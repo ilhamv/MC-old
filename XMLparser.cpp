@@ -41,7 +41,7 @@ std::shared_ptr< T > findByName( const std::vector< std::shared_ptr< T > >& vec,
 void setNuclide( const std::string name, const std::string label, std::shared_ptr<Nuclide_t>& Nuc )
 {
 	// Check availability
-	std::string dirName = "./xs_folder/" + name + ".txt"; // Library file location
+	std::string dirName = "./xs_library/" + name + ".txt"; // Library file location
 	std::ifstream xs_file (dirName);
 	if ( !xs_file )
 	{
@@ -130,7 +130,7 @@ void XML_input
 	// XML input treatment //
 	
 	// User enters the XML file name and pugixml will attempt to load
-        std::string dirName = "./test_folder/";
+        std::string dirName = "./input_example/";
 	std::string input_file_name;
   	std::cout << "\nEnter XML input file name:\n";
   	std::cin  >> input_file_name;
@@ -383,7 +383,7 @@ void XML_input
 				else if ( r.attribute("xs_file") ) 
 				{
                     			std::string filename;
-	                    		std::string dirName = "./xs_folder/";
+	                    		std::string dirName = "./xs_library/";
                 
 	                    		// cross section loading
         	            		if ( r.attribute("xs_file") )

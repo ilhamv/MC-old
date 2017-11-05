@@ -1,0 +1,124 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+
+<simulation>
+	<description name="Problem 6b" histories="1e8"/>
+	<cut-off     time="1e-7"/>
+</simulation>
+
+
+<distributions>
+  	<delta       name="enrg" datatype="double" val="1.0e6"/>
+  	<cubic       name="ang source" datatype="double" a="-1.0" b="1.0" c3="0.166666666" c2="0.5" c1="0.5" c0="0.33333333" fmax="1.5"/>
+  	<anisotropic name="dir"  datatype="point"  u = "1.0" v = "0.0" w = "0.0" distribution="ang source"/>
+</distributions>
+
+
+<nuclides>
+	<nuclide name="lithium" A="6.0">
+    		<capture xs_v="0.0 100.0"/>
+		<scatter xs  ="2.4" distribution="linear" mubar="0.2"/>
+  	</nuclide>
+
+	<nuclide name="nuc_detector" A="1.0">
+    		<scatter xs_v="1.0 500.0" distribution="isotropic"/>
+  	</nuclide>
+</nuclides>
+
+
+<materials>
+  	<material name="mat_sphere">
+    		<nuclide name="lithium" density="0.1"/>
+  	</material>
+  	
+	<material name="mat_detector">
+    		<nuclide name="nuc_detector" density="0.1"/>
+  	</material>
+</materials>
+
+
+<surfaces>
+	<sphere     name="sp1"      x="0.0" y="0.0"   z="0.0" r="5.0"/>
+	<cone_x     name="conex1"   x="3.0" y="0.0"   z="0.0" r="0.125"/>
+	<cylinder_x name="cx1"      y="0.0" z="-10.0" r="0.5"/>
+	<plane_x    name="px1"      x="-25.0"/>
+	<plane_x    name="px2"      x="-20.0"/>
+	<plane_x    name="px split" x=" -1.0"/>
+	<plane_x    name="px3"      x=" 20.0"/>
+	<plane_x    name="px4"      x=" 25.0"/>
+</surfaces>
+
+
+<cells>
+  	<cell name="sphere right" material="mat_sphere">
+    		<surface name="sp1"      sense="-1"/>
+    		<surface name="px split" sense="+1"/>
+  	</cell>
+
+  	<cell name="sphere left" material="mat_sphere">
+    		<surface name="sp1"      sense="-1"/>
+    		<surface name="px split" sense="-1"/>
+		<surface name="conex1"     sense="+1"/>
+  	</cell>
+
+  	<cell name="detector left" material="mat_detector">
+    		<surface name="cx1" sense="-1"/>
+    		<surface name="px1" sense="+1"/>
+    		<surface name="px2" sense="-1"/>
+  	</cell>
+	
+  	<cell name="detector right" material="mat_detector">
+    		<surface name="cx1" sense="-1"/>
+    		<surface name="px3" sense="+1"/>
+    		<surface name="px4" sense="-1"/>
+  	</cell>
+
+	<cell name="vacuum cone">
+    		<surface name="conex1"    sense="-1"/>
+		<surface name="px split" sense="-1"/>
+    		<surface name="sp1"      sense="-1"/>
+  	</cell>
+  	
+	<cell name="vacuum left">
+		<surface name="px1" sense="+1"/>
+		<surface name="px2" sense="-1"/>
+		<surface name="cx1" sense="+1"/>
+	</cell>	
+
+	<cell name="vacuum right">
+		<surface name="px3" sense="+1"/>
+		<surface name="px4" sense="-1"/>
+		<surface name="cx1" sense="+1"/>
+	</cell>	
+
+	<cell name="vacuum middle">
+		<surface name="px2" sense="+1"/>
+		<surface name="px3" sense="-1"/>
+		<surface name="sp1" sense="+1"/>
+	</cell>	
+	
+	<cell name="universe left" importance="0.0">
+    		<surface name="px1" sense="-1"/>
+	</cell>
+	
+	<cell name="universe right" importance="0.0">
+    		<surface name="px4" sense="+1"/>
+	</cell>
+</cells>
+
+
+<estimators>
+  	<estimator name="Detector left" score="flux scatter">
+    		<cell name="detector left"/>
+		<bin    type="time" grid_linear="0 5e-9 1e-7"/>
+  	</estimator>
+  	
+  	<estimator name="Detector right" score="flux scatter">
+    		<cell name="detector right"/>
+		<bin    type="time" grid_linear="0 5e-9 1e-7"/>
+  	</estimator>
+</estimators>
+
+
+<sources>
+  	<disk_x x="-1.000000001" y="0.0" z="0.0" r="0.5" distribution="dir" energy="enrg"/>
+</sources>

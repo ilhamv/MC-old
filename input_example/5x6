@@ -1,0 +1,120 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+
+<simulation>
+	<description name="Problem 5x6" histories="1e8"/>
+</simulation>
+
+
+<nuclides>
+	<nuclide name="nuc_dark">
+    		<capture xs="100.0"/>
+  	</nuclide>
+
+	<nuclide name="nuc_light">
+    		<capture xs="10.0"/>
+    		<scatter xs="10.0" distribution="isotropic"/>
+  	</nuclide>
+	
+	<nuclide name="nuc_detector">
+    		<scatter xs="1.0" distribution="isotropic"/>
+    		<capture xs="59.0"/>
+  	</nuclide>
+</nuclides>
+
+
+<materials>
+  	<material name="mat_dark">
+    		<nuclide name="nuc_dark" density="0.1"/>
+  	</material>
+  	
+	<material name="mat_light">
+    		<nuclide name="nuc_light" density="0.1"/>
+  	</material>
+	
+	<material name="mat_detector">
+    		<nuclide name="nuc_detector" density="0.005"/>
+  	</material>
+</materials>
+
+
+<surfaces>
+  <plane_x    name="px1" x="0.0"/>
+  <plane_x    name="px2" x="4.0"/>
+  <plane_x    name="px3" x="5.0"/>
+  <plane_x    name="px4" x="9.0"/>
+  <plane_y    name="py1" y="0.0"/>
+  <plane_y    name="py2" y="3.0"/>
+  <plane_y    name="py3" y="6.0"/>
+  <cylinder_z name="cz1" x="6.5" y="1.5" r="0.5"/>
+</surfaces>
+
+
+<cells>
+  	<cell name="light1" material="mat_light" importance="1.0">
+    		<surface name="px1" sense="+1"/>
+    		<surface name="px2" sense="-1"/>
+    		<surface name="py1" sense="+1"/>
+    		<surface name="py2" sense="-1"/>
+  	</cell>
+
+  	<cell name="light2" material="mat_light" importance="6.0">
+    		<surface name="px1" sense="+1"/>
+    		<surface name="px2" sense="-1"/>
+    		<surface name="py2" sense="+1"/>
+    		<surface name="py3" sense="-1"/>
+  	</cell>
+
+  	<cell name="light3" material="mat_light" importance="36.0">
+    		<surface name="px2" sense="+1"/>
+    		<surface name="px4" sense="-1"/>
+    		<surface name="py2" sense="+1"/>
+    		<surface name="py3" sense="-1"/>
+  	</cell>
+  	
+	<cell name="light4" material="mat_light" importance="216.0">
+    		<surface name="px3" sense="+1"/>
+    		<surface name="px4" sense="-1"/>
+    		<surface name="py1" sense="+1"/>
+    		<surface name="py2" sense="-1"/>
+    		<surface name="cz1" sense="+1"/>
+  	</cell>
+
+  	<cell name="dark" material="mat_dark" importance="1.0">
+    		<surface name="px2" sense="+1"/>
+    		<surface name="px3" sense="-1"/>
+    		<surface name="py1" sense="+1"/>
+    		<surface name="py2" sense="-1"/>
+  	</cell>
+	
+  	<cell name="detector" material="mat_detector" importance="1296.0">
+    		<surface name="cz1" sense="-1"/>
+  	</cell>
+	
+	<cell name="left outside" importance="0.0">
+    		<surface name="px1" sense="-1"/>
+  	</cell>
+  	
+	<cell name="right outside" importance="0.0">
+    		<surface name="px4" sense="+1"/>
+	</cell>
+
+	<cell name="down outside" importance="0.0">
+    		<surface name="py1" sense="-1"/>
+  	</cell>
+	
+	<cell name="up outside" importance="0.0">
+    		<surface name="py3" sense="+1"/>
+  	</cell>
+</cells>
+
+
+<estimators>
+    <estimator name="Detector" score="flux absorption">
+        <cell name="detector"/>
+    </estimator>
+</estimators>
+
+
+<sources>
+    <point x="1.5"  y="1.5"  z="0.0"/>
+</sources>

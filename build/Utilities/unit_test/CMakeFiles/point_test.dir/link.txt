@@ -1,0 +1,1 @@
+/usr/bin/c++      CMakeFiles/point_test.dir/point_test.cpp.o  -o point_test -rdynamic ../libutils.a 

@@ -2,7 +2,7 @@
 #include "Particle.h"
 #include "Point.h"
 #include "Const.h"  // MAX, EPSILON
-#include "Solver.h" // sphere_quad, cylinder_quad
+#include "Solver.h" // solve_quad
 
 
 
@@ -179,7 +179,7 @@ double Sphere_Surface::distance( const Particle_t& P )
   	double b = 2.0 * ( ( p.x - x0 ) * u.x + ( p.y - y0 ) * u.y + ( p.z - z0 ) * u.z );
   	double c = eval( p );
 
-  	return sphere_quad( b, c );
+  	return solve_quad( 1.0, b, c );
 }
 
 void Sphere_Surface::reflect( Particle_t& P ) { return; }

@@ -1,0 +1,83 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+
+<simulation>
+	<description name="Problem 4b" histories="1e7"/>
+</simulation>
+
+
+<nuclides>
+	<nuclide name="nuc1">
+    		<scatter xs="19.0" distribution="linear" mubar="0.333333333333333333333333"/>
+    		<capture xs="1.0"/>
+  	</nuclide>
+
+	<nuclide name="nuc2">
+    		<scatter xs="4.0" distribution="isotropic"/>
+    		<capture xs="1.0"/>
+  	</nuclide>
+	
+	<nuclide name="nuc_detector">
+    		<scatter xs="1.0" distribution="isotropic"/>
+    		<capture xs="59.0"/>
+  	</nuclide>
+</nuclides>
+
+
+<materials>
+  	<material name="mat1">
+    		<nuclide name="nuc1" density="0.066666666666666666666667"/>
+    		<nuclide name="nuc2" density="0.033333333333333333333333"/>
+  	</material>
+  	
+	<material name="mat_detector">
+    		<nuclide name="nuc_detector" density="0.005"/>
+  	</material>
+</materials>
+
+
+<surfaces>
+	<sphere     name="sp1" x="0.0" y="0.0" z="0.0" r="4.0"/>
+	<plane_x    name="px1" x="14.0"/>
+	<plane_x    name="px2" x="19.0"/>
+	<cylinder_x name="cx1" y="0.0" z="0.0" r="0.5"/>
+</surfaces>
+
+
+<cells>
+  	<cell name="sphere" material="mat1">
+    		<surface name="sp1" sense="-1"/>
+  	</cell>
+	
+  	<cell name="detector" material="mat_detector">
+    		<surface name="px1" sense="+1"/>
+    		<surface name="px2" sense="-1"/>
+    		<surface name="cx1" sense="-1"/>
+  	</cell>
+	
+	<cell name="left vacuum">
+    		<surface name="sp1" sense="+1"/>
+    		<surface name="px1" sense="-1"/>
+  	</cell>
+	
+	<cell name="middle vacuum">
+    		<surface name="cx1" sense="+1"/>
+    		<surface name="px1" sense="+1"/>
+    		<surface name="px2" sense="-1"/>
+  	</cell>
+
+	<cell name="right vacuum">
+    		<surface name="px2" sense="+1" importance="0.0"/>
+  	</cell>
+</cells>
+
+
+<estimators>
+  	<estimator name="Detector" score="flux absorption">
+    		<cell name="detector"/>
+  	</estimator>
+</estimators>
+
+
+<sources>
+  	<sphere_shell x="0.0"  y="0.0" z="0.0" ri="1.0" ro="2.0"/>
+</sources>
