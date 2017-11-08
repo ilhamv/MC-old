@@ -11,7 +11,6 @@
 #include "Const.h" // PI
 #include "Random.h" // Urand
 #include "Point.h"
-#include "Particle.h"
 #include "XSec.h"
 
 // Sampling Distributions base class

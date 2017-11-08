@@ -17,7 +17,7 @@ TEST_CASE( "Point", "Test 3-elements point object" )
         REQUIRE( flag );
     }
 
-    // Test creation (default)
+    // Test creation
     Point_t p2(1.0,-2.0,3.0);
     SECTION( "point creation" )
     { 
@@ -28,10 +28,18 @@ TEST_CASE( "Point", "Test 3-elements point object" )
         REQUIRE( flag );
     }
 
-    // Test point normalization
+    // Test normalization
     p2.normalize();
     SECTION( "point normalized" )
     {
         REQUIRE( p2.x*p2.x + p2.y*p2.y + p2.z*p2.z == Approx(1.0) );
     }
+
+    // Test equality operator
+    Point_t p1 = p2;
+    SECTION( "point equality" )
+    {
+        REQUIRE( p1 == p2 );
+    }
+
 }

@@ -7,7 +7,6 @@
 #include "Point.h"
 #include "Const.h"       // PI2
 #include "Solver.h"
-#include "Particle.h"
 #include "Solver.h" // Linterpolate
 
 double Uniform_Distribution::sample( const double param /*= 0.0*/ ) 

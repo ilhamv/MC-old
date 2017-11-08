@@ -13,6 +13,9 @@ class Point_t
         ~Point_t() {};		
 
         void normalize();
+
+        // Test if (x,y,z) are the same
+        bool operator== (const Point_t& p);
 };
 
 
