@@ -5,6 +5,7 @@
 #include <vector> // vector
 
 #include "Point.h"
+#include "Geometry.h"
 
 
 // Forward declarations

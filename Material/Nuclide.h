@@ -7,6 +7,8 @@
 
 #include "Reaction.h"
 
+// Forward declaration
+class Reaction_t;
 
 // Nuclide base class
 class Nuclide_t

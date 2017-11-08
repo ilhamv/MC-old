@@ -14,6 +14,8 @@
 #include "Geometry.h"
 #include "Distribution.h"
 
+// Forward declaration
+class Particle_t;
 
 ///////////////
 /// Scoring ///

@@ -4,7 +4,7 @@
 #include "Solver.h"
 #include "Point.h"
 
-TEST_CASE( "Point", "Test 3-elements point object" )
+TEST_CASE( "Point", "" )
 {
     // Test creation (default)
     Point_t p;
@@ -41,5 +41,4 @@ TEST_CASE( "Point", "Test 3-elements point object" )
     {
         REQUIRE( p1 == p2 );
     }
-
 }

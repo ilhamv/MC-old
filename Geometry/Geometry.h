@@ -43,6 +43,8 @@ class Geometry_t
 /// Surfaces ///
 ///////////////
 
+// Forward declaration
+class Cell_t;
 
 // Surface base class
 class Surface_t : public Geometry_t
@@ -54,7 +56,7 @@ class Surface_t : public Geometry_t
 	
 	protected:
 		// Crossing the surface --> an epsilon kick to the working particle
-		virtual void cross ( Particle_t& P ) final { P.move( EPSILON ); }
+		void cross ( Particle_t& P );
 
 		// Reflect and cross the working particle
 		virtual void reflect ( Particle_t& P ) = 0;

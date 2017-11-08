@@ -4,16 +4,15 @@
 #include "Distribution.h"
 #include "Point.h"
 
-TEST_CASE( "Distribution", "Test all supported distributions" )
+TEST_CASE( "Delta distribution", "" )
 {
-    // Test delta distribution
     SECTION( "delta - double" )
     { 
         Delta_Distribution<double> Delta_double(-5.0);
         REQUIRE( Delta_double.sample() == -5.0 );
     }
     
-    SECTION( "delta - double" )
+    SECTION( "delta - point" )
     { 
         Point_t p_return(3.0, 2.0, 1.0);
         Delta_Distribution<Point_t> Delta_point( p_return );

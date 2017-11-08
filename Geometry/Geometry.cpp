@@ -10,6 +10,8 @@
 /// Surfaces ///
 ///////////////
 
+// Crossing the surface --> an epsilon kick to the working particle
+void Surface_t::cross ( Particle_t& P ) { P.move( EPSILON ); }
 
 // Hit implementation
 void Surface_t::hit( Particle_t& P, const std::vector<std::shared_ptr<Cell_t>>& Cell )

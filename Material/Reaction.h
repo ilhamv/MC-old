@@ -11,6 +11,8 @@
 #include "Point.h"
 #include "XSec.h"
 
+// Forward declaration
+class Particle_t;
 
 // Reaction base class
 class Reaction_t

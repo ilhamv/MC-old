@@ -13,6 +13,7 @@ enable_testing()
 
 file(GLOB MC_SRC "*.cpp")
 add_executable(MC.exe ${MC_SRC})
+target_link_libraries(MC.exe particle)
 target_link_libraries(MC.exe ${MC_PCKGS})
 
 # Copy Cross-Section library (text files) and input examples

@@ -12,6 +12,8 @@
 #include "Random.h"
 #include "Const.h"   // MAXD
 
+// Forward declaration
+class Nuclide_t;
 
 // Material base class
 class Material_t
