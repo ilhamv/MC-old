@@ -25,7 +25,7 @@
 
 int main( int argc, char* argv[] )
 {
-/*    // Check # of arguments passed
+    // Check # of arguments passed
     if ( argc == 1 ) { std::cout<< "Please provide input file\n"; return 1; }
 
     // Variable declarations
@@ -48,16 +48,8 @@ int main( int argc, char* argv[] )
     std::vector < std::shared_ptr<Distribution_t<int>>    > int_distributions;
     std::vector < std::shared_ptr<Distribution_t<Point_t>>> point_distributions;
     	
-/*    // Check input file existence
-    if ( !boost::filesystem::exists( "input_file" ) )    
-    {
-        std::cout << "Can't find my file!" << std::endl;
-    }
-    std::ifstream check( input_file );
-    if ( check.fail() ) { std::cout<< "Input file does not exist: " << input_file << "\n"; return 1; }*/
-
     // XML input parser	
-    XML_input( simName, nhist, Ecut_off, tcut_off, Sbank, Surface, Cell, Nuclide, Material, Estimator, double_distributions, int_distributions, point_distributions );
+    XML_input( input_file, simName, nhist, Ecut_off, tcut_off, Sbank, Surface, Cell, Nuclide, Material, Estimator, double_distributions, int_distributions, point_distributions );
 	
     std::cout<<"\nSimulation setup done,\nNow running the simulation...\n\n";
     std::cout.flush();

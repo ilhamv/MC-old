@@ -111,14 +111,15 @@ void setNuclide( const std::string name, const std::string label, std::shared_pt
 
 // XML input pasrese
 void XML_input
-( 
+(
+        std::string                                              file_name,
 	std::string&                                             simName,
 	unsigned long long&                                      nhist,          
 	double&                                                  Ecut_off,
 	double&                                                  tcut_off,
 	Source_Bank&                                             Sbank,
 	std::vector < std::shared_ptr<Surface_t>   >&            Surface,     
-	std::vector < std::shared_ptr<Cell_t>    >&            Cell,    
+	std::vector < std::shared_ptr<Cell_t>      >&            Cell,    
 	std::vector < std::shared_ptr<Nuclide_t>   >&            Nuclide,   
 	std::vector < std::shared_ptr<Material_t>  >&            Material, 
 	std::vector < std::shared_ptr<Estimator_t> >&            Estimator,
@@ -127,18 +128,9 @@ void XML_input
   	std::vector < std::shared_ptr<Distribution_t<Point_t>>>& point_distributions
 )
 {
-	// XML input treatment //
-	
-	// User enters the XML file name and pugixml will attempt to load
-        std::string dirName = "./input_example/";
-	std::string input_file_name;
-  	std::cout << "\nEnter XML input file name:\n";
-  	std::cin  >> input_file_name;
-	dirName += input_file_name;
-    
 	// XML input file
 	pugi::xml_document input_file;
-    	pugi::xml_parse_result load_result = input_file.load_file( dirName.c_str() );
+    	pugi::xml_parse_result load_result = input_file.load_file( file_name.c_str() );
 
 	// Check to see if result failed and throw an exception if it did
 	if ( ! load_result ) 

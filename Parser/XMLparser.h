@@ -39,6 +39,7 @@ void setNuclide( const std::string name, const std::string label, std::shared_pt
 // XML input pasrese
 void XML_input
 ( 
+        std::string                                              file_name,
 	std::string&                                             simName,
 	unsigned long long&                                      nhist,          
 	double&                                                  Ecut_off,
