@@ -140,7 +140,7 @@ int main( int argc, char* argv[] )
     for ( int i = 0 ; i < simName.length()+6 ; i++ ) { output << "="; }
     output << "\n";
     output << "Number of histories: " << nhist << "\n";
-    output << "Track time: " << trackTime << "\n";
+//    output << "Track time: " << trackTime << "\n";
 
     // Report tallies
     for ( auto& E : Estimator ) { E->report( output, trackTime ); } // TrackTime is passed for F.O.M.
