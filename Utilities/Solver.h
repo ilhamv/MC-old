@@ -27,7 +27,7 @@ int Binary_Search( const double x, const std::vector<double>& vec );
 Point_t scatter_direction( const Point_t dir_i, const double mu0 );
 
 
-// Lagrenge interpolation
+// Linear interpolation
 double Linterpolate( const double x, const double x1, const double x2, const double y1, const double y2 );
 
 

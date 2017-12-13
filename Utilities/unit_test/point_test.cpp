@@ -29,9 +29,9 @@ TEST_CASE( "Point", "" )
     }
 
     // Test normalization
-    p2.normalize();
-    SECTION( "point normalized" )
+    SECTION( "point normalization" )
     {
+        p2.normalize();
         REQUIRE( p2.x*p2.x + p2.y*p2.y + p2.z*p2.z == Approx(1.0) );
     }
 
@@ -39,6 +39,8 @@ TEST_CASE( "Point", "" )
     Point_t p1 = p2;
     SECTION( "point equality" )
     {
-        REQUIRE( p1 == p2 );
+        REQUIRE( p1.x == p2.x );
+        REQUIRE( p1.y == p2.y );
+        REQUIRE( p1.z == p2.z );
     }
 }

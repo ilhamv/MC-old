@@ -328,224 +328,201 @@ void XML_input
     		}
   	}	
 
-	// Set nuclides
-	pugi::xml_node input_nuclides = input_file.child("nuclides");
-  	for ( const auto& n : input_nuclides )
-	{
-		std::shared_ptr<Nuclide_t> Nuc;
-        	const std::string name   = n.attribute("name").value(); // Nuclide name (or label)
-		double            Amass = 1e9;                          // Default nuclide mass
-		const std::string n_tag = n.name();                    // Nuclide tag
+    // Set nuclides
+    pugi::xml_node input_nuclides = input_file.child("nuclides");
+    for ( const auto& n : input_nuclides )
+    {
+	std::shared_ptr<Nuclide_t> Nuc;
+        const  std::string name   = n.attribute("name").value(); // Nuclide name (or label)
+	double             Amass = 1e9;                          // Default nuclide mass
+	const  std::string n_tag = n.name();                    // Nuclide tag
 		
-		// User defined nuclide
-		if ( n_tag == "nuclide" )
-		{
-			// Provided nuclide mass input
-			if ( n.attribute("A") ) 
-    			{
-	    			Amass = n.attribute("A").as_double();
-    			}
+        if ( n_tag != "nuclide" )
+        {
+            std::cout<< "[ERROR-INPUT] Unsupported tag under nuclides\n";
+            std::exit(EXIT_FAILURE);
+        }
 
-			Nuc   = std::make_shared<Nuclide_t> ( name, Amass );
+        // Standard ZAID nuclide
+        if ( n.attribute("ZAID") )
+        {
+	    setNuclide( n.attribute("ZAID").value(), name, Nuc );
+        }
 
-    			// Add nuclide reactions
-    			for ( const auto& r : n.children() ) 
-			{
-            			const std::string       rxn_type = r.name();
+        // User defined nuclide
+        else
+        {
+    	    // Provided nuclide mass input
+	    if ( n.attribute("A") ) 
+    	    {
+	        Amass = n.attribute("A").as_double();
+    	    }
+
+	    Nuc   = std::make_shared<Nuclide_t> ( name, Amass );
+
+    	    // Add nuclide reactions
+    	    for ( const auto& r : n.children() ) 
+	    {
+            	const std::string       rxn_type = r.name();
 			
-				// Set XSec
-				std::shared_ptr<XSec_t> XS;
-			
-				// Constant XSec
-				if ( r.attribute("xs") ) 
-    				{
-      					const double xs = r.attribute("xs").as_double();
-		    			XS = std::make_shared<Constant_XSec> ( xs );
-    				}
-				// 1/v XSec
-				else if ( r.attribute("xs_v") )
-				{
-					double a, b;
-					std::vector<std::string> scores;
-					std::istringstream iss( r.attribute("xs_v").value() );
-					iss >> a >> b;
-		    			XS = std::make_shared<OverV_XSec> ( a, b );
-				}
-		        	// Table look-up XSec
-				else if ( r.attribute("xs_file") ) 
-				{
-                    			std::string filename;
-	                    		std::string dirName = "./xs_library/";
-                
-	                    		// cross section loading
-        	            		if ( r.attribute("xs_file") )
-                	    		{
-                        			std::istringstream iss( r.attribute("xs_file").value() );
-                        			iss >> filename;
-                        			dirName += filename;
-			                }
-        	            		else
-	        	            	{
-        	        	        	std::cout << "Cross section file for reaction" << rxn_type << " is required" << std::endl;
-                	        		throw;
-	                    		}
-
-	                		std::ifstream xs_file (dirName);
-			                auto E_vec = std::make_shared<std::vector<double>>();
-        		        	std::vector<double> XS_vec;
-        	        		double c1,c2,c3,c4,c5;
-                
-		                	if (xs_file.is_open())
-                	    		{
-                        			while(xs_file >> c1 >> c2 >> c3 >> c4 >> c5)
-	                        		{
-        	                    			E_vec->push_back(c1);
-                	            			XS_vec.push_back(c4); //4th column is scatter
-                        			}
-                        			xs_file.close();
-                        			XS = std::make_shared<Table_XSec> ( E_vec, XS_vec );
-                    			}
-                    			else
-					{ 
-						std::cout << "unable to open file for reaction " << rxn_type << " in nuclide " << name << std::endl;
-						throw;
-					}
-
-				}
-			
-				// Unknown XSec type
-				else
-				{
-					std::cout << "appropriate cross section for reaction" << rxn_type << " is required" << std::endl;
-					throw;
-				}
-			
-				// Capture
-				if ( rxn_type == "capture" )
-				{
-        				Nuc->addReaction( std::make_shared<Capture_Reaction> ( XS ) );
-	      			}      
-
-				// Scatter
-				else if ( rxn_type == "scatter" )
-				{
-					// Set scattering cosine distribution
-					if ( !r.attribute("distribution") ) 
-					{ 
-						std::cout << "distribution is required for scattering reaction" << std::endl;
-						throw;
-					}
-				
-					const std::string dist_name = r.attribute("distribution").value();
-        			
-					// Isotropic
-					if ( dist_name == "isotropic" ) 
-					{
-						Nuc->addReaction( std::make_shared< Scatter_Reaction > ( XS, std::make_shared< IsotropicScatter_Distribution > (), Amass ) );
-        				}
-				
-					// Henyey-Greenstein
-					else if ( dist_name == "henyey-greenstein" ) 
-					{
-						if ( !r.attribute("g") ) 
-						{ 
-							std::cout << "parameter g is required for henyey-greenstein scattering distribution" << std::endl;
-							throw;
-						}
-						const double g = r.attribute("g").as_double();
-						Nuc->addReaction( std::make_shared< Scatter_Reaction > ( XS, std::make_shared< HGScatter_Distribution > ( g ), Amass ) );
-        				}
-				
-					// Linearly anisotropic
-					else if ( dist_name == "linear" )
-					{
-						const double mubar = r.attribute("mubar").as_double();
-						Nuc->addReaction( std::make_shared< Scatter_Reaction > ( XS, std::make_shared< LinearScatter_Distribution > ( mubar ), Amass ) );
-        				}
-        			
-					// Unknown scattering distribution
-					else 
-					{
-          					std::cout << "unknown scattering distribution " << dist_name << " in nuclide " << name << std::endl;
-          					throw;
-	        			}
-      				}
-			
-				// Fission
-				else if ( rxn_type == "fission" )
-				{
-					// Set up Chi spectrum
-					std::shared_ptr< Distribution_t<double> > watt;
-
-					// Next: <watt name="" dtype="double" fissile="U-235"
-					// 	Build a function("nuclide name") returning a pair of vectors, a and b
-					std::vector<double> a;
-					std::vector<double> b;
-					a.push_back( 0.988 );
-					a.push_back( 0.988 );
-					a.push_back( 1.028 );
-					b.push_back( 2.249 );
-					b.push_back( 2.249 );
-					b.push_back( 2.084 );
-					watt = std::make_shared< Watt_Distribution > ( a, b, name );
-
-					if ( !r.attribute("multiplicity")  )
-					{ 
-						std::cout << "multiplicity is required for fission reaction" << std::endl;
-						throw;
-					}
-
-					const std::string mult_dist_name   = r.attribute("multiplicity").value();
-					
-					// Average
-					if ( mult_dist_name == "average" )
-					{
-						if ( !r.attribute("nubar") ) 
-						{ 
-							std::cout << "parameter nubar is required for average fission multiplicity" << std::endl;
-							throw;
-						}
-						auto nubar = std::make_shared<Constant_XSec> ( r.attribute("nubar").as_double() );
-                    
-						Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS, nubar, std::make_shared< Average_Multiplicity_Distribution > (), watt ) );
-					}
-
-					// Terrel
-					else if ( mult_dist_name == "terrel" )
-					{
-						if ( !r.attribute("nubar") || !r.attribute("gamma") || !r.attribute("b") || !r.attribute("nmax") ) 
-						{ 
-							std::cout << "parameter nubar, gamma, b, and nmax are required for terrel fission multiplicity" << std::endl;
-							throw;
-						}
-						const double nubar = r.attribute("nubar").as_double();
-						const double gamma = r.attribute("gamma").as_double();
-						const double b     = r.attribute("b").as_double();
-						const int    nmax  = r.attribute("nmax").as_int();
-						const std::vector< std::pair< int, double > > v;     // a dummy, as it is required for discrete distribution base class
-						auto         nu = std::make_shared<Constant_XSec>(0.0);
-						Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS, nu, std::make_shared< Terrel_Multiplicity_Distribution > ( nubar, gamma, b, nmax, v ), watt ) );
-					}
-				
-					// Unknown multiplicity distribution
-					else 
-					{	
-        	  				std::cout << "unknown fission multiplicity distribution " << mult_dist_name <<" in nuclide " << name << std::endl;
-          					throw;
-        				}
-
-				}
-			}
+		// Set XSec
+		std::shared_ptr<XSec_t> XS;
+		
+		// Constant XSec
+		if ( r.attribute("xs") ) 
+    		{
+      		    const double xs = r.attribute("xs").as_double();
+		    XS = std::make_shared<Constant_XSec> ( xs );
     		}
-		else
-		// Set nuclide referring to the available library
+		// 1/v XSec
+		else if ( r.attribute("xs_v") )
 		{
-			setNuclide( n_tag, name, Nuc );
+		    double a, b;
+		    std::vector<std::string> scores;
+		    std::istringstream iss( r.attribute("xs_v").value() );
+		    iss >> a >> b;
+		    XS = std::make_shared<OverV_XSec> ( a, b );
+		}
+		// Table look-up XSec
+		else if ( r.attribute("xs_file") ) 
+		{
+                    std::string filename;
+	            std::string dirName = r.attribute("xs_file").value();
+                
+	            // cross section loading
+	            std::ifstream xs_file (dirName);
+		    auto E_vec = std::make_shared<std::vector<double>>();
+        	    std::vector<double> XS_vec;
+        	    double c1,c2;
+                
+		    if (xs_file.is_open())
+                    {
+                	while(xs_file >> c1 >> c2)
+	        	{
+        	    	    E_vec->push_back(c1);
+                    	    XS_vec.push_back(c2); //4th column is scatter
+                	}
+                	    xs_file.close();
+                	    XS = std::make_shared<Table_XSec> ( E_vec, XS_vec );
+                    }
+                    else
+		    { 
+			std::cout << "[ERROR-INPUT] Unable to open xs table file for reaction " << rxn_type << " in nuclide " << name << std::endl;
+                        std::exit(EXIT_FAILURE);
+		    }
+		}
+		// Unknown XSec type
+		else
+		{
+		    std::cout << "[ERROR-INPUT] Appropriate cross section type for reaction " << rxn_type << " is required" << std::endl;
+                    std::exit(EXIT_FAILURE);
 		}
 		
-		// Push new nuclide
-		Nuclide.push_back( Nuc );
- 	}
+		// Capture
+		if ( rxn_type == "capture" )
+		{
+        	    Nuc->addReaction( std::make_shared<Capture_Reaction> ( XS ) );
+	      	}      
+
+		// Scatter
+		else if ( rxn_type == "scatter" )
+		{
+		    // Set scattering cosine distribution
+		    if ( !r.attribute("distribution") ) 
+		    { 
+			std::cout << "[ERROR-INPUT] Scattering cosine distribution is required for scattering reaction " << std::endl;
+                        std::exit(EXIT_FAILURE);
+		    }
+		
+		    const std::string dist_name = r.attribute("distribution").value();
+		    // Isotropic
+		    if ( dist_name == "isotropic" )
+		    {
+			Nuc->addReaction( std::make_shared< Scatter_Reaction > ( XS, std::make_shared< IsotropicScatter_Distribution > (), Amass ) );
+        	    }		
+		    // Henyey-Greenstein
+		    else if ( dist_name == "henyey-greenstein" ) 
+		    {
+			const double g = r.attribute("g").as_double();
+			Nuc->addReaction( std::make_shared< Scatter_Reaction > ( XS, std::make_shared< HGScatter_Distribution > ( g ), Amass ) );
+        	    }
+		    // Linearly anisotropic
+		    else if ( dist_name == "linear" )
+		    {
+			const double mubar = r.attribute("mubar").as_double();
+			Nuc->addReaction( std::make_shared< Scatter_Reaction > ( XS, std::make_shared< LinearScatter_Distribution > ( mubar ), Amass ) );
+        	    }
+		    // Unknown scattering distribution
+		    else 
+		    {
+          		std::cout << "[ERROR-INPUT] Unsupported scattering distribution " << dist_name << " in nuclide " << name << std::endl;
+                        std::exit(EXIT_FAILURE);
+	            }
+      		}
+		
+		// Fission
+		else if ( rxn_type == "fission" )
+		{
+		    // Set up Chi spectrum
+		    std::shared_ptr< Distribution_t<double> > watt;
+
+		    // 	Build a function("nuclide name") returning a pair of vectors, a and b
+		    std::vector<double> a;
+		    std::vector<double> b;
+		    a.push_back( 0.988 );
+		    a.push_back( 0.988 );
+		    a.push_back( 1.028 );
+		    b.push_back( 2.249 );
+		    b.push_back( 2.249 );
+		    b.push_back( 2.084 );
+		    watt = std::make_shared< Watt_Distribution > ( a, b, name );
+
+		    const std::string mult_dist_name   = r.attribute("multiplicity").value();
+			
+		    // Average
+		    if ( mult_dist_name == "average" )
+		    {
+			if ( !r.attribute("nubar") ) 
+			{ 
+			    std::cout << "parameter nubar is required for average fission multiplicity" << std::endl;
+			    throw;
+			}
+			auto nubar = std::make_shared<Constant_XSec> ( r.attribute("nubar").as_double() );
+                
+			Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS, nubar, std::make_shared< Average_Multiplicity_Distribution > (), watt ) );
+		    }
+
+		    // Terrel
+		    else if ( mult_dist_name == "terrel" )
+		    {
+			if ( !r.attribute("nubar") || !r.attribute("gamma") || !r.attribute("b") || !r.attribute("nmax") ) 
+			{ 
+			    std::cout << "parameter nubar, gamma, b, and nmax are required for terrel fission multiplicity" << std::endl;
+			    throw;
+			}
+			const double nubar = r.attribute("nubar").as_double();
+			const double gamma = r.attribute("gamma").as_double();
+			const double b     = r.attribute("b").as_double();
+			const int    nmax  = r.attribute("nmax").as_int();
+			const std::vector< std::pair< int, double > > v;     // a dummy, as it is required for discrete distribution base class
+			auto         nu = std::make_shared<Constant_XSec>(0.0);
+			Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS, nu, std::make_shared< Terrel_Multiplicity_Distribution > ( nubar, gamma, b, nmax, v ), watt ) );
+		    }
+		
+		    // Unknown multiplicity distribution
+		    else 
+		    {	
+        		std::cout << "unknown fission multiplicity distribution " << mult_dist_name <<" in nuclide " << name << std::endl;
+          		throw;
+        	    }
+
+		} 
+	    } // End reactions
+    	} // End user defined nuclide
+		
+	// Push new nuclide
+	Nuclide.push_back( Nuc );
+    }
 
   	// Set materials
   	pugi::xml_node input_materials = input_file.child("materials");

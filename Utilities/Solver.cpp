@@ -8,21 +8,23 @@
 // return smallest positive real root if it exists; if it does not, return very big number
 double solve_quad( const double a, const double b, const double c ) 
 {
-    double d = b*b - 4.0 * a * c;
+    // Determinant
+    const double D = b*b - 4.0 * a * c;
     	
     // roots are complex, no intersection, return huge number
     // or identical roots, tangent, return huge number
-    if ( d <= 0.0 ) { return MAX; }
+    if ( D <= 0.0 ) { return MAX; }
   	
     else 
     {
-        double sqrtd = std::sqrt(d);
-        double ai = 0.5 / a;
+        const double sqrtD = std::sqrt(D);
+        const double ai = 0.5 / a;
 
-        double r1 = ai * ( -1.0 * b - sqrtd );
-        double r2 = ai * ( -1.0 * b + sqrtd );
+        // roots
+        double r1 = ai * ( -1.0 * b - sqrtD );
+        double r2 = ai * ( -1.0 * b + sqrtD );
 
-        // Negative roots return huge number
+        // Negative roots return huge number (moving away from surface)
         if ( r1 < 0 ) { r1 = MAX; }
         if ( r2 < 0 ) { r2 = MAX; }
 
@@ -75,7 +77,7 @@ Point_t scatter_direction( const Point_t dir_i, const double mu0 )
         dir_f.z = dir_i.z * mu0 - cos_azi * Ac * B;
     }
 	
-    // If dir_i = k, interchange z and y in the scattering formula
+    // If dir_i = 0i + 0j + k, interchange z and y in the scattering formula
     else
     {
         const double       B = std::sqrt( 1.0 - dir_i.y * dir_i.y );

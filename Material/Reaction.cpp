@@ -36,6 +36,7 @@ void Fission_Reaction::sample( Particle_t& P, std::stack< Particle_t >& Pbank )
 
 		// reset the top particle
 		P.setDirection( isotropic.sample() );
+		P.setEnergy( Chi_dist->sample( P.energy() ) );
 	}
 	else
 	{ P.kill(); }
