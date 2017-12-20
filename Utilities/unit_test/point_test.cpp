@@ -39,8 +39,6 @@ TEST_CASE( "Point", "" )
     Point_t p1 = p2;
     SECTION( "point equality" )
     {
-        REQUIRE( p1.x == p2.x );
-        REQUIRE( p1.y == p2.y );
-        REQUIRE( p1.z == p2.z );
+        REQUIRE( p1 == p2 );
     }
 }

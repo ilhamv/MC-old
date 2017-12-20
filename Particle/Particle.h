@@ -27,7 +27,9 @@ class Particle_t
 
     public:
         // Constructor: Pass position and direction and initialize particle
-        Particle_t( const Point_t& p1, const Point_t& p2, const double E = 2e6, const double t = 0.0, const double w = 1.0 ) :
+        //Particle_t( const Point_t& p1, const Point_t& p2, const double E = 2e6, const double t = 0.0, const double w = 1.0 ) :
+        //    p_pos(p1), p_dir(p2), p_time(t), p_weight(w) { setEnergy(E); }
+        Particle_t( const Point_t& p1, const Point_t& p2, const double E, const double t, const double w ) :
             p_pos(p1), p_dir(p2), p_time(t), p_weight(w) { setEnergy(E); }
         ~Particle_t() {};
 

@@ -69,7 +69,7 @@ TEST_CASE( "Generic Plane Surface", "" )
     // test smallest positive distance w/ intersection
     SECTION ( " distance with intersection " ) 
     {
-        Particle_t P( Point_t( -3.0, -2.0, +1.0 ), Point_t( 1.0, 0.0, 0.0 ) );
+        Particle_t P( Point_t( -3.0, -2.0, +1.0 ), Point_t( 1.0, 0.0, 0.0 ), 1.0, 1.0, 1.0 );
         double eval_result = 14.0;
         REQUIRE( planeT.distance(P) == Approx( eval_result ) );
     } 
@@ -77,7 +77,7 @@ TEST_CASE( "Generic Plane Surface", "" )
     // test smallest positive distance w/ no intersection
     SECTION ( " distance with no intersection " ) 
     {
-        Particle_t P( Point_t( -3.0, -2.0, +1.0 ), Point_t( -1.0, 0.0, 0.0 ) );
+        Particle_t P( Point_t( -3.0, -2.0, +1.0 ), Point_t( -1.0, 0.0, 0.0 ), 1.0, 1.0, 1.0 );
         double eval_result = MAX;
         REQUIRE( planeT.distance(P) == Approx( eval_result ) );
     } 
@@ -86,7 +86,7 @@ TEST_CASE( "Generic Plane Surface", "" )
     SECTION ( " parallel to surface " ) 
     {
         Point_t dir( 1.0, 1.0, 1.0 ); dir.normalize();
-        Particle_t P( Point_t( -3.0, -2.0, +1.0 ), dir );
+        Particle_t P( Point_t( -3.0, -2.0, +1.0 ), dir, 1.0, 1.0, 1.0 );
         double eval_result = MAX;
         REQUIRE( planeT.distance(P) == Approx( eval_result ) );
     } 
