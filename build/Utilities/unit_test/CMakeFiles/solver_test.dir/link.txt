@@ -1,1 +1,0 @@
-/usr/bin/c++      CMakeFiles/solver_test.dir/solver_test.cpp.o  -o solver_test -rdynamic ../libutils.a 

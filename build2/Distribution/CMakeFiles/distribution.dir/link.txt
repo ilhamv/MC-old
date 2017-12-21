@@ -1,2 +1,0 @@
-/usr/bin/ar qc libdistribution.a  CMakeFiles/distribution.dir/Distribution.cpp.o
-/usr/bin/ranlib libdistribution.a

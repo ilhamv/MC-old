@@ -1,2 +1,0 @@
-/usr/bin/ar qc libmaterial.a  CMakeFiles/material.dir/Material.cpp.o CMakeFiles/material.dir/Nuclide.cpp.o CMakeFiles/material.dir/Reaction.cpp.o CMakeFiles/material.dir/XSec.cpp.o
-/usr/bin/ranlib libmaterial.a
