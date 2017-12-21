@@ -1,0 +1,2 @@
+/usr/bin/ar qc libutils.a  CMakeFiles/utils.dir/Point.cpp.o CMakeFiles/utils.dir/Random.cpp.o CMakeFiles/utils.dir/Solver.cpp.o CMakeFiles/utils.dir/pugixml.cpp.o
+/usr/bin/ranlib libutils.a

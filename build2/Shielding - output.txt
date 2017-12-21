@@ -1,0 +1,23 @@
+
+===============
+== Shielding ==
+===============
+Number of histories: 100000
+Number of tracks: 546696
+
+
+Estimator report: Detector
+==========================
+Total tallies,
+  Flux:
+  -> Mean     = 0.0341814  +/-  0.000704916  (2.06228%)
+  -> Variance = 0.0496907
+  [F.O.M.: 0.0043009]
+
+
+  Abs. Rate:
+  -> Mean     = 0.000339876  +/-  2.99182e-05  (8.80269%)
+  -> Variance = 8.951e-05
+  [F.O.M.: 0.000236061]
+
+

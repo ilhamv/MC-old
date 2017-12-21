@@ -72,14 +72,14 @@
   	<surface name="px1" sense="-1"/>
     </cell>
       
-    <cell name="middle vacuum">
+    <cell name="middle vacuum" importance="0.0">
   	<surface name="cx1" sense="+1"/>
   	<surface name="px1" sense="+1"/>
   	<surface name="px2" sense="-1"/>
     </cell>
 
-    <cell name="right vacuum">
-  	<surface name="px2" sense="+1" importance="0.0"/>
+    <cell name="right vacuum" importance="0.0">
+  	<surface name="px2" sense="+1"/>
     </cell>
 </cells>
 

@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 2.6 FATAL_ERROR)
 
 project(MC CXX)
 add_definitions("-std=c++11 -O3")
+#add_definitions("-std=c++11 -g -O0")
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/cmake/Modules)
 include(PackageList)

@@ -1,0 +1,17 @@
+
+==================
+== Simple Slabs ==
+==================
+Number of histories: 100000
+Number of tracks: 130113
+
+
+Estimator report: Leak out right
+================================
+Total tallies,
+  Current:
+  -> Mean     = 0.01469  +/-  0.000380452  (2.58987%)
+  -> Variance = 0.0144743
+  [F.O.M.: 0.0114584]
+
+

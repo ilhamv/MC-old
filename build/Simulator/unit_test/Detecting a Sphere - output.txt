@@ -1,0 +1,23 @@
+
+========================
+== Detecting a Sphere ==
+========================
+Number of histories: 10000000
+Number of tracks: 55752559
+
+
+Estimator report: Detector
+==========================
+Total tallies,
+  Flux:
+  -> Mean     = 0.0010718  +/-  1.48883e-05  (1.3891%)
+  -> Variance = 0.00221662
+  [F.O.M.: 9.29541e-05]
+
+
+  Abs. Rate:
+  -> Mean     = 6.86155e-05  +/-  1.3636e-06  (1.98731%)
+  -> Variance = 1.85942e-05
+  [F.O.M.: 4.54154e-05]
+
+

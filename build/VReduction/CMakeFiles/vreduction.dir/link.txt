@@ -1,0 +1,2 @@
+/usr/bin/ar qc libvreduction.a  CMakeFiles/vreduction.dir/VReduction.cpp.o
+/usr/bin/ranlib libvreduction.a
