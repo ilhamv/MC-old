@@ -232,6 +232,8 @@ class Estimator_t
 		
 		// Report results
 		virtual void report( std::ostringstream& output, const double tTime ) = 0;
+		
+                std::vector<Tally_t>                  total_tally; // Total tallies [Nscore]
 };
 
 
@@ -240,16 +242,14 @@ class Estimator_t
 
 class Generic_Estimator : public Estimator_t
 {
-	protected:
+	public:
 		std::vector<std::shared_ptr<Score_t>> scores;      // Things to be scored
 		int                                   Nscore = 0;  // # of scores (things to be scored)
-		std::vector<Tally_t>                  total_tally; // Total tallies [Nscore]
 		
 		std::vector<double>                   grid;        // Bin grid
 		std::shared_ptr<Bin_t>                bin;         // Estimator bin
 		int                                   Nbin = 0;    // # of bins
 
-	public:
 		// Constructor: pass the estimator name
 		 Generic_Estimator( const std::string n ) : Estimator_t(n) {};
 		~Generic_Estimator() {};

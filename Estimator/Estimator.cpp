@@ -251,11 +251,10 @@ void Generic_Estimator::report( std::ostringstream& output, const double trackTi
 	       	output << "  +/-  " << total_tally[i].meanUncer;
 		output << "  (" << total_tally[i].relUncer * 100.0;
 		output << "%)\n";
-/*		output << "  -> Variance = " << total_tally[i].var;
+		output << "  -> Variance = " << total_tally[i].var;
 	       	output << "\n";
 		output << "  [F.O.M.: " << total_tally[i].FOM;
-	        output << "]\n\n\n";*/
-	        output << "\n\n\n";
+	        output << "]\n\n\n";
 	}
 
 	// Bin tallies

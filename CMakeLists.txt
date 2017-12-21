@@ -1,10 +1,7 @@
-cmake_minimum_required (VERSION 2.6 FATAL_ERROR)
+cmake_minimum_required(VERSION 2.6 FATAL_ERROR)
 
-project (MC CXX)
+project(MC CXX)
 add_definitions("-std=c++11 -O3")
-
-# Will be removed once all libraries are set up
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/cmake/Modules)
 include(PackageList)
@@ -13,7 +10,6 @@ enable_testing()
 
 file(GLOB MC_SRC "*.cpp")
 add_executable(MC.exe ${MC_SRC})
-target_link_libraries(MC.exe particle)
 target_link_libraries(MC.exe ${MC_PCKGS})
 
 # Copy Cross-Section library (text files) and input examples
