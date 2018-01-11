@@ -1,7 +1,7 @@
 <?xml version = '1.0' encoding = 'UTF-8'?>
 
 <simulation>
-    <description name="Shielding" histories="1e8"/>
+    <description name="Shielding w/ Variance Reduction - 3" histories="1e8"/>
 </simulation>
 
 
@@ -53,21 +53,21 @@
     	<surface name="py2" sense="-1"/>
     </cell>
 
-    <cell name="water2" material="H2O" importance="1.0">
+    <cell name="water2" material="H2O" importance="3.0">
     	<surface name="px1" sense="+1"/>
     	<surface name="px2" sense="-1"/>
     	<surface name="py2" sense="+1"/>
     	<surface name="py3" sense="-1"/>
     </cell>
 
-  	<cell name="water3" material="H2O" importance="1.0">
+  	<cell name="water3" material="H2O" importance="9.0">
     	<surface name="px2" sense="+1"/>
     	<surface name="px4" sense="-1"/>
     	<surface name="py2" sense="+1"/>
     	<surface name="py3" sense="-1"/>
     </cell>
   	
-    <cell name="water4" material="H2O" importance="1.0">
+    <cell name="water4" material="H2O" importance="27.0">
     	<surface name="px3" sense="+1"/>
     	<surface name="px4" sense="-1"/>
     	<surface name="py1" sense="+1"/>
@@ -82,7 +82,7 @@
     	<surface name="py2" sense="-1"/>
     </cell>
 	
-    <cell name="detector" material="mat_detector" importance="1.0">
+    <cell name="detector" material="mat_detector" importance="81.0">
     	<surface name="cz1" sense="-1"/>
     </cell>
 	
