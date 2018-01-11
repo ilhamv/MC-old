@@ -312,13 +312,14 @@ class Cell_t : public Geometry_t
     		~Cell_t() {};
 
     		// Getters
-		double      importance(); // importance
+		double importance(); // importance
 		// MacroXsec of the contained material
-		double      SigmaT  ( const double E );
-		double      SigmaS  ( const double E );
-		double      SigmaC  ( const double E );
-		double      SigmaF  ( const double E );
-		double      nuSigmaF( const double E );
+		double SigmaT  ( const double E );
+		double SigmaS  ( const double E );
+		double SigmaC  ( const double E );
+		double SigmaF  ( const double E );
+		double SigmaA  ( const double E );
+		double nuSigmaF( const double E );
 		
 		// Set the material
     		void setMaterial( const std::shared_ptr< Material_t >& M );

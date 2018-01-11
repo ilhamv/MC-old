@@ -11,37 +11,37 @@
 /// Scoring ///
 ///////////////
 
-// Current (crossing)
-double Current_Score::add_score( const Particle_t& P, const double l /*= 0.0*/ )
+// Current (event)
+double Current_Score::score( const Particle_t& P, const double l )
 { return P.weight(); }
 
 // Flux (path length)
-double Flux_Score::add_score( const Particle_t& P, const double track /*= 0.0*/ )
-{ return track * P.weight(); }
+double Flux_Score::score( const Particle_t& P, const double l )
+{ return l * P.weight(); }
 
 // Absorption (path length)
-double Absorption_Score::add_score( const Particle_t& P, const double track /*= 0.0*/ )
-{ return ( P.cell()->SigmaC( P.energy() ) + P.cell()->SigmaF( P.energy() ) ) * track * P.weight(); }
+double Absorption_Score::score( const Particle_t& P, const double l )
+{ return P.cell()->SigmaA( P.energy() ) * l * P.weight(); }
 
 // Scatter (path length)
-double Scatter_Score::add_score( const Particle_t& P, const double track /*= 0.0*/ )
-{ return P.cell()->SigmaS( P.energy() ) * track * P.weight(); }
+double Scatter_Score::score( const Particle_t& P, const double l )
+{ return P.cell()->SigmaS( P.energy() ) * l * P.weight(); }
 
 // Capture (path length)
-double Capture_Score::add_score( const Particle_t& P, const double track /*= 0.0*/ )
-{ return P.cell()->SigmaC( P.energy() ) * track * P.weight(); }
+double Capture_Score::score( const Particle_t& P, const double l )
+{ return P.cell()->SigmaC( P.energy() ) * l * P.weight(); }
 
 // Fission (path length)
-double Fission_Score::add_score( const Particle_t& P, const double track /*= 0.0*/ )
-{ return P.cell()->SigmaF( P.energy() ) * track * P.weight(); }
+double Fission_Score::score( const Particle_t& P, const double l )
+{ return P.cell()->SigmaF( P.energy() ) * l * P.weight(); }
 
 // Production (path length)
-double nuFission_Score::add_score( const Particle_t& P, const double track /*= 0.0*/ )
-{ return P.cell()->nuSigmaF( P.energy() ) * track * P.weight(); }
+double nuFission_Score::score( const Particle_t& P, const double l )
+{ return P.cell()->nuSigmaF( P.energy() ) * l * P.weight(); }
 
 // Total (path length)
-double Total_Score::add_score( const Particle_t& P, const double track /*= 0.0*/ )
-{ return P.cell()->SigmaT( P.energy() ) * track * P.weight(); }
+double Total_Score::score( const Particle_t& P, const double l )
+{ return P.cell()->SigmaT( P.energy() ) * l * P.weight(); }
 
 
 
@@ -61,7 +61,7 @@ void Energy_Bin::score( const Particle_t& P, const std::vector<double>& grid, co
 		// Iterate over scores
 		for ( int i = 0 ; i < Nscore ; i++ )
 		{
-			tally[loc][i].hist += scores[i]->add_score( P, track );
+			tally[loc][i].hist += scores[i]->score( P, track );
 		}
 		// Note: In case of using cross section table, 
 		// might want to pass an index pointing to the XSec table location
@@ -126,7 +126,7 @@ void Time_Bin::score( const Particle_t& P, const std::vector<double>& grid, cons
 		// Iterate over scored bins
 		for ( auto& LnT : loc_track )
 		{
-			tally[LnT.first][i].hist += scores[i]->add_score( P, LnT.second );
+			tally[LnT.first][i].hist += scores[i]->score( P, LnT.second );
 		}	
 		// Note: In case of using cross section table, 
 		// might want to pass an index pointing to the location in XSec table
@@ -195,7 +195,7 @@ void Generic_Estimator::score( const Particle_t& P, const double told, const dou
         // Total tallies
         for ( int i = 0 ; i < Nscore ; i++ )
         {
-                total_tally[i].hist += scores[i]->add_score( P, track );
+                total_tally[i].hist += scores[i]->score( P, track );
         }
 
 	// Bin tallies, if any
@@ -583,32 +583,3 @@ void MGXS_Estimator::report( std::ostringstream& output, const double trackTime 
 		}
 	}
 }
-
-
-
-// Miscellaneous Estimator
-//////////////////////////
-
-// Surface PMF estimator (surface counting)
-void Surface_PMF_Estimator::score( const Particle_t& P, const double told, const double track /*= 0.0*/ )
-{ tally_hist++;}
-
-void Surface_PMF_Estimator::report( std::ostringstream& output, const double tTime ) 
-{
-	normalize();                        // Normalize the recorded PMF
-	stats();                            // Compute mean, variance and PMF statistical uncertainty
-	
-	// Printouts (Uncertainty is only printed out in the output.txt file)
-	output << "\n\n";
-	output << "Estimator report: " << e_name << "\n";
-	for ( int i = 0 ; i < e_name.length()+18 ; i++ ) { output << "="; }
-	output << "\n";
-	output << "PMF of # of particle crossing surface ";
-	output << ":\nx\t" << std::setw(12) << std::left << "P(x)\t" << "uncertainty\n";
-	output << "---\t------------\t------------\n";
-	for ( int i = 0 ; i < pmf.size() ; i++ )
-	{ output << i << "\t" << std::setw(12) << std::left << pmf[i] << "\t" << pmfUncer[i] << std::endl;  }
-	
-	output << "\nMean    : " << mean << std::endl;
-	output << "Variance: "   << var  << std::endl;	
-}		

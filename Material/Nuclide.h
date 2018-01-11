@@ -31,6 +31,7 @@ class Nuclide_t
 		// microXs
 		double sigmaT( const double E );
 		double sigmaS( const double E );
+		double sigmaA( const double E );
 		double sigmaC( const double E );
 		double sigmaF( const double E );
 		double nusigmaF( const double E );

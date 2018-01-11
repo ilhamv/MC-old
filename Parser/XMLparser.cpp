@@ -760,12 +760,7 @@ void XML_input
 			for(std::string s; iss >> s; )
 			{ scores.push_back(s); }
 		
-			// Miscellaneous estimator: Counting surface (results Probability Mass Function)
-			if ( scores[0] == "count" ) { Est = std::make_shared<Surface_PMF_Estimator> ( name ); }
-		
 			// Generic estimator
-			else                        
-			{ 
 				Est = std::make_shared<Generic_Estimator> ( name );
 				for ( auto& s : scores )
 				{
@@ -787,7 +782,6 @@ void XML_input
 						throw;
 	       				}
 				}
-			}
 		}
 
 		else if ( e_type == "mgxs" ) 

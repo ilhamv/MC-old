@@ -34,6 +34,7 @@ class Material_t
 		// macroXsec
 		double      SigmaT( const double E );
 		double      SigmaS( const double E );
+		double      SigmaA( const double E );
 		double      SigmaC( const double E );
 		double      SigmaF( const double E );
 		double    nuSigmaF( const double E );

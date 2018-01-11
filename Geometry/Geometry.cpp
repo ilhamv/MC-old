@@ -337,6 +337,7 @@ void ConeZ_Surface::reflect( Particle_t& P ) { return; }
 double      Cell_t::importance() { return r_importance; } // importance
 // Get macroXsec of the contained material
 double      Cell_t::SigmaT  ( const double E ) { return material->SigmaT( E ); }
+double      Cell_t::SigmaA  ( const double E ) { return material->SigmaA( E ); }
 double      Cell_t::SigmaS  ( const double E ) { return material->SigmaS( E ); }
 double      Cell_t::SigmaC  ( const double E ) { return material->SigmaC( E ); }
 double      Cell_t::SigmaF  ( const double E ) { return material->SigmaF( E ); }

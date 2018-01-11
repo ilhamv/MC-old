@@ -11,7 +11,6 @@ TEST_CASE( "Integral Simulation Tests", "" )
     {
         Simulator_t Sim("test_inputs/slab_analytic");
         Sim.start();
-        Sim.report();
 
         double mean  = Sim.Estimator[0]->total_tally[0].mean;
         double uncer = Sim.Estimator[0]->total_tally[0].meanUncer;
@@ -23,7 +22,6 @@ TEST_CASE( "Integral Simulation Tests", "" )
     {
         Simulator_t Sim("test_inputs/sphere_detection");
         Sim.start();
-        Sim.report();
 
         double mean  = Sim.Estimator[0]->total_tally[1].mean;
         double uncer = Sim.Estimator[0]->total_tally[1].meanUncer;

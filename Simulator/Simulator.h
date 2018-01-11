@@ -22,7 +22,7 @@ class Simulator_t
         unsigned long long                           nhist;                // Number of particle samples
         double                                       Ecut_off  = 0.0;      // Energy cut-off
         double                                       tcut_off  = MAX;      // Time cut-off
-        unsigned long long                           trackTime = 0;        // "Computation time" (particle track) for variance reduction
+        unsigned long long                           tracks    = 0;        // # of particle tracks ("computation time") for variance reduction
         Source_Bank                                  Sbank;                // Source bank
         std::stack  < Particle_t >                   Pbank;                // Particle bank
         std::vector < std::shared_ptr<Surface_t>   > Surface;              // Surfaces

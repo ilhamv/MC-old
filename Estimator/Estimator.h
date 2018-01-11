@@ -34,17 +34,17 @@ class Score_t
 		virtual std::string name() final { return s_name; }
 
 		// Get score to be added at event
-		virtual double add_score( const Particle_t& P, const double l = 0.0 ) = 0;
+		virtual double score( const Particle_t& P, const double l ) = 0;
 };
 
-// Current (crossing)
+// Current (event)
 class Current_Score : public Score_t
 {
 	public:
 		 Current_Score() : Score_t( "Current" ) {};
 		~Current_Score() {};
 
-		double add_score( const Particle_t& P, const double l = 0.0 );
+		double score( const Particle_t& P, const double l );
 };
 
 // Flux (path length)
@@ -54,7 +54,7 @@ class Flux_Score : public Score_t
 		 Flux_Score() : Score_t( "Flux" ) {};
 		~Flux_Score() {};
 
-		double add_score( const Particle_t& P, const double track = 0.0 );
+		double score( const Particle_t& P, const double l );
 };
 
 // Absorption (path length)
@@ -64,7 +64,7 @@ class Absorption_Score : public Score_t
 		 Absorption_Score() : Score_t( "Abs. Rate" ) {};
 		~Absorption_Score() {};
 
-		double add_score( const Particle_t& P, const double track = 0.0 );
+		double score( const Particle_t& P, const double l );
 };
 
 // Scatter (path length)
@@ -74,7 +74,7 @@ class Scatter_Score : public Score_t
 		 Scatter_Score() : Score_t( "Scat. Rate" ) {};
 		~Scatter_Score() {};
 
-		double add_score( const Particle_t& P, const double track = 0.0 );
+		double score( const Particle_t& P, const double l );
 };
 
 // Capture (path length)
@@ -84,7 +84,7 @@ class Capture_Score : public Score_t
 		 Capture_Score() : Score_t( "Capt. Rate" ) {};
 		~Capture_Score() {};
 
-		double add_score( const Particle_t& P, const double track = 0.0 );
+		double score( const Particle_t& P, const double l );
 };
 
 // Fission (path length)
@@ -94,7 +94,7 @@ class Fission_Score : public Score_t
 		 Fission_Score() : Score_t( "Fis. Rate" ) {};
 		~Fission_Score() {};
 
-		double add_score( const Particle_t& P, const double track = 0.0 );
+		double score( const Particle_t& P, const double l );
 };
 
 
@@ -105,7 +105,7 @@ class nuFission_Score : public Score_t
 		 nuFission_Score() : Score_t( "Prod. Rate" ) {};
 		~nuFission_Score() {};
 
-		double add_score( const Particle_t& P, const double track = 0.0 );
+		double score( const Particle_t& P, const double l );
 };
 
 
@@ -116,7 +116,7 @@ class Total_Score : public Score_t
 		 Total_Score() : Score_t( "Tot. Rate" ) {};
 		~Total_Score() {};
 
-		double add_score( const Particle_t& P, const double track = 0.0 );
+		double score( const Particle_t& P, const double l );
 };
 
 
@@ -313,95 +313,6 @@ class MGXS_Estimator : public Generic_Estimator
 		void report( std::ostringstream& output, const double trackTime );
 };
 
-
-
-/// Miscellaneous Estimator
-///////////////////////////
-
-// Unsigned integer PMF estimator base class
-class UInteger_PMF_Estimator : public Estimator_t 
-{
-	protected:
-		int tally_hist = 0;           // History sum
-		double mean, var;             // Esimated mean and variance of the population
-		std::vector<double> pmf;      // Recorded PMF, it expands as new valid unsigned integer arises
-		                              // the vector index means the unsigned integer random variable
-		std::vector<double> pmfUncer; // Recorded PMF uncertainty
-
-		// Compute mean, variance and PMF statistical uncertainty
-		virtual void stats() final 
-		{
-			// Create PMF uncertainty vector with appropriate size
-			pmfUncer.resize( pmf.size() );
-			
-			double s1=0,s2=0; // first and second moment accumulator
-			for ( int i = 0; i < pmf.size(); i++ )
-			{
-				s1 += i * pmf[i];
-				s2 += i*i *pmf[i];
-				pmfUncer[i] = sqrt( pmf[i] / nhist );
-			}
-			
-			mean      = s1;
-			var       = s2 - s1*s1; 
-		};
-	
-	public:
-		// Constructor: pass the name
-		UInteger_PMF_Estimator( const std::string n ) : Estimator_t(n) {};
-		~UInteger_PMF_Estimator() {};
-
-		// Closeout History
-		// Update the PMF (not normalized yet)
-		virtual void endHistory() final 
-		{ 
-			nhist++;
-			
-			// Check if the sampled unsigned integer (tally_hist) is inside the PMF already
-			if ( pmf.size() > tally_hist )
-			{
-				// It is: increment its probability bin
-				pmf[tally_hist]++;	
-			}
-			// It isn't yet: resize the PMF vector up to the sampled unsigned integer index
-			// vector size becomes tally_hist+1, then increment the sampled unsigned integer bin
-			else { pmf.resize( tally_hist + 1 ); pmf.back()++; }
-			tally_hist     = 0; 
-		};
-
-		// Score at events
-		virtual void score( const Particle_t& P, const double told, const double track = 0.0 ) = 0;
-	
-		// Report results
-		virtual void report( std::ostringstream& output, const double tTime ) = 0; 
-
-		// Normalize the recorded PMF
-		virtual void normalize() final
-		{ for ( int i = 0; i < pmf.size(); i++ ) { pmf[i] = pmf[i]/nhist; } }
-		
-		// Add thing to be scored [unsuported]
-		void addScore( const std::shared_ptr<Score_t>& S ) { return; }
-
-		// Set bin grid and corresponding tallies [unsuported]
-		void setBin( const std::string type, std::vector<double> bin ) { return; };
-};
-
-
-// Crossing surface PMF estimator (a.k.a. surface counting)
-class Surface_PMF_Estimator : public UInteger_PMF_Estimator 
-{
-	public:
-		// Initialize variables at construction 
-		 Surface_PMF_Estimator( const std::string n ) : UInteger_PMF_Estimator(n) {};
-		~Surface_PMF_Estimator() {};
-
-		// Score at events
-		void score( const Particle_t& P, const double told, const double track = 0.0 );
-
-		// Report results
-		// output.txt file providing the PMF is created (or overwritten)
-		void report( std::ostringstream& output, const double tTime );
-};
 
 #endif
 

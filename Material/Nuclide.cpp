@@ -40,6 +40,19 @@ double Nuclide_t::sigmaF( const double E )
 	// Nuclide doesn't have the reaction
 	return 0.0;
 }
+double Nuclide_t::sigmaA( const double E ) 
+{ 
+    checkE( E );
+    double sum = 0.0;
+
+    for ( auto& r : reactions )
+    {
+	if ( r->type("fission") ) { sum += r->xs( E, idx_help ); }
+	if ( r->type("capture") ) { sum += r->xs( E, idx_help ); }
+    }
+    // Nuclide doesn't have the reaction
+    return sum;
+}
 double Nuclide_t::sigmaT( const double E )
 { 
 	checkE( E );
@@ -98,24 +111,29 @@ void Nuclide_t::setTable( const std::shared_ptr< std::vector<double> >& Evec )
 
 
 // Add reaction
-void Nuclide_t::addReaction( const std::shared_ptr< Reaction_t >& C ) 
+void Nuclide_t::addReaction( const std::shared_ptr< Reaction_t >& R ) 
 { 
-	if ( C->type("scatter") ) { scatter = C; } // Attach pointer on scattering reaction
-	reactions.push_back( C ); 
+	if ( R->type("scatter") ) { scatter = R; } // Attach pointer on scattering reaction
+	reactions.push_back( R ); 
 }
 
 
 // Randomly sample a reaction type from the nuclide
 std::shared_ptr< Reaction_t > Nuclide_t::reaction_sample( const double E ) 
 {
-	double u = sigmaT( E ) * Urand();
-	double s = 0.0;
-	for ( auto& r : reactions ) 
-	{
-		s += r->xs( E );
-		if ( s > u ) { return r; }
-	}
-    assert( false ); // should never reach here
+    //Note: Implicit Capture/Absorption is implemented
+
+    const double u = (sigmaT( E ) - sigmaC( E ) ) * Urand();
+
+    double s = 0.0;
+    for ( auto& r : reactions ) 
+    {
+	if ( !r->type("capture") ) 
+        {
+            s += r->xs( E );
+	    if ( s > u ) { return r; }
+        }
+    }
     return nullptr;
 }
 

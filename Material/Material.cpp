@@ -30,6 +30,15 @@ double Material_t::SigmaC( const double E )
 	}	
 	return sum;
 }
+double Material_t::SigmaA( const double E ) 
+{ 
+	double sum = 0.0;
+	for ( auto& n : nuclides )
+	{
+		sum += n.first->sigmaA( E ) * n.second;
+	}	
+	return sum;
+}
 double Material_t::SigmaF( const double E ) 
 { 
 	double sum = 0.0;
@@ -90,14 +99,17 @@ std::shared_ptr< Nuclide_t > Material_t::nuclide_sample( const double E )
 // Then, process the reaction on the Particle 
 void Material_t::collision_sample( Particle_t& P, std::stack<Particle_t>& Pbank ) 
 {
-	// First sample nuclide
-	std::shared_ptr< Nuclide_t >  N = nuclide_sample( P.energy() );
+    // Implicit Capture or Absorption (if kCode)
+    P.setWeight( P.weight() * ( SigmaT(P.energy()) - SigmaC(P.energy()) ) / SigmaT(P.energy()) );
 
-	// Now get the reaction
-	std::shared_ptr< Reaction_t > C = N->reaction_sample( P.energy() );
+    // First sample nuclide
+    std::shared_ptr< Nuclide_t >  N = nuclide_sample( P.energy() );
+
+    // Now get the reaction
+    std::shared_ptr< Reaction_t > R = N->reaction_sample( P.energy() );
 	
-	// Finally process the reaction on the Particle
-	C->sample( P, Pbank );
+    // Finally process the reaction on the Particle
+    if( R ) { R->sample( P, Pbank ); }
 }
 		
 
