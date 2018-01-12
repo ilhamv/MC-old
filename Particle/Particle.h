@@ -57,9 +57,6 @@ class Particle_t
         // Move particle a distance dmove along its current trajectory
         void move( const double dmove );                                           
 
-        // Scatter with scattering angle mu0, with nucleus having relative atomic mass of A
-        void scatter( const double mu0, const double A );                                          
-		
         // Search and set particle cell (Where am I now?)
         void searchCell( const std::vector<std::shared_ptr<Cell_t>>& Cell ); 
 };
