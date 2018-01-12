@@ -97,16 +97,18 @@ std::shared_ptr< Nuclide_t > Material_t::nuclide_sample( const double E )
 
 // Sample entire collision (nuclide, then nuclide reaction)
 // Then, process the reaction on the Particle 
-void Material_t::collision_sample( Particle_t& P, std::stack<Particle_t>& Pbank ) 
+void Material_t::collision_sample( Particle_t& P, std::stack<Particle_t>& Pbank, const bool ksearch ) 
 {
-    // Implicit Capture or Absorption (if kCode)
-    P.setWeight( P.weight() * ( SigmaT(P.energy()) - SigmaC(P.energy()) ) / SigmaT(P.energy()) );
+    // Implicit Capture or Absorption (if ksearch)
+    double        implicit  = SigmaC(P.energy());
+    if (ksearch){ implicit += SigmaF(P.energy()); }
+    P.setWeight( P.weight() * ( SigmaT(P.energy()) - implicit ) / SigmaT(P.energy()) );
 
     // First sample nuclide
     std::shared_ptr< Nuclide_t >  N = nuclide_sample( P.energy() );
 
     // Now get the reaction
-    std::shared_ptr< Reaction_t > R = N->reaction_sample( P.energy() );
+    std::shared_ptr< Reaction_t > R = N->reaction_sample( P.energy(), ksearch );
 	
     // Finally process the reaction on the Particle
     if( R ) { R->sample( P, Pbank ); }

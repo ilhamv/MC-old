@@ -1,7 +1,7 @@
 <?xml version = '1.0' encoding = 'UTF-8'?>
 
 <simulation>
-    <description name="Detecting a Sphere" histories="1e7"/>
+    <description name="Detecting a Sphere" samples="1e7"/>
 </simulation>
 
 

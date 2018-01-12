@@ -18,22 +18,25 @@
 class Simulator_t
 {
     public:
-        std::string                                  simName;              // Simulation name
-        unsigned long long                           nhist;                // Number of particle samples
-        double                                       Ecut_off  = 0.0;      // Energy cut-off
-        double                                       tcut_off  = MAX;      // Time cut-off
-        unsigned long long                           tracks    = 0;        // # of particle tracks ("computation time") for variance reduction
-        Source_Bank                                  Sbank;                // Source bank
-        std::stack  < Particle_t >                   Pbank;                // Particle bank
-        std::vector < std::shared_ptr<Surface_t>   > Surface;              // Surfaces
-        std::vector < std::shared_ptr<Cell_t>      > Cell;                 // Cells
-        std::vector < std::shared_ptr<Nuclide_t>   > Nuclide;              // Nuclides
-        std::vector < std::shared_ptr<Material_t>  > Material;             // Materials
-        std::vector < std::shared_ptr<Estimator_t> > Estimator;            // Estimators  	
+        std::string                                  simName;          // Simulation name
+        unsigned long long                           nSample;          // Number of particle samples per cycle
+        bool                                         ksearch  = false; // ksearch mode flag
+        unsigned long long                           nCycle   = 1;     // Number of iteration/cycle
+        unsigned long long                           nPassive = 0;     //
+        double                                       Ecut_off = 0.0;   // Energy cut-off
+        double                                       tcut_off = MAX;   // Time cut-off
+        unsigned long long                           tracks   = 0;     // # of particle tracks ("computation time") for variance reduction
+        Source_Bank                                  Fbank;            // Fission bank
+        Source_Bank                                  Sbank;            // Source bank
+        std::stack  < Particle_t >                   Pbank;            // Particle bank
+        std::vector < std::shared_ptr<Surface_t>   > Surface;          // Surfaces
+        std::vector < std::shared_ptr<Cell_t>      > Cell;             // Cells
+        std::vector < std::shared_ptr<Nuclide_t>   > Nuclide;          // Nuclides
+        std::vector < std::shared_ptr<Material_t>  > Material;         // Materials
+        std::vector < std::shared_ptr<Estimator_t> > Estimator;        // Estimators  	
         // User-defined distributions
-        std::vector < std::shared_ptr<Distribution_t<double>> > double_distributions;
-        std::vector < std::shared_ptr<Distribution_t<int>>    > int_distributions;
-        std::vector < std::shared_ptr<Distribution_t<Point_t>>> point_distributions;
+        std::vector < std::shared_ptr<Distribution_t<double>> > Distribution_Double;
+        std::vector < std::shared_ptr<Distribution_t<Point_t>>> Distribution_Point;
 
         // Constructor: Set up the simulator with XML parser
         Simulator_t( const std::string input_dir );

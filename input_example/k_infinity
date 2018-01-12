@@ -1,0 +1,56 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+
+<simulation>
+    <description name="Analytical k-infinity" samples="1e7"/>
+    <ksearch active_cycles="200" passive_cycles="20"/>
+</simulation>
+
+
+<distributions>
+    <delta name="dir" datatype="point"  x="1.0" y="0.0" z="0.0"/>
+    <delta name="mu"  datatype="double" val="-1.0"/>
+    <delta name="eg1" datatype="double" val="2999999"/>
+</distributions>
+
+
+<nuclides>
+    <nuclide name="nuc1" A="238">
+    	<capture xs="1.0"/>
+    	<scatter xs_file="input_example/k_infinity_dataS" distribution="mu" model="zero"/>
+    	<fission xs_file="input_example/k_infinity_dataF" nubar="2.5" chi="eg1"/>
+    </nuclide>
+</nuclides>
+
+
+<materials>
+    <material name="mat1">
+    	<nuclide name="nuc1" density="1.0"/>
+    </material>
+</materials>
+
+
+<surfaces>
+    <plane_x name="px1" x="-10.0" bc="reflective"/>
+    <plane_x name="px2" x=" 10.0" bc="reflective"/>
+</surfaces>
+
+
+<cells>
+    <cell name="slab1" material="mat1">
+    	<surface name="px1" sense="+1"/>
+    	<surface name="px2" sense="-1"/>
+    </cell>
+	
+    <cell name="left outside" importance="0.0">
+    	<surface name="px1" sense="-1"/>
+    </cell>
+  	
+    <cell name="right outside" importance="0.0">
+    	<surface name="px2" sense="+1"/>
+    </cell>
+</cells>
+
+
+<sources>
+    <point x="0.0" y="0.0" z="0.0" direction="dir" energy="eg1"/>
+</sources>

@@ -52,7 +52,7 @@ class Material_t
 		// Handle collision event
 		// Sample entire collision (nuclide, then nuclide reaction)
 		// Then, process the reaction on the Particle
-		void collision_sample( Particle_t& P, std::stack< Particle_t >& Pbank );
+		void collision_sample( Particle_t& P, std::stack< Particle_t >& Pbank, const bool ksearch );
 		
 		// Simulate scattering for scattering matrix MGXS
 		void simulate_scatter( Particle_t& P );

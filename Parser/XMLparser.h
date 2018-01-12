@@ -39,20 +39,22 @@ void setNuclide( const std::string name, const std::string label, std::shared_pt
 // XML input pasrese
 void XML_input
 ( 
-        std::string                                              file_name,
-	std::string&                                             simName,
-	unsigned long long&                                      nhist,          
-	double&                                                  Ecut_off,
-	double&                                                  tcut_off,
-	Source_Bank&                                             Sbank,
-	std::vector < std::shared_ptr<Surface_t>   >&            Surface,     
-	std::vector < std::shared_ptr<Cell_t>    >&            Cell,    
-	std::vector < std::shared_ptr<Nuclide_t>   >&            Nuclide,   
-	std::vector < std::shared_ptr<Material_t>  >&            Material, 
-	std::vector < std::shared_ptr<Estimator_t> >&            Estimator,
-	std::vector < std::shared_ptr<Distribution_t<double>> >& double_distributions,
-  	std::vector < std::shared_ptr<Distribution_t<int>>    >& int_distributions,
-  	std::vector < std::shared_ptr<Distribution_t<Point_t>>>& point_distributions
+    const std::string                                        file_name,
+    std::string&                                             simName,
+    unsigned long long&                                      nSample,          
+    bool&                                                    ksearch,
+    unsigned long long&                                      nCycle,          
+    unsigned long long&                                      nPassive,          
+    double&                                                  Ecut_off,
+    double&                                                  tcut_off,
+    Source_Bank&                                             Sbank,
+    std::vector < std::shared_ptr<Surface_t>   >&            Surface,     
+    std::vector < std::shared_ptr<Cell_t>    >&              Cell,    
+    std::vector < std::shared_ptr<Nuclide_t>   >&            Nuclide,   
+    std::vector < std::shared_ptr<Material_t>  >&            Material, 
+    std::vector < std::shared_ptr<Estimator_t> >&            Estimator,
+    std::vector < std::shared_ptr<Distribution_t<double>> >& Distribution_Double,
+    std::vector < std::shared_ptr<Distribution_t<Point_t>>>& Distribution_Point
 );
 
 

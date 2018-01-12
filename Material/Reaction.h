@@ -63,7 +63,7 @@ class Capture_Reaction : public Reaction_t
 };
 
 
-// Scatter reaction
+// Scatter reaction, room temperature
 class Scatter_Reaction : public Reaction_t 
 {
     private:
@@ -80,6 +80,23 @@ class Scatter_Reaction : public Reaction_t
 };
 
 
+// Scatter reaction, zero K
+class Scatter_Zero_Reaction : public Reaction_t 
+{
+    private:
+	std::shared_ptr< Distribution_t<double> > scatter_dist; // Scattering angle distribution
+	const double                              A;            // Nuclide mass
+    public:
+	// Constructor: Pass the microXs
+	 Scatter_Zero_Reaction( std::shared_ptr<XSec_t> x, const std::shared_ptr< Distribution_t<double> >& D, const double a ) :
+		Reaction_t(x,1), scatter_dist(D), A(a) {}; // Pass the microXs and scattering angle distribution
+	~Scatter_Zero_Reaction() {};
+
+	// Scatter the working particle
+	void  sample( Particle_t& P, std::stack< Particle_t >& Pbank );
+};
+
+
 // Fission reaction
 class Fission_Reaction : public Reaction_t 
 {
@@ -89,9 +106,8 @@ class Fission_Reaction : public Reaction_t
 
     public:
 	// Constructor: Pass the microXs and distributions
-	 Fission_Reaction( std::shared_ptr<XSec_t> x, std::shared_ptr<XSec_t> n, const std::shared_ptr< Distribution_t<int> >& D
-                  , const std::shared_ptr< Distribution_t<double> >& W  ) :
-	 	Reaction_t(x,2,n), nu_dist(D) 
+	 Fission_Reaction( std::shared_ptr<XSec_t> x, std::shared_ptr<XSec_t> n, const std::shared_ptr< Distribution_t<double> >& W  ) :
+	 	Reaction_t(x,2,n)
 	{
 		Chi_dist = W;
 	}

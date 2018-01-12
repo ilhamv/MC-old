@@ -14,7 +14,7 @@
 void Surface_t::cross ( Particle_t& P ) { P.move( EPSILON ); }
 
 // Hit implementation
-void Surface_t::hit( Particle_t& P, const std::vector<std::shared_ptr<Cell_t>>& Cell )
+void Surface_t::hit( Particle_t& P, const std::vector<std::shared_ptr<Cell_t>>& Cell, const bool tally )
 {
 	// Note: new particle cell search is only performed in transmission
 	// Transmission
@@ -35,8 +35,11 @@ void Surface_t::hit( Particle_t& P, const std::vector<std::shared_ptr<Cell_t>>& 
 	}
 	
 	// Score estimators 
-	const double told = P.time(); // crossing surface happends instantly
-	for ( auto& e : estimators ) { e->score( P, told ); }
+        if (tally)
+        {
+	    const double told = P.time(); // crossing surface happends instantly
+	    for ( auto& e : estimators ) { e->score( P, told ); }
+        }
 }
 
 
@@ -370,11 +373,14 @@ bool Cell_t::testPoint( const Point_t& p )
 
 
 // Move particle and score any estimators
-void Cell_t::moveParticle( Particle_t& P, const double dmove )
+void Cell_t::moveParticle( Particle_t& P, const double dmove, const bool tally )
 {
 	const double told = P.time();
 	P.move( dmove );
-	for ( const auto& e : estimators ) { e->score( P, told, dmove ); }
+
+        // Score track length estimator
+        if (tally)
+        { for ( const auto& e : estimators ) { e->score( P, told, dmove ); } }
 }
 
 
@@ -409,10 +415,10 @@ double Cell_t::collision_distance( const double E )
 
 // Collision
 // Let the Material take care of the collision sample and reaction process
-void Cell_t::collision( Particle_t& P, std::stack< Particle_t >& Pbank )
+void Cell_t::collision( Particle_t& P, std::stack< Particle_t >& Pbank, const bool ksearch )
 { 
 	if ( material ) 
-	{ material->collision_sample( P, Pbank ); }
+	{ material->collision_sample( P, Pbank, ksearch ); }
 	// Vacuum --> Kill particle at collision
 	else { return P.kill(); }
 }	

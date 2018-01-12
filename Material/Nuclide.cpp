@@ -119,22 +119,24 @@ void Nuclide_t::addReaction( const std::shared_ptr< Reaction_t >& R )
 
 
 // Randomly sample a reaction type from the nuclide
-std::shared_ptr< Reaction_t > Nuclide_t::reaction_sample( const double E ) 
+std::shared_ptr< Reaction_t > Nuclide_t::reaction_sample( const double E, const bool ksearch ) 
 {
     //Note: Implicit Capture/Absorption is implemented
+    double         implicit  = sigmaC(E);
+    if (ksearch) { implicit += sigmaF(E); }
 
-    const double u = (sigmaT( E ) - sigmaC( E ) ) * Urand();
+    const double u = (sigmaT( E ) - implicit ) * Urand();
 
     double s = 0.0;
     for ( auto& r : reactions ) 
     {
-	if ( !r->type() == 0 ) 
+	if ( !r->type() == 0 && !( ksearch && r->type() == 2 ) ) 
         {
             s += r->xs( E );
 	    if ( s > u ) { return r; }
         }
     }
-    return nullptr; // Purely capture, skip collision sample
+    return nullptr; // Skip collision sample
 }
 
 

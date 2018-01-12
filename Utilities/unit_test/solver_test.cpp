@@ -98,6 +98,14 @@ TEST_CASE( "Binary Search", "" )
         REQUIRE( Binary_Search( 1.0, vec ) == -1 );
         REQUIRE( Binary_Search( 12.0, vec ) == 8 );
     }
+    
+    std::vector<double> mg = { 0, 5, 5, 10 };
+    
+    SECTION( "multi group or histogram grid" )
+    {
+        REQUIRE( Binary_Search( 1, mg ) == 0 );
+        REQUIRE( Binary_Search( 8, mg ) == 2 );
+    }
 }
 
 TEST_CASE( "Direction Scattering","" )

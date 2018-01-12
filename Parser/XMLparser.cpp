@@ -104,7 +104,7 @@ void setNuclide( const std::string name, const std::string label, std::shared_pt
 	// Fissionable check
 	if ( nu[ nu.size() / 2 ] > 0.0 )
 	{
-		Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS_F, XS_nu, std::make_shared< Average_Multiplicity_Distribution > (), std::make_shared< Watt_Distribution > ( a, b ) ) );
+		Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS_F, XS_nu, std::make_shared< Watt_Distribution > ( a, b ) ) );
 	}
 }
 
@@ -112,49 +112,60 @@ void setNuclide( const std::string name, const std::string label, std::shared_pt
 // XML input pasrese
 void XML_input
 (
-        std::string                                              file_name,
-	std::string&                                             simName,
-	unsigned long long&                                      nhist,          
-	double&                                                  Ecut_off,
-	double&                                                  tcut_off,
-	Source_Bank&                                             Sbank,
-	std::vector < std::shared_ptr<Surface_t>   >&            Surface,     
-	std::vector < std::shared_ptr<Cell_t>      >&            Cell,    
-	std::vector < std::shared_ptr<Nuclide_t>   >&            Nuclide,   
-	std::vector < std::shared_ptr<Material_t>  >&            Material, 
-	std::vector < std::shared_ptr<Estimator_t> >&            Estimator,
-	std::vector < std::shared_ptr<Distribution_t<double>> >& double_distributions,
-  	std::vector < std::shared_ptr<Distribution_t<int>>    >& int_distributions,
-  	std::vector < std::shared_ptr<Distribution_t<Point_t>>>& point_distributions
+    const std::string                                        file_name,
+    std::string&                                             simName,
+    unsigned long long&                                      nSample,          
+    bool&                                                    ksearch,
+    unsigned long long&                                      nCycle,          
+    unsigned long long&                                      nPassive,          
+    double&                                                  Ecut_off,
+    double&                                                  tcut_off,
+    Source_Bank&                                             Sbank,
+    std::vector < std::shared_ptr<Surface_t>   >&            Surface,     
+    std::vector < std::shared_ptr<Cell_t>      >&            Cell,    
+    std::vector < std::shared_ptr<Nuclide_t>   >&            Nuclide,   
+    std::vector < std::shared_ptr<Material_t>  >&            Material, 
+    std::vector < std::shared_ptr<Estimator_t> >&            Estimator,
+    std::vector < std::shared_ptr<Distribution_t<double>> >& Distribution_Double,
+    std::vector < std::shared_ptr<Distribution_t<Point_t>>>& Distribution_Point
 )
 {
-	// XML input file
-	pugi::xml_document input_file;
-    	pugi::xml_parse_result load_result = input_file.load_file( file_name.c_str() );
+    // XML input file
+    pugi::xml_document input_file;
+    pugi::xml_parse_result load_result = input_file.load_file( file_name.c_str() );
 
-	// Check to see if result failed and throw an exception if it did
-	if ( ! load_result ) 
-	{
-		std::cout << load_result.description() << std::endl;
-		throw;
-	}
+    // Able to load file?
+    if ( ! load_result ) 
+    {
+        std::cout<< "Unable to load input file " << file_name << ":\n";
+	std::cout<< load_result.description() << std::endl;
+        std::exit(EXIT_FAILURE);
+    }
 	
-	// Set simulation description: name and # of histories
-  	pugi::xml_node input_simulation = input_file.child("simulation");
+    // Set simulation descriptions
+    pugi::xml_node input_simulation = input_file.child("simulation");
     	
-	for ( const auto& s : input_simulation )
+    for ( const auto& s : input_simulation )
+    {
+	if( (std::string) s.name() == "description" )
 	{
-		if( (std::string) s.name() == "description" )
-		{
-			simName = s.attribute("name").value();          // simulation name
-			nhist   = s.attribute("histories").as_double(); // # of histories
-		}
-		else if ( (std::string) s.name() == "cut-off" )
-		{
-			if ( s.attribute("energy") ) { Ecut_off = s.attribute("energy").as_double(); }
-			if ( s.attribute("time") )   { tcut_off = s.attribute("time").as_double(); }
-		}
+	    simName = s.attribute("name").value();         
+	    nSample   = s.attribute("samples").as_double();
 	}
+	else if ( (std::string) s.name() == "cut-off" )
+	{
+	    if ( s.attribute("energy") ) { Ecut_off = s.attribute("energy").as_double(); }
+	    if ( s.attribute("time") )   { tcut_off = s.attribute("time").as_double(); }
+	}
+	else if ( (std::string) s.name() == "ksearch" )
+	{
+            unsigned long long active;
+            ksearch  = true;
+	    active   = s.attribute("active_cycles").as_double();
+	    nPassive = s.attribute("passive_cycles").as_double();
+            nCycle   = active + nPassive;
+	}
+    }
         
 	// Set user distributuions
   	pugi::xml_node input_distributions = input_file.child("distributions");
@@ -179,7 +190,7 @@ void XML_input
 			if ( data == "double" ) 
 			{
         			// Skip rest of loop if distribution already done
-        			if ( findByName( double_distributions, name ) ) { continue; }
+        			if ( findByName( Distribution_Double, name ) ) { continue; }
 	        		std::shared_ptr<Distribution_t<double>> Dist;
         			
 				// Delta-double
@@ -197,29 +208,6 @@ void XML_input
 	          			Dist = std::make_shared< Uniform_Distribution > ( a, b, name );
         			}
         			
-				// Linear-double
-				else if ( type == "linear" ) 
-				{
-          				const double a  = d.attribute("a").as_double();
-	          			const double b  = d.attribute("b").as_double();
-        	  			const double fa = d.attribute("fa").as_double();
-          				const double fb = d.attribute("fb").as_double();
-          				Dist = std::make_shared< Linear_Distribution > ( a, b, fa, fb, name );
-        			}
-	        		
-		                // Cubic-double
-        		        else if ( type == "cubic" )
-                		{
-		                    	const double a    = d.attribute("a").as_double();
-        		           	const double b    = d.attribute("b").as_double();
-                		    	const double c3   = d.attribute("c3").as_double();
-                    			const double c2   = d.attribute("c2").as_double();
-	                    		const double c1   = d.attribute("c1").as_double();
-	        	            	const double c0   = d.attribute("c0").as_double();
-        	        	    	const double fmax = d.attribute("fmax").as_double();
-                	    		Dist = std::make_shared< Cubic_Distribution > ( a, b, c3, c2, c1, c0, fmax, name );
-		                }
-                
         		        // Watt spectrum-double
                 		else if (type == "watt" )
 		                {
@@ -245,14 +233,14 @@ void XML_input
 	        		}
 				
 				// Push new double-distribution
-		        	double_distributions.push_back( Dist );
+		        	Distribution_Double.push_back( Dist );
 		      	}
 
 			// 3D point
 			else if ( data == "point" ) 
 			{
         			// Skip rest of loop if distribution already done
-        			if ( findByName( point_distributions, name ) ) { continue; }
+        			if ( findByName( Distribution_Point, name ) ) { continue; }
         			std::shared_ptr< Distribution_t< Point_t > > Dist;
 		        	
 				// Delta-point
@@ -270,27 +258,12 @@ void XML_input
           				Dist = std::make_shared< IsotropicDirection_Distribution > ( name );
         			}
         			
-				// Anisotropic-point
-				else if ( type == "anisotropic" ) 
-				{
-          				const double u = d.attribute("u").as_double(); 
-          				const double v = d.attribute("v").as_double(); 
-          				const double w = d.attribute("w").as_double();        
-          				std::shared_ptr< Distribution_t<double> > angDist = 
-            				findByName( double_distributions, d.attribute("distribution").value() );
-      
-          				// in the angular distribution does not yet, skip to the end of the loop
-          				if ( ! angDist ) { continue; }
-
-          				Dist = std::make_shared< AnisotropicDirection_Distribution > ( Point_t( u, v, w ), angDist, name );
-        			}
-
 				// XYZ-point
         			else if ( type == "independentXYZ" ) 
 				{
-		          		std::shared_ptr< Distribution_t<double> > distX = findByName( double_distributions, d.attribute("x").value() ); 
-        		  		std::shared_ptr< Distribution_t<double> > distY = findByName( double_distributions, d.attribute("y").value() ); 
-          				std::shared_ptr< Distribution_t<double> > distZ = findByName( double_distributions, d.attribute("z").value() ); 
+		          		std::shared_ptr< Distribution_t<double> > distX = findByName( Distribution_Double, d.attribute("x").value() ); 
+        		  		std::shared_ptr< Distribution_t<double> > distY = findByName( Distribution_Double, d.attribute("y").value() ); 
+          				std::shared_ptr< Distribution_t<double> > distZ = findByName( Distribution_Double, d.attribute("z").value() ); 
 
           				// if any of these distributions have not yet been resolved, skip to the end of the loop
 	          			if ( !distX || !distY || !distZ ) { continue; }
@@ -306,7 +279,7 @@ void XML_input
 		        	}
 				
 				// Push new point-distribution
-        			point_distributions.push_back( Dist );
+        			Distribution_Point.push_back( Dist );
       			}
       			
 			// Unknown datatype
@@ -374,15 +347,6 @@ void XML_input
       		    const double xs = r.attribute("xs").as_double();
 		    XS = std::make_shared<Constant_XSec> ( xs );
     		}
-		// 1/v XSec
-		else if ( r.attribute("xs_v") )
-		{
-		    double a, b;
-		    std::vector<std::string> scores;
-		    std::istringstream iss( r.attribute("xs_v").value() );
-		    iss >> a >> b;
-		    XS = std::make_shared<OverV_XSec> ( a, b );
-		}
 		// Table look-up XSec
 		else if ( r.attribute("xs_file") ) 
 		{
@@ -404,6 +368,7 @@ void XML_input
                 	}
                 	    xs_file.close();
                 	    XS = std::make_shared<Table_XSec> ( E_vec, XS_vec );
+	                Nuc->setTable( E_vec );
                     }
                     else
 		    { 
@@ -435,87 +400,28 @@ void XML_input
 		    }
 		
 		    const std::string dist_name = r.attribute("distribution").value();
-		    // Isotropic
-		    if ( dist_name == "isotropic" )
-		    {
-			Nuc->addReaction( std::make_shared< Scatter_Reaction > ( XS, std::make_shared< IsotropicScatter_Distribution > (), Amass ) );
-        	    }		
-		    // Henyey-Greenstein
-		    else if ( dist_name == "henyey-greenstein" ) 
-		    {
-			const double g = r.attribute("g").as_double();
-			Nuc->addReaction( std::make_shared< Scatter_Reaction > ( XS, std::make_shared< HGScatter_Distribution > ( g ), Amass ) );
-        	    }
-		    // Linearly anisotropic
-		    else if ( dist_name == "linear" )
-		    {
-			const double mubar = r.attribute("mubar").as_double();
-			Nuc->addReaction( std::make_shared< Scatter_Reaction > ( XS, std::make_shared< LinearScatter_Distribution > ( mubar ), Amass ) );
-        	    }
-		    // Unknown scattering distribution
-		    else 
-		    {
-          		std::cout << "[ERROR-INPUT] Unsupported scattering distribution " << dist_name << " in nuclide " << name << std::endl;
-                        std::exit(EXIT_FAILURE);
-	            }
+  		    std::shared_ptr< Distribution_t<double> > f_mu = findByName( Distribution_Double, dist_name );
+
+                    const std::string mod = r.attribute("model").value();
+                    if ( mod == "zero" )
+                    {
+		        Nuc->addReaction( std::make_shared< Scatter_Zero_Reaction > ( XS, f_mu, Amass ) );
+                    }
+                    else
+                    {
+		        Nuc->addReaction( std::make_shared< Scatter_Reaction > ( XS, f_mu, Amass ) );
+                    }
       		}
 		
 		// Fission
 		else if ( rxn_type == "fission" )
 		{
-		    // Set up Chi spectrum
-		    std::shared_ptr< Distribution_t<double> > watt;
-
-		    // 	Build a function("nuclide name") returning a pair of vectors, a and b
-		    std::vector<double> a;
-		    std::vector<double> b;
-		    a.push_back( 0.988 );
-		    a.push_back( 0.988 );
-		    a.push_back( 1.028 );
-		    b.push_back( 2.249 );
-		    b.push_back( 2.249 );
-		    b.push_back( 2.084 );
-		    watt = std::make_shared< Watt_Distribution > ( a, b, name );
-
-		    const std::string mult_dist_name   = r.attribute("multiplicity").value();
-			
-		    // Average
-		    if ( mult_dist_name == "average" )
-		    {
-			if ( !r.attribute("nubar") ) 
-			{ 
-			    std::cout << "parameter nubar is required for average fission multiplicity" << std::endl;
-			    throw;
-			}
-			auto nubar = std::make_shared<Constant_XSec> ( r.attribute("nubar").as_double() );
+		    auto nubar = std::make_shared<Constant_XSec> ( r.attribute("nubar").as_double() );
+		    
+                    const std::string dist_name = r.attribute("chi").value();
+  		    std::shared_ptr< Distribution_t<double> > watt = findByName( Distribution_Double, dist_name );
                 
-			Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS, nubar, std::make_shared< Average_Multiplicity_Distribution > (), watt ) );
-		    }
-
-		    // Terrel
-		    else if ( mult_dist_name == "terrel" )
-		    {
-			if ( !r.attribute("nubar") || !r.attribute("gamma") || !r.attribute("b") || !r.attribute("nmax") ) 
-			{ 
-			    std::cout << "parameter nubar, gamma, b, and nmax are required for terrel fission multiplicity" << std::endl;
-			    throw;
-			}
-			const double nubar = r.attribute("nubar").as_double();
-			const double gamma = r.attribute("gamma").as_double();
-			const double b     = r.attribute("b").as_double();
-			const int    nmax  = r.attribute("nmax").as_int();
-			const std::vector< std::pair< int, double > > v;     // a dummy, as it is required for discrete distribution base class
-			auto         nu = std::make_shared<Constant_XSec>(0.0);
-			Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS, nu, std::make_shared< Terrel_Multiplicity_Distribution > ( nubar, gamma, b, nmax, v ), watt ) );
-		    }
-		
-		    // Unknown multiplicity distribution
-		    else 
-		    {	
-        		std::cout << "unknown fission multiplicity distribution " << mult_dist_name <<" in nuclide " << name << std::endl;
-          		throw;
-        	    }
-
+		    Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS, nubar, watt ) );
 		} 
 	    } // End reactions
     	} // End user defined nuclide
@@ -911,21 +817,21 @@ void XML_input
     		if ( s.attribute("direction") )
     		{
   			dir_dist_name = s.attribute("direction").value();
-  			dirDist       = findByName( point_distributions, dir_dist_name );
+  			dirDist       = findByName( Distribution_Point, dir_dist_name );
     		}
     		
 		// Input provided energy distribution
 		if ( s.attribute("energy") )
     		{
   			enrg_dist_name = s.attribute("energy").value();
-  			enrgDist       = findByName( double_distributions, enrg_dist_name );
+  			enrgDist       = findByName( Distribution_Double, enrg_dist_name );
     		}
 
 		// Input provided time distribution
     		if ( s.attribute("time") )
     		{
   			time_dist_name = s.attribute("time").value();
-  			timeDist       = findByName( double_distributions, time_dist_name );
+  			timeDist       = findByName( Distribution_Double, time_dist_name );
     		}
 		
 		// Check distribution availability
@@ -983,7 +889,7 @@ void XML_input
 		
   			std::string pos_dist_name  = s.attribute("position").value();
 
-  			std::shared_ptr< Distribution_t<Point_t> > posDist  = findByName( point_distributions , pos_dist_name );
+  			std::shared_ptr< Distribution_t<Point_t> > posDist  = findByName( Distribution_Point , pos_dist_name );
 
   			if ( ! posDist )
 			{ 

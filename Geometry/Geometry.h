@@ -66,7 +66,7 @@ class Surface_t : public Geometry_t
     		~Surface_t() {};
 
 		// Hit implementation
-		virtual void hit( Particle_t& P, const std::vector<std::shared_ptr<Cell_t>>& Cell );
+		virtual void hit( Particle_t& P, const std::vector<std::shared_ptr<Cell_t>>& Cell, const bool tally );
 
 		// Evaluate point location via the "S" equation
 		virtual double eval( const Point_t& p ) = 0;
@@ -334,7 +334,7 @@ class Cell_t : public Geometry_t
 		bool testPoint( const Point_t& p );
 		
 		// Move particle and score any estimators
-		void moveParticle( Particle_t& P, const double dmove );
+		void moveParticle( Particle_t& P, const double dmove, const bool tally );
 		
 		// Return the closest bounding surface and the corresponding particle hit distance 
 		std::pair< std::shared_ptr< Surface_t >, double > surface_intersect( const Particle_t& P );
@@ -343,7 +343,7 @@ class Cell_t : public Geometry_t
 		double collision_distance( const double E );
 
 		// Let the Material take care of the collision sample and reaction process
-		void collision( Particle_t& P, std::stack< Particle_t >& Pbank );
+		void collision( Particle_t& P, std::stack< Particle_t >& Pbank, const bool ksearch );
 
 		// Simulate scattering for scattering matrix MGXS
 		void simulate_scatter( Particle_t& P );

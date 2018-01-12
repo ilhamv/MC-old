@@ -50,7 +50,7 @@ class Nuclide_t
 		void addReaction( const std::shared_ptr< Reaction_t >& C );
 		
 		// Randomly sample a reaction type from the nuclide
-		std::shared_ptr<Reaction_t> reaction_sample( const double E );
+		std::shared_ptr<Reaction_t> reaction_sample( const double E, const bool ksearch );
 		
 		// Simulate scattering for scattering matrix MGXS
 		void simulate_scatter( Particle_t& P );

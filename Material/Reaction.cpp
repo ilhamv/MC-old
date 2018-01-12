@@ -97,6 +97,49 @@ void Scatter_Reaction::sample( Particle_t& P, std::stack< Particle_t >& Pbank )
 }
 
 
+// Scatter the particle with sampled scattering angle mu0, with nucleus having mass A
+// Scattering is trated in Center of mass (COM) frame
+// Current model: Free gas scattering with constant cross section
+void Scatter_Zero_Reaction::sample( Particle_t& P, std::stack< Particle_t >& Pbank )
+{
+    const double mu0 = scatter_dist->sample();
+
+    // Particle velocity - LAB
+    Point_t v_lab( P.speed() * P.dir().x, P.speed() * P.dir().y, P.speed() * P.dir().z );
+		
+    // COM velocity	
+    const Point_t u ( v_lab.x / ( 1.0 + A ), v_lab.y / ( 1.0 + A ), v_lab.z / ( 1.0 + A ) ); // Eq. 6
+	
+    // Particle velocity - COM
+    Point_t v_c( v_lab.x - u.x, v_lab.y - u.y, v_lab.z - u.z );
+	
+    // Particle speed - COM
+    const double speed_c = std::sqrt( v_c.x*v_c.x+ v_c.y*v_c.y+ v_c.z*v_c.z );
+
+    // Particle initial direction - COM
+    const Point_t dir_c( v_c.x / speed_c, v_c.y / speed_c, v_c.z / speed_c );
+	
+    // Scattering the direction in COM
+    Point_t dir_cNew = scatter_direction( dir_c, mu0 ); // Final direction - COM
+
+    // Final velocity - COM
+    v_c.x = speed_c * dir_cNew.x;
+    v_c.y = speed_c * dir_cNew.y;
+    v_c.z = speed_c * dir_cNew.z;
+	
+    // Final velocity - LAB
+    v_lab.x = v_c.x + u.x;
+    v_lab.y = v_c.y + u.y;
+    v_lab.z = v_c.z + u.z;
+
+    // Final speed - LAB
+    P.setSpeed( std::sqrt( v_lab.x*v_lab.x+ v_lab.y*v_lab.y+ v_lab.z*v_lab.z ) ); // Final energy is computed as well
+
+    // Final direction - LAB
+    P.setDirection( Point_t( v_lab.x / P.speed(), v_lab.y / P.speed(), v_lab.z / P.speed() ) );
+}
+
+
 // Fission reaction sample
 void Fission_Reaction::sample( Particle_t& P, std::stack< Particle_t >& Pbank )
 {
@@ -104,7 +147,7 @@ void Fission_Reaction::sample( Particle_t& P, std::stack< Particle_t >& Pbank )
 	// push all but one of them into the Particle bank, and reset the top particle 
 	// if no secondaries, kill the particle
 
-	int n = nu_dist->sample( r_nu->xs( P.energy() ) ); // sampled multiplicity
+	const int n = std::floor( r_nu->xs( P.energy() ) + Urand() ); // sampled multiplicity
     
 	if ( n != 0 ) 
     	{
