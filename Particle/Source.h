@@ -8,16 +8,36 @@
 #include "Const.h"    // EPSILON
 #include "Geometry.h"
 
+class Cell_t;
+//class Particle_t;
 
 // Particle source base class
 class Source_t
 {
-  	public:
- 		 Source_t() {};
-		~Source_t() {};
+    public:
+ 	 Source_t() {};
+	~Source_t() {};
 
-		// Get the particle source
-		virtual Particle_t getSource() = 0;
+	// Get the particle source
+	virtual Particle_t getSource() = 0;
+};
+
+
+// Fission Source
+class Fission_Source : public Source_t
+{
+    private:
+        const Point_t pos;
+        const Point_t dir;
+        const double  E;
+        const double  w;
+        const double  t;
+
+    public:
+        Fission_Source( const Point_t p, const Point_t d, const double p_E, const double p_w, const double p_t ): pos(p), dir(d), E(p_E), w(p_w), t(p_t) {};
+        ~Fission_Source() {};
+
+        Particle_t getSource();
 };
 
 
@@ -153,28 +173,16 @@ class Source_Bank
             total += prob;
         }
 		
+        void reset()
+        {
+            sources.clear();
+            total = 0.0;
+        }
+		
         // Get source
         // sources are sampled wrt to their probability
         // then, particle cell is searched and set
-        Particle_t getSource( const std::vector<std::shared_ptr<Cell_t>>& Cell )
-        {
-            const double xi = total * Urand();
-            double s  = 0.0;
-            for ( auto& So : sources ) 
-            {
-                // first is source, second is ratio
-                s += So.second;
-                if ( s > xi ) 
-                { 
-                    Particle_t P = So.first->getSource();
-                    P.searchCell( Cell );
-                    return P;
-                }
-            }
-            //this is added because there is a possibility that this class does not return anything.
-            std::cout<< "[ERROR] Source weights are not normalized to one\n";
-            std::exit(EXIT_FAILURE);
-        }
+        Particle_t getSource( const std::vector<std::shared_ptr<Cell_t>>& Cell );
 };
 
 

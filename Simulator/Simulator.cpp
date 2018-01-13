@@ -13,17 +13,17 @@
 // Constructor: Set up the simulator with XML parser
 Simulator_t::Simulator_t( const std::string input_file )
 {
-    XML_input( input_file, simName, nSample, ksearch, nCycle, nPassive, Ecut_off, tcut_off, Sbank, Surface, Cell, Nuclide, Material, Estimator, Distribution_Double, Distribution_Point );
+    XML_input( input_file, simName, nSample, ksearch, nCycle, nPassive, Ecut_off, tcut_off, Fbank, Surface, Cell, Nuclide, Material, Estimator, Distribution_Double, Distribution_Point );
 }
 
 void Simulator_t::start()
 {
-    bool tally = false; // Estimator activation toggle
-
     // Simulation loop
     for ( unsigned long long icycle = 0; icycle < nCycle ; icycle++ )
     {
         if ( icycle == nPassive ) { tally = true; }
+
+        Sbank = Fbank; Fbank.reset();
 
         // Cycle loop
         for ( unsigned long long isample = 0 ; isample < nSample ; isample++ )
@@ -75,7 +75,7 @@ void Simulator_t::start()
                     {
                         // Move particle to collision site and sample the collision and tally if there is any cell tally
                         C->moveParticle( P, dcol, tally );
-                        C->collision( P, Pbank, ksearch );			
+                        C->collision( P, Pbank, ksearch, Fbank, k );			
                     }
                             
                     // add # of tracks

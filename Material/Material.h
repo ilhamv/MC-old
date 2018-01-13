@@ -11,9 +11,12 @@
 #include "Nuclide.h"
 #include "Random.h"
 #include "Const.h"   // MAXD
+#include "Source.h"
 
 // Forward declaration
 class Nuclide_t;
+class Source_Bank;
+class Fission_Source;
 
 // Material base class
 class Material_t
@@ -23,6 +26,8 @@ class Material_t
 		
 		// Nuclides contained and its corresponding density
 		std::vector< std::pair< std::shared_ptr<Nuclide_t>, double > > nuclides;
+                
+                IsotropicDirection_Distribution           isotropic; // For implicit fission
 
 	public:
      		// Constructor: pass the material name 
@@ -52,7 +57,7 @@ class Material_t
 		// Handle collision event
 		// Sample entire collision (nuclide, then nuclide reaction)
 		// Then, process the reaction on the Particle
-		void collision_sample( Particle_t& P, std::stack< Particle_t >& Pbank, const bool ksearch );
+		void collision_sample( Particle_t& P, std::stack< Particle_t >& Pbank, const bool ksearch, Source_Bank& Fbank, const double k );
 		
 		// Simulate scattering for scattering matrix MGXS
 		void simulate_scatter( Particle_t& P );

@@ -17,6 +17,13 @@ Particle_t Point_Source::getSource()
 }
 
 
+Particle_t Fission_Source::getSource()
+{
+    Particle_t P( pos, dir, E, t, w );
+    return P;
+}
+
+
 Particle_t DiskX_Source::getSource()
 {
     Point_t p = dist_dir->sample();
@@ -96,4 +103,28 @@ Particle_t Generic_Source::getSource()
 	
     Particle_t P ( dist_pos->sample(), p, dist_enrg->sample(), dist_time->sample(), 1.0 );
     return P;
+}
+
+
+// Get source
+// sources are sampled wrt to their probability
+// then, particle cell is searched and set
+Particle_t Source_Bank::getSource( const std::vector<std::shared_ptr<Cell_t>>& Cell )
+{
+    const double xi = total * Urand();
+    double s  = 0.0;
+    for ( auto& So : sources ) 
+    {
+        // first is source, second is ratio
+        s += So.second;
+        if ( s > xi ) 
+        { 
+            Particle_t P = So.first->getSource();
+            P.searchCell( Cell );
+            return P;
+        }
+    }
+    //this is added because there is a possibility that this class does not return anything.
+    std::cout<< "[ERROR] Source weights are not normalized to one\n";
+    std::exit(EXIT_FAILURE);
 }
