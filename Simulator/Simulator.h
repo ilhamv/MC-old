@@ -21,7 +21,7 @@ class Simulator_t
         std::string                                  simName;          // Simulation name
         unsigned long long                           nSample;          // Number of particle samples per cycle
         bool                                         ksearch  = false; // ksearch mode flag
-        double                                       k        = 1.0;   // Criticality estimate
+        std::vector<double>                          k        = {1.0}; // Criticality estimate
         unsigned long long                           nCycle   = 1;     // Number of iteration/cycle
         unsigned long long                           nPassive = 0;     // Number of passive cycle
         bool                                         tally    = false; // Estimator activation toggle

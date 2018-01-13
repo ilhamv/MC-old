@@ -415,7 +415,7 @@ double Cell_t::collision_distance( const double E )
 
 // Collision
 // Let the Material take care of the collision sample and reaction process
-void Cell_t::collision( Particle_t& P, std::stack< Particle_t >& Pbank, const bool ksearch, Source_Bank& Fbank, const double k )
+void Cell_t::collision( Particle_t& P, std::stack< Particle_t >& Pbank, const bool ksearch, Source_Bank& Fbank, std::vector<double>& k )
 { 
 	if ( material ) 
 	{ material->collision_sample( P, Pbank, ksearch, Fbank, k ); }

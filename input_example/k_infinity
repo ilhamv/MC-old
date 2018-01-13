@@ -1,7 +1,7 @@
 <?xml version = '1.0' encoding = 'UTF-8'?>
 
 <simulation>
-    <description name="Analytical k-infinity" samples="1e7"/>
+    <description name="Analytical k-infinity" samples="10"/>
     <ksearch active_cycles="200" passive_cycles="20"/>
 </simulation>
 

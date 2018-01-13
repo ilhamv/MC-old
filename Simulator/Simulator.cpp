@@ -23,7 +23,7 @@ void Simulator_t::start()
     {
         if ( icycle == nPassive ) { tally = true; }
 
-        Sbank = Fbank; Fbank.reset();
+        Sbank = Fbank; Fbank.reset(); k.push_back(0.0);
 
         // Cycle loop
         for ( unsigned long long isample = 0 ; isample < nSample ; isample++ )
@@ -96,6 +96,12 @@ void Simulator_t::start()
             // Start next history
 
         } // All histories are done, end of cycle loop
+
+        if (ksearch)
+        {
+            k.back() /= nSample;
+            std::cout<<icycle<<"  "<<k.back()<<"\n";
+        }
 
         // Start next cycle
     

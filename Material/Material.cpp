@@ -97,10 +97,10 @@ std::shared_ptr< Nuclide_t > Material_t::nuclide_sample( const double E )
 
 // Sample entire collision (nuclide, then nuclide reaction)
 // Then, process the reaction on the Particle 
-void Material_t::collision_sample( Particle_t& P, std::stack<Particle_t>& Pbank, const bool ksearch, Source_Bank& Fbank, const double k ) 
+void Material_t::collision_sample( Particle_t& P, std::stack<Particle_t>& Pbank, const bool ksearch, Source_Bank& Fbank, std::vector<double>& k ) 
 {
     // Note that we implement Implicit Capture or Absorption (if ksearch)
-    double        implicit  = SigmaC(P.energy());
+    double implicit  = SigmaC(P.energy());
 
     // The implicit fission
     if (ksearch)
@@ -108,7 +108,7 @@ void Material_t::collision_sample( Particle_t& P, std::stack<Particle_t>& Pbank,
         implicit += SigmaF(P.energy()); 
 
         // Bank Fbank
-        const double bank_nu = std::floor( P.weight() / k * nuSigmaF(P.energy()) / SigmaT(P.energy()) + Urand() );                
+        const double bank_nu = std::floor( P.weight() / k[k.size()-2] * nuSigmaF(P.energy()) / SigmaT(P.energy()) + Urand() );                
         for ( int i = 0 ; i < bank_nu ; i++ )
         {
             // Determine the emitting nuclide 
@@ -119,11 +119,14 @@ void Material_t::collision_sample( Particle_t& P, std::stack<Particle_t>& Pbank,
                 s += n.first->nusigmaF( P.energy() ) / nuSigmaF( P.energy() );
                 if ( r < s )
                 {
-                    Fbank.addSource( std::make_shared<Fission_Source>( P.pos(), isotropic.sample(), n.first->Chi( P.energy() ), P.time(), P.weight() ) );
+                    Fbank.addSource( std::make_shared<Fission_Source>( P.pos(), isotropic.sample(), n.first->Chi( P.energy() ), 1.0, P.time() ) );
                     break;
                 }
             }
         }
+
+        // New estimate k
+        k.back() += nuSigmaF(P.energy()) * P.weight() / SigmaT(P.energy());
     }
     
     // The implicit capture/absorption

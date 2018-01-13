@@ -345,7 +345,7 @@ class Cell_t : public Geometry_t
 		double collision_distance( const double E );
 
 		// Let the Material take care of the collision sample and reaction process
-		void collision( Particle_t& P, std::stack< Particle_t >& Pbank, const bool ksearch, Source_Bank& Fbank, const double k );
+		void collision( Particle_t& P, std::stack< Particle_t >& Pbank, const bool ksearch, Source_Bank& Fbank, std::vector<double>& k );
 
 		// Simulate scattering for scattering matrix MGXS
 		void simulate_scatter( Particle_t& P );
