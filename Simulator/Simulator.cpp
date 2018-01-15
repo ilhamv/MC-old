@@ -14,16 +14,20 @@
 Simulator_t::Simulator_t( const std::string input_file )
 {
     XML_input( input_file, simName, nSample, ksearch, nCycle, nPassive, Ecut_off, tcut_off, Fbank, Surface, Cell, Nuclide, Material, Estimator, Distribution_Double, Distribution_Point );
+    
+    k_cycle.resize(nCycle, 0.0);
 }
 
 void Simulator_t::start()
 {
+    double k = 1; // Current k estimate
+
     // Simulation loop
     for ( unsigned long long icycle = 0; icycle < nCycle ; icycle++ )
     {
         if ( icycle == nPassive ) { tally = true; }
 
-        Sbank = Fbank; Fbank.reset(); k.push_back(0.0);
+        Sbank = Fbank; Fbank.reset();
 
         // Cycle loop
         for ( unsigned long long isample = 0 ; isample < nSample ; isample++ )
@@ -34,7 +38,7 @@ void Simulator_t::start()
             while ( !Pbank.empty() )
             {
                 Particle_t              P = Pbank.top(); // Working particle
-                std::shared_ptr<Cell_t> C = P.cell();  // Working cell
+                std::shared_ptr<Cell_t> C = P.cell();    // Working cell
                 Pbank.pop();
 
                 // Particle loop
@@ -46,7 +50,7 @@ void Simulator_t::start()
                     SnD = C->surface_intersect( P );
 
                     // Determine collision distance
-                    double dcol = C->collision_distance( P.energy() );
+                    const double dcol = C->collision_distance( P.energy() );
                                     
                     // Hit surface?
                     if ( dcol > SnD.second )
@@ -76,6 +80,10 @@ void Simulator_t::start()
                         // Move particle to collision site and sample the collision and tally if there is any cell tally
                         C->moveParticle( P, dcol, tally );
                         C->collision( P, Pbank, ksearch, Fbank, k );			
+                        
+                        // New estimate k
+                        if (ksearch)
+                        { k_cycle[icycle] += C->nuSigmaF(P.energy()) * P.weight() / C->SigmaT(P.energy()); }
                     }
                             
                     // add # of tracks
@@ -99,8 +107,9 @@ void Simulator_t::start()
 
         if (ksearch)
         {
-            k.back() /= nSample;
-            std::cout<<icycle<<"  "<<k.back()<<"\n";
+            k_cycle[icycle] /= nSample;
+            std::cout<<icycle<<"  "<<k_cycle[icycle]<<"\n";
+            k = k_cycle[icycle];
         }
 
         // Start next cycle

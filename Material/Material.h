@@ -21,46 +21,45 @@ class Fission_Source;
 // Material base class
 class Material_t
 {
-  	private:
-		std::string m_name;         // Material name
-		
-		// Nuclides contained and its corresponding density
-		std::vector< std::pair< std::shared_ptr<Nuclide_t>, double > > nuclides;
-                
-                IsotropicDirection_Distribution           isotropic; // For implicit fission
+    private:
+	std::string                      m_name;    // Material name
+        IsotropicDirection_Distribution  isotropic; // For implicit fission
+	
+        // Nuclides contained and its corresponding density
+	std::vector< std::pair< std::shared_ptr<Nuclide_t>, double > > nuclides;        
 
-	public:
-     		// Constructor: pass the material name 
-		Material_t( const std::string n ) : m_name(n) {};
-    		~Material_t() {};
+    public:
+     	// Constructor: pass the material name 
+	Material_t( const std::string n ) : m_name(n) {};
+	~Material_t() {};
 
-		// Getters
-		std::string name();// Name
-		// macroXsec
-		double      SigmaT( const double E );
-		double      SigmaS( const double E );
-		double      SigmaA( const double E );
-		double      SigmaC( const double E );
-		double      SigmaF( const double E );
-		double    nuSigmaF( const double E );
-		
-		// Add a pair of nuclide and its total macroXs
-		// the supplied variable are the nuclide and its nuclide density
-		void addNuclide( const std::shared_ptr< Nuclide_t >& Nuclide, double N );
+	// Getters
+	std::string name();// Name
+	// macroXsec
+	double      SigmaT( const double E );
+	double      SigmaS( const double E );
+	double      SigmaA( const double E );
+	double      SigmaC( const double E );
+	double      SigmaF( const double E );
+	double    nuSigmaF( const double E );
+	
+	// Add a pair of nuclide and its total macroXs
+	// the supplied variable are the nuclide and its nuclide density
+	void addNuclide( const std::shared_ptr< Nuclide_t >& Nuclide, double N );
 
-		// Sample collision distance
-		double collision_distance_sample( const double E );
-		
-		// Sample collided nuclide
-		std::shared_ptr< Nuclide_t > nuclide_sample( const double E );
+	// Sample collision distance
+	double collision_distance_sample( const double E );
+	
+	// Sample collided nuclide
+	std::shared_ptr< Nuclide_t > nuclide_sample( const double E );
 
-		// Handle collision event
-		// Sample entire collision (nuclide, then nuclide reaction)
-		// Then, process the reaction on the Particle
-		void collision_sample( Particle_t& P, std::stack< Particle_t >& Pbank, const bool ksearch, Source_Bank& Fbank, std::vector<double>& k );
-		
-		// Simulate scattering for scattering matrix MGXS
-		void simulate_scatter( Particle_t& P );
+	// Handle collision event
+	// Sample entire collision (nuclide, then nuclide reaction)
+	// Then, process the reaction on the Particle
+	void collision_sample( Particle_t& P, std::stack< Particle_t >& Pbank, const bool ksearch, Source_Bank& Fbank, const double k );
+	
+	// Simulate scattering for scattering matrix MGXS
+	void simulate_scatter( Particle_t& P );
 };
 
 
