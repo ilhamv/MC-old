@@ -131,12 +131,11 @@ class Tally_t
 		double hist    = 0.0; // History sum
 		double sum     = 0.0; // Sum over all histories
 	       	double squared = 0.0; // Sum of history sum squared over all histories
-		double mean;          // Estimated mean
-		double var;           // Estimated variance of the population
-		double meanUncer;     // Uncertainty of the estimated mean
-		                            // sqrt(variance of the estimated mean)
-		double relUncer;      // Relative uncertainty of estimated mean
-		double FOM;           // Figure of merit		
+		
+                double mean  = 0.0;   // Estimated mean
+		double uncer = 0.0;   // Uncertainty of the estimated mean
+		double uncer_rel;     // Relative uncertainty of estimated mean
+		double FOM   = 0.0;   // Figure of merit		
 	
 	public:
 		 Tally_t() {};
@@ -212,6 +211,7 @@ class Estimator_t
 	protected:
 		const std::string    e_name;     // Estimator name
 		unsigned long long   nhist = 0;  // # of histories estimated
+		unsigned long long   ncycle = 0;  // # of histories estimated
 
 	public:
 		// Constructor: pass the estimator name and bin grid
@@ -227,11 +227,12 @@ class Estimator_t
 		// Score at events
 		virtual void score( const Particle_t& P, const double told, const double track = 0.0  ) = 0;
 		
-		// Closeout history
+		// Closeout
 		virtual void endHistory() = 0;              
+		virtual void endCycle( const double tracks ) = 0;              
 		
 		// Report results
-		virtual void report( std::ostringstream& output, const double tTime ) = 0;
+		virtual void report( std::ostringstream& output ) = 0;
 		
                 std::vector<Tally_t>                  total_tally; // Total tallies [Nscore]
 };
@@ -260,21 +261,20 @@ class Generic_Estimator : public Estimator_t
 		// Set bin
 		virtual void setBin( const std::string type, const std::vector<double> gr );
 		
-		// Update the sum and sum of squared, and restart history sum of a tally
+		// Tally operations
 		void tally_endHistory( Tally_t& T );
-		
-		// Compute mean, variance and mean statistical uncertainty of a tally
-		void tally_stats( Tally_t& T, const double trackTime );
+                void tally_endCycle( Tally_t& T, const double tracks );
+		void tally_average( Tally_t& T );
 		
 		// Score at events
 		virtual void score( const Particle_t& P, const double told, const double track = 0.0 );
 
-		// Closeout history
-		// Update the sum and sum of squared, and restart history sum of all tallies
-		virtual void endHistory();
+		// Closeout
+                virtual void endHistory();
+                virtual void endCycle( const double tracks );
 
 		// Report results
-		virtual void report( std::ostringstream& output, const double trackTime );
+		virtual void report( std::ostringstream& output );
 };
 
 
@@ -288,7 +288,6 @@ class MGXS_Estimator : public Generic_Estimator
 		                                                             //   consists of GxG scattering matrix for each legendre order n=[0,N]
 		const unsigned int                               N;          // Legendre order considered
 		std::vector<double>                              Pl;         // To store legendre polynomials value		
-		std::vector<Tally_t>                             Chi;        // Fission neutron energy group fraction (current model: universal table)
 		// Simple group constants are handled by generic estimator bin
 	
 	public:
@@ -296,7 +295,7 @@ class MGXS_Estimator : public Generic_Estimator
 		MGXS_Estimator( const std::string n, const unsigned int pn ) : Generic_Estimator(n), N(pn) {};
 		~MGXS_Estimator() {};
 		
-		// Set bin (or group structure), and calculate Chi group constants
+		// Set bin (or group structure)
 		void setBin( const std::string type, const std::vector<double> gr );
 
 		// Calculate Legendre polynomials at mu
@@ -308,9 +307,10 @@ class MGXS_Estimator : public Generic_Estimator
 		// Closeout history
 		// Update the sum and sum of squared, and restart history sum of all tallies
 		void endHistory();
+                void endCycle( const double tracks );
 
 		// Report results
-		void report( std::ostringstream& output, const double trackTime );
+		void report( std::ostringstream& output );
 };
 
 

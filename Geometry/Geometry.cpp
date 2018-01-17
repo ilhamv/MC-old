@@ -379,8 +379,11 @@ void Cell_t::moveParticle( Particle_t& P, const double dmove, const bool tally )
 	P.move( dmove );
 
         // Score track length estimator
-        if (tally)
-        { for ( const auto& e : estimators ) { e->score( P, told, dmove ); } }
+        if (tally){ 
+            for ( const auto& e : estimators ) { 
+                e->score( P, told, dmove ); 
+            } 
+        }
 }
 
 

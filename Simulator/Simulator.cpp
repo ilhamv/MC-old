@@ -23,27 +23,22 @@ void Simulator_t::start()
     double k = 1; // Current k estimate
 
     // Simulation loop
-    for ( unsigned long long icycle = 0; icycle < nCycle ; icycle++ )
-    {
+    for ( unsigned long long icycle = 0; icycle < nCycle ; icycle++ ){
         if ( icycle == nPassive ) { tally = true; }
-
         Sbank = Fbank; Fbank.reset();
 
         // Cycle loop
-        for ( unsigned long long isample = 0 ; isample < nSample ; isample++ )
-        {
+        for ( unsigned long long isample = 0 ; isample < nSample ; isample++ ){
             Pbank.push( Sbank.getSource( Cell ) );
                     
             // History loop
-            while ( !Pbank.empty() )
-            {
+            while ( !Pbank.empty() ){
                 Particle_t              P = Pbank.top(); // Working particle
                 std::shared_ptr<Cell_t> C = P.cell();    // Working cell
                 Pbank.pop();
 
                 // Particle loop
-                while ( P.alive() )
-                {
+                while ( P.alive() ){
                     std::pair< std::shared_ptr< Surface_t >, double > SnD; // To hold nearest surface and its distance
                                     
                     // Determine nearest surface and its distance
@@ -53,8 +48,7 @@ void Simulator_t::start()
                     const double dcol = C->collision_distance( P.energy() );
                                     
                     // Hit surface?
-                    if ( dcol > SnD.second )
-                    {	
+                    if ( dcol > SnD.second ){	
                         // Surface hit! Move particle to surface, tally if there is any Cell Tally
                         C->moveParticle( P, SnD.second, tally );
 
@@ -75,8 +69,7 @@ void Simulator_t::start()
                     }
                                     
                     // Collide!!
-                    else
-                    {
+                    else{
                         // Move particle to collision site and sample the collision and tally if there is any cell tally
                         C->moveParticle( P, dcol, tally );
                         C->collision( P, Pbank, ksearch, Fbank, k );			
@@ -105,14 +98,17 @@ void Simulator_t::start()
 
         } // All histories are done, end of cycle loop
 
-        if (ksearch)
-        {
+        // Estimator history closeout
+        if (tally)
+        { for ( auto& E : Estimator ) { E->endCycle(tracks); } }
+
+        if (ksearch){
             k_cycle[icycle] /= nSample;
-            std::cout<<icycle<<"  "<<k_cycle[icycle]<<"\n";
             k = k_cycle[icycle];
         }
 
         // Start next cycle
+        tracks = 0.0;
     
     } // All cycles are done, end of simulation loop
 }
@@ -130,11 +126,14 @@ void Simulator_t::report()
     output << "== " + simName + " ==\n";
     for ( int i = 0 ; i < simName.length()+6 ; i++ ) { output << "="; }
     output << "\n";
-    output << "Number of samples: " << nSample << "\n";
-    output << "Number of tracks: " << tracks << "\n";
+    output << "Number of passive cycles   : " << nPassive << "\n";
+    output << "Number of active cycles    : " << nCycle - nPassive << "\n";
+    output << "Number of samples per cycle: " << nSample << "\n\n";
+    
+    if (ksearch ) { output << "k-eigenvalue: " << k_cycle.back() << "\n"; }
 
     // Report tallies
-    for ( auto& E : Estimator ) { E->report( output, tracks ); } // TrackTime is passed for F.O.M.
+    for ( auto& E : Estimator ) { E->report( output ); }
 	
     // Print on monitor and file
     std::cout<< output.str();

@@ -165,29 +165,6 @@ void Generic_Estimator::setBin( const std::string type, const std::vector<double
 	if      ( type == "energy" ) { bin = std::make_shared<Energy_Bin> ( grid, total_tally, scores ); }
 	else if ( type == "time" )   { bin = std::make_shared<Time_Bin>   ( grid, total_tally, scores ); }
 }
-	
-// Update the sum and sum of squared, and restart history sum of a tally
-void Generic_Estimator::tally_endHistory( Tally_t& T )
-{ 
-	T.sum     += T.hist;
-	T.squared += T.hist * T.hist;
-	T.hist     = 0.0; 
-}
-	
-// Compute mean, variance and mean statistical uncertainty of a tally
-void Generic_Estimator::tally_stats( Tally_t& T, const double trackTime )
-{
-	// Estimated mean of the population
-	T.mean      = T.sum / nhist;
-	// Estimated variance of the population
-	T.var       = ( T.squared - nhist * T.mean*T.mean ) / ( nhist - 1.0 );
-	// Uncertainty of the estimated mean
-	T.meanUncer = sqrt( ( T.squared / nhist - T.mean*T.mean ) / ( nhist - 1.0 ) );
-	// Relative uncertainty of estimated mean
-	T.relUncer  = T.meanUncer / T.mean;
-	// Figure of merit
-	T.FOM       = 1.0 / ( T.relUncer*T.relUncer * trackTime );
-};
 
 // Score at events
 void Generic_Estimator::score( const Particle_t& P, const double told, const double track /*= 0.0*/ )
@@ -203,37 +180,73 @@ void Generic_Estimator::score( const Particle_t& P, const double told, const dou
 	{ bin->score( P, grid, told, track ); }
 }
 
-// Closeout history
-// Update the sum and sum of squared, and restart history sum of all tallies
+// Tally operations
+void Generic_Estimator::tally_endHistory( Tally_t& T )
+{
+    T.sum     += T.hist;
+    T.squared += T.hist * T.hist;
+    T.hist     = 0.0; 
+}	
+void Generic_Estimator::tally_endCycle( Tally_t& T, const double trackTime )
+{
+    const double mean          = T.sum / nhist;
+    const double uncer_squared = ( T.squared / nhist - mean*mean ) / ( nhist - 1.0 );
+    const double uncer_rel     = std::sqrt(uncer_squared) / mean;
+   
+    T.mean      += mean;
+    T.uncer     += uncer_squared;
+    T.FOM       = 1.0 / ( uncer_rel*uncer_rel * trackTime );
+
+    T.sum     = 0.0;
+    T.squared = 0.0;
+    
+};
+void Generic_Estimator::tally_average( Tally_t& T )
+{
+    T.mean      = T.mean / ncycle;
+    T.uncer     = sqrt( T.uncer ) / ncycle;
+    T.uncer_rel = T.uncer / T.mean;
+    T.FOM       = T.FOM / ncycle;
+};
+
+// Closeout
 void Generic_Estimator::endHistory()
 {
-	nhist++;
-	for ( int i = 0 ; i < Nscore ; i++ )
-	{
-		// Total tally
-		tally_endHistory( total_tally[i] );
-		
-		// Bin tally
-		for ( int j = 0 ; j < Nbin ; j++ )
-		{
-			tally_endHistory( bin->tally[j][i] );
-		}
+    nhist++;
+    for ( int i = 0 ; i < Nscore ; i++ ){
+	tally_endHistory( total_tally[i] );
+
+	for ( int j = 0 ; j < Nbin ; j++ ){
+	    tally_endHistory( bin->tally[j][i] );
 	}
+    }
+}
+void Generic_Estimator::endCycle( const double tracks )
+{
+    ncycle++;
+    for ( int i = 0 ; i < Nscore ; i++ ){
+	tally_endCycle( total_tally[i], tracks );
+		
+	for ( int j = 0 ; j < Nbin ; j++ ){
+	    tally_endCycle( bin->tally[j][i], tracks );
+	}
+    }
+    nhist = 0.0;
 }
 
 // Report results
-void Generic_Estimator::report( std::ostringstream& output, const double trackTime )
+void Generic_Estimator::report( std::ostringstream& output )
 {
 	// Compute mean, variance, and uncertainty of all tallies
 	for ( int i = 0 ; i < Nscore ; i++ )
 	{
 		// Total tally
-		tally_stats( total_tally[i], trackTime );
+		tally_average( total_tally[i] );
 		
 		// Bin tally
 		for ( int j = 0 ; j < Nbin ; j++ )
 		{
-			tally_stats( bin->tally[j][i], trackTime );
+			tally_average( bin->tally[j][i] );
 		}	
 	}
 	
@@ -248,11 +261,9 @@ void Generic_Estimator::report( std::ostringstream& output, const double trackTi
 	{
 		output << "  " + scores[i]->name() + ":\n";
 		output << "  -> Mean     = " << total_tally[i].mean;
-	       	output << "  +/-  " << total_tally[i].meanUncer;
-		output << "  (" << total_tally[i].relUncer * 100.0;
+	       	output << "  +/-  " << total_tally[i].uncer;
+		output << "  (" << total_tally[i].uncer_rel * 100.0;
 		output << "%)\n";
-		output << "  -> Variance = " << total_tally[i].var;
-	       	output << "\n";
 		output << "  [F.O.M.: " << total_tally[i].FOM;
 	        output << "]\n\n\n";
 	}
@@ -288,7 +299,7 @@ void Generic_Estimator::report( std::ostringstream& output, const double trackTi
 			for ( int i = 0 ; i < Nscore ; i++ )
 			{
 				output << std::setw(12) << bin->tally[j][i].mean << "\t";
-			        output << std::setw(12) << bin->tally[j][i].meanUncer << "\t";
+			        output << std::setw(12) << bin->tally[j][i].uncer << "\t";
 			}
 			output << "\n";
 		}
@@ -346,7 +357,6 @@ void MGXS_Estimator::setBin( const std::string type, const std::vector<double> g
 	for ( int i = 0 ; i < Nbin ; i++ )
 	{
 		std::shared_ptr<Bin_t> temp_bin = std::make_shared<Energy_Bin> ( grid, temp_Tvec, temp_scores ); // Bin of initial energy with only one tally for scattering score
-		Chi.push_back( T );
 	}
 	
 	for ( int j = 0 ; j <= N ; j++ )
@@ -414,32 +424,47 @@ void MGXS_Estimator::score( const Particle_t& P, const double told, const double
 // Update the sum and sum of squared, and restart history sum of all tallies
 void MGXS_Estimator::endHistory()
 {
-	nhist++;
-	// Flux, Capture, Fission, nuFission, Total, Scater Tallies
-	for ( int i = 0 ; i < Nscore ; i++ )
-	{
-		for ( int j = 0 ; j < Nbin ; j++ )
-		{
-			tally_endHistory( bin->tally[j][i] );
-		}
+    nhist++;
+    // Flux, Capture, Fission, nuFission, Total, Scater Tallies
+    for ( int i = 0 ; i < Nscore ; i++ ){
+        for ( int j = 0 ; j < Nbin ; j++ ){
+	    tally_endHistory( bin->tally[j][i] );
 	}
+    }
 	
-	// Scattering matrix Tallies
-	for ( int i = 0 ; i < Nbin ; i++ )
-	{
-		for ( int j = 0 ; j < Nbin ; j++ )
-		{
-			for ( int n = 0 ; n <= N ; n++ )
-			{
-				tally_endHistory( tensor_bin[n][i]->tally[j][0] );
-			}
-		}
+    // Scattering matrix Tallies
+    for ( int i = 0 ; i < Nbin ; i++ ){
+        for ( int j = 0 ; j < Nbin ; j++ ){
+	    for ( int n = 0 ; n <= N ; n++ ){
+		tally_endHistory( tensor_bin[n][i]->tally[j][0] );
+	    }
 	}
+    }
 }
 
+void MGXS_Estimator::endCycle( const double tracks )
+{
+    ncycle++;
+    // Flux, Capture, Fission, nuFission, Total, Scater Tallies
+    for ( int i = 0 ; i < Nscore ; i++ ){
+        for ( int j = 0 ; j < Nbin ; j++ ){
+	    tally_endCycle( bin->tally[j][i], tracks );
+	}
+    }
+	
+    // Scattering matrix Tallies
+    for ( int i = 0 ; i < Nbin ; i++ ){
+        for ( int j = 0 ; j < Nbin ; j++ ){
+	    for ( int n = 0 ; n <= N ; n++ ){
+		tally_endCycle( tensor_bin[n][i]->tally[j][0], tracks );
+	    }
+	}
+    }
+    nhist = 0.0;
+}
 
 // Report results
-void MGXS_Estimator::report( std::ostringstream& output, const double trackTime )
+void MGXS_Estimator::report( std::ostringstream& output )
 {
 	// Compute mean, variance, uncertainty, and F.O.M of all tallies
 	// Flux, Capture, Fission, nuFission, Total, Scater Tallies
@@ -447,7 +472,7 @@ void MGXS_Estimator::report( std::ostringstream& output, const double trackTime 
 	{
 		for ( int j = 0 ; j < Nbin ; j++ )
 		{
-			tally_stats( bin->tally[j][i], trackTime );
+			tally_average( bin->tally[j][i] );
 		}	
 	}	
 	// Scattering matrix Tallies
@@ -457,7 +482,7 @@ void MGXS_Estimator::report( std::ostringstream& output, const double trackTime 
 		{
 			for ( int n = 0 ; n <= N ; n++ )
 			{
-				tally_stats( tensor_bin[n][i]->tally[j][0], trackTime );
+				tally_average( tensor_bin[n][i]->tally[j][0] );
 			}	
 		}	
 	}	
@@ -466,22 +491,22 @@ void MGXS_Estimator::report( std::ostringstream& output, const double trackTime 
 	// Convert tally (except flux) into homogenized multigroup constant [mean and uncertainty]
 	for ( int j = 0 ; j < Nbin ; j++ )
 	{
-		const double B = bin->tally[j][0].meanUncer / bin->tally[j][0].mean;
+		const double B = bin->tally[j][0].uncer / bin->tally[j][0].mean;
 		for ( int i = 1 ; i < Nscore ; i++ )
 		{
-			const double A = bin->tally[j][i].meanUncer / bin->tally[j][i].mean;
-			bin->tally[j][i].meanUncer = std::sqrt( A*A + B*B );
+			const double A = bin->tally[j][i].uncer / bin->tally[j][i].mean;
+			bin->tally[j][i].uncer = std::sqrt( A*A + B*B );
 
 			bin->tally[j][i].mean = bin->tally[j][i].mean / bin->tally[j][0].mean;
-			bin->tally[j][i].meanUncer = bin->tally[j][i].meanUncer * bin->tally[j][i].mean;
+			bin->tally[j][i].uncer = bin->tally[j][i].uncer * bin->tally[j][i].mean;
 		}	
 		for ( int i = 0 ; i < Nbin ; i++ )
 		{
-			const double C = tensor_bin[0][i]->tally[j][0].meanUncer / tensor_bin[0][i]->tally[j][0].mean;
-			tensor_bin[0][i]->tally[j][0].meanUncer = std::sqrt( C*C + B*B );
+			const double C = tensor_bin[0][i]->tally[j][0].uncer / tensor_bin[0][i]->tally[j][0].mean;
+			tensor_bin[0][i]->tally[j][0].uncer = std::sqrt( C*C + B*B );
 
 			tensor_bin[0][i]->tally[j][0].mean = tensor_bin[0][i]->tally[j][0].mean / bin->tally[j][0].mean;
-			tensor_bin[0][i]->tally[j][0].meanUncer = tensor_bin[0][i]->tally[j][0].meanUncer * tensor_bin[0][i]->tally[j][0].mean;
+			tensor_bin[0][i]->tally[j][0].uncer = tensor_bin[0][i]->tally[j][0].uncer * tensor_bin[0][i]->tally[j][0].mean;
 		}	
 	}	
 	
@@ -511,13 +536,12 @@ void MGXS_Estimator::report( std::ostringstream& output, const double trackTime 
 			output << "\t" << std::setw(12) << std::left << grid[Nbin-j];
 		        output << "\t" << std::setw(12) << std::left << grid[Nbin-j-1]; 
 		        output << "\t" << std::setw(12) << bin->tally[Nbin-j-1][0].mean; 
-		        output << "\t" << std::setw(12) << bin->tally[Nbin-j-1][0].meanUncer; 
+		        output << "\t" << std::setw(12) << bin->tally[Nbin-j-1][0].uncer; 
 			output << "\n";
 		}
 		output << "\n\nHomogenized MG Constants," << std::endl;
 
 		output << "g\t";
-		output << std::setw(12) << std::left << "Chi" << "\t"; 
 		for ( int i = 1 ; i < Nscore ; i++ ) 
 		{ 
 			output << std::setw(12) << std::left << scores[i]->name() << "\t"; 
@@ -535,13 +559,12 @@ void MGXS_Estimator::report( std::ostringstream& output, const double trackTime 
 		for ( int j = 0 ; j < Nbin ; j++ )
 		{
 			output << j+1;
-		        output << "\t" << std::setw(12) << std::left << Chi[Nbin-j-1].mean;
 			output << "\t";
 
 			for ( int i = 1 ; i < Nscore ; i++ )
 			{
 				output << std::setw(12) << bin->tally[Nbin-j-1][i].mean << "\t";
-			        output << std::setw(12) << bin->tally[Nbin-j-1][i].meanUncer << "\t";
+			        output << std::setw(12) << bin->tally[Nbin-j-1][i].uncer << "\t";
 			}
 			output << "\n";
 		}
@@ -575,7 +598,7 @@ void MGXS_Estimator::report( std::ostringstream& output, const double trackTime 
 				for ( int i = 0 ; i < Nbin ; i++ )
 				{
 					output << std::setw(12) << tensor_bin[n][Nbin-i-1]->tally[Nbin-j-1][0].mean << "\t"; 
-					output << std::setw(12) << tensor_bin[n][Nbin-i-1]->tally[Nbin-j-1][0].meanUncer << "\t"; 
+					output << std::setw(12) << tensor_bin[n][Nbin-i-1]->tally[Nbin-j-1][0].uncer << "\t"; 
 				}
 				output << "\n";
 			}
