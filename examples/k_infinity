@@ -16,8 +16,8 @@
 <nuclides>
     <nuclide name="nuc1" A="238">
     	<capture xs="1.0"/>
-    	<scatter xs_file="input_example/k_infinity_dataS" distribution="mu" model="zero"/>
-    	<fission xs_file="input_example/k_infinity_dataF" nubar="2.5" chi="eg1"/>
+    	<scatter xs_file="examples/k_infinity_dataS" distribution="mu" model="zero"/>
+    	<fission xs_file="examples/k_infinity_dataF" nubar="2.5" chi="eg1"/>
     </nuclide>
 </nuclides>
 

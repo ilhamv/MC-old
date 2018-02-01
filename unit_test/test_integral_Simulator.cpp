@@ -9,7 +9,7 @@ TEST_CASE( "Integral Simulation Tests", "" )
 {
     SECTION ( " analytic 1D slab test " ) 
     {
-        Simulator_t Sim("test_inputs/slab_analytic");
+        Simulator_t Sim("../examples/slab_analytic");
         Sim.start();
         Sim.report();
 
@@ -21,7 +21,7 @@ TEST_CASE( "Integral Simulation Tests", "" )
     
     SECTION ( " MCNP6: detecting a sphere " ) 
     {
-        Simulator_t Sim("test_inputs/sphere_detection");
+        Simulator_t Sim("../examples/sphere_detection");
         Sim.start();
         Sim.report();
 
