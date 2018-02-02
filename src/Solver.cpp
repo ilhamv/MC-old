@@ -95,3 +95,43 @@ Point_t scatter_direction( const Point_t dir_i, const double mu0 )
 // Lagrenge interpolation
 double Linterpolate( const double x, const double x1, const double x2, const double y1, const double y2 )
 { return ( x - x2 ) / ( x1 - x2 ) * y1 + ( x - x1 ) / ( x2 - x1 ) * y2; }
+
+
+// Shannon entropy
+void Shannon_Entropy_Mesh::clear()
+{
+    total = 0;
+    for ( int i = 0; i < x_nmesh; i++ ){
+        for ( int j = 0; j < y_nmesh; j++ ){
+	    for ( int k = 0; k < z_nmesh; k++ ){
+		mesh[i][j][k] = 0.0;
+	    }
+	}
+    }
+    return;
+}
+
+void Shannon_Entropy_Mesh::update( const Point_t& p, const double N )
+{
+    int x_index = floor( ( ( p.x - xmin ) * x_nmesh ) / (xmax - xmin) );
+    int y_index = floor( ( ( p.y - ymin ) * y_nmesh ) / (ymax - ymin) );
+    int z_index = floor( ( ( p.z - zmin ) * z_nmesh ) / (zmax - zmin) );
+
+    mesh[x_index][y_index][z_index] += N;
+    total += N;
+    return;
+}
+
+double Shannon_Entropy_Mesh::entropy()
+{
+    double e = 0.0;
+    for ( int i = 0; i < x_nmesh; i++ ){
+	for ( int j = 0; j < y_nmesh; j++ ){
+	    for ( int k = 0; k < z_nmesh; k++ ){
+		const double p = mesh[i][j][k] / total;
+		e -= p * std::log2(p);
+	    }
+	}
+    }
+    return e;
+}

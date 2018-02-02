@@ -31,4 +31,32 @@ Point_t scatter_direction( const Point_t dir_i, const double mu0 );
 double Linterpolate( const double x, const double x1, const double x2, const double y1, const double y2 );
 
 
+// Shannon entropy
+class Shannon_Entropy_Mesh
+{
+    private:
+	double xmin, xmax, ymin, ymax, zmin, zmax;
+	int    x_nmesh, y_nmesh, z_nmesh, total;
+
+	std::vector<std::vector<std::vector<double>>> mesh;
+
+    public:
+	Shannon_Entropy_Mesh( double x, double X, int xn, double y, double Y, int yn, double z, double Z, int zn ) :
+            xmin(x), xmax(X), x_nmesh(xn), ymin(y), ymax(Y), y_nmesh(yn), zmin(z), zmax(Z), z_nmesh(zn)
+	    {
+		std::vector <double> v;
+		for ( int k = 0; k < z_nmesh; k++ ) { v.push_back(0.0); }
+		std::vector < std::vector <double> > vv;
+		for (int j = 0; j < y_nmesh; j++ ) { vv.push_back(v); }
+		for (int i = 0; i < x_nmesh; i++ ) { mesh.push_back(vv); }
+                total = 0;
+	    }
+	~Shannon_Entropy_Mesh() {};
+
+	void clear();
+	void update( const Point_t& p, const double N );
+	double entropy();
+};
+
+
 #endif

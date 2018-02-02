@@ -28,11 +28,14 @@ class Simulator_t
         bool                                         tally    = false; // Estimator activation toggle
         
         std::vector<double>                          k_cycle;          // Criticality estimate at each cycle
+        std::vector<double>                          entropy_cycle;    // Entropy at each cycle
         
         double                                       Ecut_off = 0.0;   // Energy cut-off
         double                                       tcut_off = MAX;   // Time cut-off
 
-        unsigned long long                           tracks   = 0;     // # of particle tracks ("computation time") for variance reduction
+        unsigned long long                           tracks   = 0;     // # of particle tracks
+        double                                       wr       = 0.25;  // Weight rouletting
+        double                                       ws       = 1.0;  // Survival weight
         
         Source_Bank                                  Fbank;            // Fission bank
         Source_Bank                                  Sbank;            // Sample bank

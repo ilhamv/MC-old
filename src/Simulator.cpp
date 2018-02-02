@@ -72,18 +72,26 @@ void Simulator_t::start()
                     else{
                         // Move particle to collision site and sample the collision and tally if there is any cell tally
                         C->moveParticle( P, dcol, tally );
-                        C->collision( P, Pbank, ksearch, Fbank, k );			
                         
                         // New estimate k
                         if (ksearch)
                         { k_cycle[icycle] += C->nuSigmaF(P.energy()) * P.weight() / C->SigmaT(P.energy()); }
+                        C->collision( P, Pbank, ksearch, Fbank, k );			
                     }
                             
                     // add # of tracks
                     tracks++;
 
-                    // Cut-off working particle?
+                    // Cut-off or kill working particle?
                     if ( P.energy() < Ecut_off || P.time() > tcut_off || P.weight() == 0.0 ) { P.kill();}
+                    else{
+                        // Weight rouletting
+                        if( P.weight() < wr ){
+                            if( Urand() < P.weight() / ws ) { P.setWeight(ws); }
+                            else { P.kill(); }
+                        }
+                    }
+
 
                 } // Particle is dead, end of particle loop		
                 // Transport next Particle in the bank
@@ -130,7 +138,12 @@ void Simulator_t::report()
     output << "Number of active cycles    : " << nCycle - nPassive << "\n";
     output << "Number of samples per cycle: " << nSample << "\n\n";
     
-    if (ksearch ) { output << "k-eigenvalue: " << k_cycle.back() << "\n"; }
+    if (ksearch ) { 
+        double k = 0.0;
+        for( int i = nPassive; i < nCycle; i++ ) { k += k_cycle[i]; }
+        k /= (nCycle - nPassive);
+        output << "k-eigenvalue: " << k << "\n"; 
+    }
 
     // Report tallies
     for ( auto& E : Estimator ) { E->report( output ); }
