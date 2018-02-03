@@ -7,7 +7,7 @@
 
 TEST_CASE( "Integral Simulation Tests", "" ) 
 {
-    SECTION ( " analytic 1D slab test " ) 
+    SECTION ( " analytic: 1G purely absorbing slab " ) 
     {
         Simulator_t Sim("../examples/slab_analytic");
         Sim.start();
@@ -30,4 +30,16 @@ TEST_CASE( "Integral Simulation Tests", "" )
         
         REQUIRE( std::abs( mean - 6.9276e-5 ) <= uncer+1.15e-6  );
     }
+    
+    SECTION ( " criticality: HEU sphere " ) 
+    {
+        Simulator_t Sim("../examples/HEU_sphere");
+        Sim.start();
+        Sim.report();
+
+        double mean  = Sim.k;
+        
+        REQUIRE( std::abs( mean - 0.90302 ) <= 0.00047  );
+    }
+
 }

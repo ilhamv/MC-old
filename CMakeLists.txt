@@ -20,16 +20,17 @@ option(optimize "Turn on all compiler optimization flags"        OFF)
 #===============================================================================
 
 list(APPEND cxxflags -std=c++11 -O2)
-    if(debug)
-      list(REMOVE_ITEM cxxflags -O2)
-      list(APPEND cxxflags -g -O0)
-    endif()
     if(profile)
       list(APPEND cxxflags -pg)
     endif()
     if(optimize)
       list(REMOVE_ITEM cxxflags -O2)
       list(APPEND cxxflags -O3)
+    endif()
+    if(debug)
+      list(REMOVE_ITEM cxxflags -O2)
+      list(REMOVE_ITEM cxxflags -O3)
+      list(APPEND cxxflags -g -O0)
     endif()
 
 # Show flags being used

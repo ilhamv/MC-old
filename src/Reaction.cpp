@@ -29,7 +29,7 @@ void Scatter_Reaction::sample( Particle_t& P, std::stack< Particle_t >& Pbank )
 	
     const double y = beta * P.speed(); // Eq. 32
 	
-    // Sample candidate V_tilda and mu_tilda?
+    // Sample candidate V_tilda and mu_tilda
     do
     {
 	double x;

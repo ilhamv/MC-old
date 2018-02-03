@@ -28,6 +28,7 @@ class Simulator_t
         bool                                         tally    = false; // Estimator activation toggle
         
         std::vector<double>                          k_cycle;          // Criticality estimate at each cycle
+        double                                       k = 1.0;
         std::vector<double>                          entropy_cycle;    // Entropy at each cycle
         
         double                                       Ecut_off = 0.0;   // Energy cut-off

@@ -24,27 +24,27 @@ class Particle_t;
 // Score base class
 class Score_t
 {
-	private:
-		const std::string s_name;
-	public:
-		 Score_t( const std::string n ) : s_name(n) {};
-		~Score_t() {};
+    private:
+	const std::string s_name;
+    public:
+    	 Score_t( const std::string n ) : s_name(n) {};
+	~Score_t() {};
 
-		// Get score type name
-		virtual std::string name() final { return s_name; }
+	// Get score type name
+	virtual std::string name() final { return s_name; }
 
-		// Get score to be added at event
-		virtual double score( const Particle_t& P, const double l ) = 0;
+	// Get score to be added at event
+	virtual double score( const Particle_t& P, const double l ) = 0;
 };
 
-// Current (event)
-class Current_Score : public Score_t
+// Event
+class Event_Score : public Score_t
 {
-	public:
-		 Current_Score() : Score_t( "Current" ) {};
-		~Current_Score() {};
+    public:
+	Event_Score() : Score_t( "Event" ) {};
+	~Event_Score() {};
 
-		double score( const Particle_t& P, const double l );
+	double score( const Particle_t& P, const double l );
 };
 
 // Flux (path length)

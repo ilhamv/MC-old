@@ -20,8 +20,6 @@ Simulator_t::Simulator_t( const std::string input_file )
 
 void Simulator_t::start()
 {
-    double k = 1; // Current k estimate
-
     // Simulation loop
     for ( unsigned long long icycle = 0; icycle < nCycle ; icycle++ ){
         if ( icycle == nPassive ) { tally = true; }
@@ -92,7 +90,6 @@ void Simulator_t::start()
                         }
                     }
 
-
                 } // Particle is dead, end of particle loop		
                 // Transport next Particle in the bank
 
@@ -139,7 +136,7 @@ void Simulator_t::report()
     output << "Number of samples per cycle: " << nSample << "\n\n";
     
     if (ksearch ) { 
-        double k = 0.0;
+        k = 0.0;
         for( int i = nPassive; i < nCycle; i++ ) { k += k_cycle[i]; }
         k /= (nCycle - nPassive);
         output << "k-eigenvalue: " << k << "\n"; 

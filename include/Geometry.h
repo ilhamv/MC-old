@@ -10,7 +10,6 @@
 #include "Estimator.h"
 #include "Point.h"
 #include "Material.h"
-//#include "Source.h"
 
 
 // Forward declaration
@@ -21,24 +20,23 @@ class Source_Bank;
 // Geometry base class
 class Geometry_t
 {
-	private:
-		const std::string g_name;                                 // Geometry name
+    private:
+	const std::string g_name; // Geometry name
 	
-	protected:
-		std::vector< std::shared_ptr< Estimator_t > > estimators; // Estimators attached
-	
-	public:
-     		 Geometry_t( const std::string n ) : g_name(n) {};        // Pass the name
-    		~Geometry_t() {};
+    protected:
+	std::vector< std::shared_ptr< Estimator_t > > estimators; // Estimators attached
+        
+    public:
+     	Geometry_t( const std::string n ) : g_name(n) {}; // Pass the name
+    	~Geometry_t() {};
 
-    		// Get name
-		virtual std::string name()  final { return g_name; };
-		
-		// Add an estimator
-		virtual void addEstimator( const std::shared_ptr< Estimator_t >& E ) final 
-		{ estimators.push_back( E ); }
+	// Get name
+	virtual std::string name()  final { return g_name; };
+	
+	// Add an estimator
+	virtual void addEstimator( const std::shared_ptr< Estimator_t >& E ) final 
+	{ estimators.push_back( E ); }
 };
-
 
 
 ////////////////
@@ -51,30 +49,30 @@ class Cell_t;
 // Surface base class
 class Surface_t : public Geometry_t
 {
-	public:
-		const std::string bc; // Boundary condition
-		                      //   "transmission"
-				      //   "reflective"
-	
-	protected:
-		// Crossing the surface --> an epsilon kick to the working particle
-		void cross ( Particle_t& P );
+    private:
+	const std::string bc; // Boundary condition
+		              //   "transmission"
+			      //   "reflective"
 
-		// Reflect and cross the working particle
-		virtual void reflect ( Particle_t& P ) = 0;
+    protected:
+	// Crossing the surface --> an epsilon kick to the working particle
+        void cross ( Particle_t& P );
+
+	// Reflect and cross the working particle
+	virtual void reflect ( Particle_t& P ) = 0;
 		
-	public:
-     		 Surface_t( const std::string n, const std::string b ) : Geometry_t(n), bc(b) {}; // Pass the name
-    		~Surface_t() {};
+    public:
+     	Surface_t( const std::string n, const std::string b ) : Geometry_t(n), bc(b) {}; // Pass the name
+    	~Surface_t() {};
 
-		// Hit implementation
-		virtual void hit( Particle_t& P, const std::vector<std::shared_ptr<Cell_t>>& Cell, const bool tally );
+	// Hit implementation
+	virtual void hit( Particle_t& P, const std::vector<std::shared_ptr<Cell_t>>& Cell, const bool tally );
 
-		// Evaluate point location via the "S" equation
-		virtual double eval( const Point_t& p ) = 0;
+	// Evaluate point location via the "S" equation
+	virtual double eval( const Point_t& p ) = 0;
 
-		// Get moving particle distance to surface
-    		virtual double distance( const Particle_t& P ) = 0;
+	// Get moving particle distance to surface
+    	virtual double distance( const Particle_t& P ) = 0;
 };
 
 
