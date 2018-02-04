@@ -7,43 +7,171 @@
 #include "Solver.h"  // Binary_Search, Linterpolate
 
 
-///////////////
-/// Scoring ///
-///////////////
+//=============================================================================
+// Scoring Kernel
+//   - Supports: Neutron, Track Length, Collision
+//=============================================================================
 
-// Current (event)
-double Current_Score::score( const Particle_t& P, const double l )
-{ return P.weight(); }
+// Neutron
+double ScoreKernelNeutron::score( const Particle_t& P, const double l )
+{ 
+    return P.weight(); 
+}
 
-// Flux (path length)
-double Flux_Score::score( const Particle_t& P, const double l )
-{ return l * P.weight(); }
+// Track Length
+double ScoreKernelTrackLength::score( const Particle_t& P, const double l )
+{ 
+    return P.weight() * l; 
+}
 
-// Absorption (path length)
-double Absorption_Score::score( const Particle_t& P, const double l )
-{ return P.cell()->SigmaA( P.energy() ) * l * P.weight(); }
-
-// Scatter (path length)
-double Scatter_Score::score( const Particle_t& P, const double l )
-{ return P.cell()->SigmaS( P.energy() ) * l * P.weight(); }
-
-// Capture (path length)
-double Capture_Score::score( const Particle_t& P, const double l )
-{ return P.cell()->SigmaC( P.energy() ) * l * P.weight(); }
-
-// Fission (path length)
-double Fission_Score::score( const Particle_t& P, const double l )
-{ return P.cell()->SigmaF( P.energy() ) * l * P.weight(); }
-
-// Production (path length)
-double nuFission_Score::score( const Particle_t& P, const double l )
-{ return P.cell()->nuSigmaF( P.energy() ) * l * P.weight(); }
-
-// Total (path length)
-double Total_Score::score( const Particle_t& P, const double l )
-{ return P.cell()->SigmaT( P.energy() ) * l * P.weight(); }
+// Collision
+double ScoreKernelCollision::score( const Particle_t& P, const double l )
+{ 
+    return P.weight() / P.cell()->SigmaT( P.energy() ); 
+}
 
 
+//=============================================================================
+// Score
+//   - Specified Scoring Kernel
+//   - Supports: Flux, Absorption, Scatter, Capture, Fission,
+//               NuFission, Total
+//=============================================================================
+
+// Flux
+double ScoreFlux::score( const Particle_t& P, const double l )
+{ 
+    return s_kernel->score(P,l); 
+}
+
+// Absorption
+double ScoreAbsorption::score( const Particle_t& P, const double l )
+{ 
+    return P.cell()->SigmaA( P.energy() ) * s_kernel->score(P,l); 
+}
+
+// Scatter
+double ScoreScatter::score( const Particle_t& P, const double l )
+{ 
+    return P.cell()->SigmaS( P.energy() ) * s_kernel->score(P,l); 
+}
+
+// Capture
+double ScoreCapture::score( const Particle_t& P, const double l )
+{ 
+    return P.cell()->SigmaC( P.energy() ) * s_kernel->score(P,l); 
+}
+
+// Fission
+double ScoreFission::score( const Particle_t& P, const double l )
+{ 
+    return P.cell()->SigmaF( P.energy() ) * s_kernel->score(P,l); 
+}
+
+// NuFission
+double ScoreNuFission::score( const Particle_t& P, const double l )
+{ 
+    return P.cell()->nuSigmaF( P.energy() ) * s_kernel->score(P,l); 
+}
+
+// Total
+double ScoreTotal::score( const Particle_t& P, const double l )
+{ 
+    return P.cell()->SigmaT( P.energy() ) * s_kernel->score(P,l); 
+}
+
+
+//==============================================================================
+// Filter
+//   - Supports: ID(Surface, Cell), Energy, Time
+//==============================================================================
+
+// ID
+std::vector<std::pair<int,double>> FilterID::idx_tl( const Particle_t& P,
+                                                     const double l,
+                                                     const double id )
+{
+    std::vector<std::pair<int,double>> v_i_l;
+    std::pair<int,double> i_l;
+
+    // Index location
+    i_l.first  = Binary_Search( id, f_grid ) + 1;
+    // Track length to score
+    i_l.second = l;
+
+    v_i_l.push_back(i_l);
+    return v_i_l;
+}
+
+// Energy
+std::vector<std::pair<int,double>> FilterEnergy::idx_tl( const Particle_t& P,
+                                                     const double l,
+                                                     const double id )
+{
+    std::vector<std::pair<int,double>> v_i_l;
+    std::pair<int,double> i_l;
+    
+    // Index location
+    i_l.first  = Binary_Search( P.energy(), f_grid );
+    // Check if inside the grids
+    if ( i_l.first < 0 && i_l.first >= f_Nbin ) { return v_i_l; }
+    // Track length to score
+    i_l.second = l;
+
+    v_i_l.push_back(i_l);
+    return v_i_l;
+}
+
+// Time
+std::vector<std::pair<int,double>> FilterTime::idx_tl( const Particle_t& P,
+                                                     const double l,
+                                                     const double told )
+{
+    std::vector<std::pair<int,double>> v_i_l;
+    std::pair<int,double> i_l;
+    
+    // Edge bin locations
+    int loc1 = Binary_Search( told, f_grid );     // before track generation
+    int loc2 = Binary_Search( P.time(), f_grid ); // after
+    
+    // Distribute score into spanned bins
+    if ( loc1 == loc2 ) // 1 bin spanned
+    {
+        // 1 bin spanned
+	if ( loc1 >= 0 && loc1 < f_Nbin ){ 
+            i_l.first  = loc1;
+            i_l.second = l;
+            v_i_l.push_back(i_l);
+        }else{ 
+            // Outside range?
+            return v_i_l; 
+        }
+    }else{
+        // >1 bins spanned
+        int    num_bin = loc2 - loc1 - 1; // # of full bins spanned
+	double new_track;                 // to hold bin track
+	// First partial bin
+	if ( loc1 >= 0 ){
+	    new_track = ( f_grid[loc1+1] - told ) * P.speed();
+	    v_i_l.push_back( std::make_pair( loc1, new_track ) );
+	}
+	// Intermediate full bin
+	for ( int i = 1 ; i <= num_bin ; i++ ){
+	    new_track = ( f_grid[loc1+i+1] - f_grid[loc1+i] ) * P.speed();
+	    v_i_l.push_back( std::make_pair( loc1+i, new_track ) );
+	}	
+	// Last partial bin
+	if ( loc2 < f_Nbin ){
+	    new_track = ( P.time() - f_grid[loc2] ) * P.speed();
+	    v_i_l.push_back( std::make_pair( loc2, new_track ) );
+	}
+	// Note that this algorithm covers the following "extreme" cases
+	//   loc1 : <lowest_grid  or at grid point
+	//   loc2 : >highest_grid or at grid point
+    }
+
+    return v_i_l;
+}
 
 ///////////
 /// Bin ///
@@ -145,14 +273,14 @@ void Time_Bin::score( const Particle_t& P, const std::vector<double>& grid, cons
 ////////////////////
 		
 // Add thing to be scored and push new total tally
-void Generic_Estimator::addScore( const std::shared_ptr<Score_t>& S )
+void Generic_Estimator::addScore( const std::shared_ptr<Score>& S )
 { 
 	// Push new score
 	scores.push_back( S );
 	Nscore++;
 		
 	// Push new total tally
-	Tally_t T;
+	Tally T;
 	total_tally.push_back( T );
 	// Note: Index in total_tally corresponds to its score
 }
@@ -181,13 +309,13 @@ void Generic_Estimator::score( const Particle_t& P, const double told, const dou
 }
 
 // Tally operations
-void Generic_Estimator::tally_endHistory( Tally_t& T )
+void Generic_Estimator::tally_endHistory( Tally& T )
 {
     T.sum     += T.hist;
     T.squared += T.hist * T.hist;
     T.hist     = 0.0; 
 }	
-void Generic_Estimator::tally_endCycle( Tally_t& T, const double trackTime )
+void Generic_Estimator::tally_endCycle( Tally& T, const double trackTime )
 {
     const double mean          = T.sum / nhist;
     const double uncer_squared = ( T.squared / nhist - mean*mean ) / ( nhist - 1.0 );
@@ -201,7 +329,7 @@ void Generic_Estimator::tally_endCycle( Tally_t& T, const double trackTime )
     T.squared = 0.0;
     
 };
-void Generic_Estimator::tally_average( Tally_t& T )
+void Generic_Estimator::tally_average( Tally& T )
 {
     T.mean      = T.mean / ncycle;
     T.uncer     = sqrt( T.uncer ) / ncycle;
@@ -310,7 +438,7 @@ void Generic_Estimator::report( std::ostringstream& output )
 
 // Homogenized MG Constant Generator
 ////////////////////////////////////
-
+/*
 // Set bin (or group structure), and calculate Chi group constants
 void MGXS_Estimator::setBin( const std::string type, const std::vector<double> gr )
 {
@@ -330,8 +458,8 @@ void MGXS_Estimator::setBin( const std::string type, const std::vector<double> g
 	Nscore = scores.size();
 
 	// Set a vector of tallies corresponding to each score
-	std::vector<Tally_t> Tvec; 
-	Tally_t T;
+	std::vector<Tally> Tvec; 
+	Tally T;
 	Tvec.resize( Nscore, T );
 
 	// Set energy bins containing copies of the vector of tallies
@@ -346,11 +474,11 @@ void MGXS_Estimator::setBin( const std::string type, const std::vector<double> g
 	// Set Legendre scattering components tensor //
 
 	// Set scores = Scatter	
-	std::vector<std::shared_ptr<Score_t>> temp_scores;
+	std::vector<std::shared_ptr<Score>> temp_scores;
 	temp_scores.push_back( std::make_shared<Scatter_Score>() );
 	
 	// Set a temporary vector of tallies corresponding to each score
-	std::vector<Tally_t> temp_Tvec; 
+	std::vector<Tally> temp_Tvec; 
 	temp_Tvec.push_back( T ); // Previous single tally T is employed
 
 	// Construct the legendre scattering components tensor and group Chi
@@ -394,7 +522,7 @@ void MGXS_Estimator::calculatePl( const double mu )
 
 
 // Score at events
-void MGXS_Estimator::score( const Particle_t& P, const double told, const double track /*= 0.0*/ )
+void MGXS_Estimator::score( const Particle_t& P, const double told, const double track  )
 {
 	// Flux, Capture, Fission, nuFission, Total, Scater Tallies
 	bin->score( P, grid, told, track );
@@ -606,3 +734,4 @@ void MGXS_Estimator::report( std::ostringstream& output )
 		}
 	}
 }
+*/

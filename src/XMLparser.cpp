@@ -648,95 +648,113 @@ void XML_input
 		// Push new cell
 		Cell.push_back( Reg );
   	}
-  	
-	// Set estimators
-  	pugi::xml_node input_estimators = input_file.child("estimators");
-  	for ( const auto& e : input_estimators )
-	{
-    		std::shared_ptr<Estimator_t> Est;
+    
+    //==========================================================================
+    // Set estimators
+    //==========================================================================
+    
+    // Loop over estimators
+    for ( auto& e : input_file.child("estimators").children("estimator") ){
+        std::shared_ptr<Estimator_t> set_estimator;
 
-    		const std::string e_type     = e.name();
-		const std::string name       = e.attribute("name").value();
-		
-		if ( e_type == "estimator" )
-		{
-			const std::string        score_string = e.attribute("score").value();
-			std::vector<std::string> scores;
-			std::istringstream iss( score_string );
-			for(std::string s; iss >> s; )
-			{ scores.push_back(s); }
-		
-			// Generic estimator
-				Est = std::make_shared<Generic_Estimator> ( name );
-				for ( auto& s : scores )
-				{
-					if      ( s == "current" )    { Est->addScore( std::make_shared<Current_Score>()    ); }
-					else if ( s == "flux" )       { Est->addScore( std::make_shared<Flux_Score>()       ); }
-					else if ( s == "absorption" ) { Est->addScore( std::make_shared<Absorption_Score>() ); }
-					else if ( s == "scatter" )    { Est->addScore( std::make_shared<Scatter_Score>()    ); }
-					else if ( s == "capture" )    { Est->addScore( std::make_shared<Capture_Score>()    ); }
-					else if ( s == "fission" )    { Est->addScore( std::make_shared<Fission_Score>()    ); }
-					else if ( s == "total" )      { Est->addScore( std::make_shared<Total_Score>()      ); }
-					else if ( s == "count" )    
-					{
-        					std::cout << "score 'count' in estimator " << name << " has to be the only score" << std::endl;
-						throw;
-	       				}
-       					else 
-					{
-        					std::cout << "unsuported score type " << s << " in estimator " << name << std::endl;
-						throw;
-	       				}
-				}
-		}
+        // Estimator name
+        std::string e_name = "Estimator #" + std::to_string(Estimator.size()+1);
+        if ( e.attribute("name") ){ e_name = e.attribute("name").value(); }
+	set_estimator = std::make_shared<Generic_Estimator> ( e_name );
 
-		else if ( e_type == "mgxs" ) 
-		{ 
-			unsigned int N = 1; // Default Legendre scattering components considered
-		       	if ( e.attribute("N") ) { N = e.attribute("N").as_uint(); }
-			Est = std::make_shared<MGXS_Estimator> ( name, N ); 
-		}
-		else { std::cout << "unknown estimator type " << name << std::endl; throw; }
+        // Estimator scores
+        std::vector<std::string> e_scores;
+        if ( !e.child("score").attribute("scores") ){
+            std::cout<< "[ERROR] There is no score in estimator " << e_name 
+                     << "\n";
+            std::exit(EXIT_FAILURE);
+        }
+        for ( auto& score : e.children("score") ){
+            // Type
+            std::shared_ptr<ScoreKernel> sk;
+            std::string                  sk_type = "TL";
+            if ( score.attribute("type") ){
+                sk_type = score.attribute("type").value();
+            }
+            if ( sk_type == "TL" ){ 
+                sk = std::make_shared<ScoreKernelTrackLength>();
+            }else if ( sk_type == "C" ){
+                sk = std::make_shared<ScoreKernelCollision>();
+            }else if ( sk_type == "N" ){
+                sk = std::make_shared<ScoreKernelNeutron>();
+            }else{
+                std::cout<< "[ERROR] Unsupported score type in estimator " 
+                         << e_name << "\n";
+                std::exit(EXIT_FAILURE);
+            }    
+            // Score
+            std::istringstream iss( score.attribute("scores").value() );
+            for ( std::string s; iss >> s; ) { e_scores.push_back(s); }
+            for ( auto& s : e_scores ){
+                if ( s == "flux" ){
+                    set_estimator->addScore
+                        ( std::make_shared<ScoreFlux>(s,sk) );
+                }else if ( s == "absorption" ){ 
+                    set_estimator->addScore
+                        ( std::make_shared<ScoreAbsorption>(s,sk) );
+                }else if ( s == "scatter" ){ 
+                    set_estimator->addScore
+                        ( std::make_shared<ScoreScatter>(s,sk) ); 
+                }else if ( s == "capture" ){ 
+                    set_estimator->addScore
+                        ( std::make_shared<ScoreCapture>(s,sk) ); 
+                }else if ( s == "fission" ){ 
+                    set_estimator->addScore
+                        ( std::make_shared<ScoreFission>(s,sk) ); 
+                }else if ( s == "nu-fission" ){ 
+                    set_estimator->addScore
+                        ( std::make_shared<ScoreNuFission>(s,sk) ); 
+                }else if ( s == "total" ){ 
+                    set_estimator->addScore
+                        ( std::make_shared<ScoreTotal>(s,sk) ); 
+                }else if ( s == "current" ){ 
+                    sk = std::make_shared<ScoreKernelNeutron>();
+                    set_estimator->addScore
+                        ( std::make_shared<ScoreFlux>(s,sk) ); 
+                }else{
+                    std::cout<< "[ERROR] Unsuported score type " << s 
+                             << " in estimator " << e_name << "\n";
+                    std::exit(EXIT_FAILURE);
+                }
+            }
+        }
 
-      		for ( const auto& eChild : e.children() )
-		{
-			// Add estimator to surface
-        		if ( (std::string) eChild.name() == "surface" )
-			{
-          			const std::string                s_name  = eChild.attribute("name").value();
-          			const std::shared_ptr<Surface_t> SurfPtr = findByName( Surface, s_name );
-          			
-				if ( SurfPtr ) 					
-				{
-       					SurfPtr->addEstimator( Est );
-       				}
-       				else 
-				{
-        				std::cout << "unknown surface label " << s_name << " in estimator " << name << std::endl;
-					throw;
-       				}
-       			}
-			
-			// Add estimator to cell
-        		else if ( (std::string) eChild.name() == "cell" )
-			{
-          			const std::string          r_name  = eChild.attribute("name").value();
-          			std::shared_ptr<Cell_t>  RegPtr  = findByName( Cell, r_name );
-          				
-				if ( RegPtr ) 
-				{
-            				RegPtr->addEstimator( Est );
-          			}
-          			else 
-				{
-            				std::cout << "unknown cell label " << r_name << " in estimator " << name << std::endl;
-					throw;
-          			}
-        		}
-            
-			
+        // Attach estimator on geometries (and build the corresponding filter)
+        if ( !e.child("surface") && !e.child("cell") ){
+            std::cout<< "[ERROR] Estimator " << e_name 
+                     << " needs to be attached somewhere\n";
+            std::exit(EXIT_FAILURE);
+        }
+        for ( auto& surface : e.children("surface") ){
+            const std::string s_name = surface.attribute("name").value();
+            const std::shared_ptr<Surface_t> s_ptr = findByName( Surface, s_name );
+	    if ( !s_ptr ){
+        	std::cout << "[ERROR] Unknown surface label " << s_name 
+                          << " in estimator " << e_name << "\n";
+                std::exit(EXIT_FAILURE);
+       	    }
+       	    s_ptr->addEstimator( set_estimator );
+        }
+        for ( auto& cell : e.children("cell") ){
+            const std::string c_name = cell.attribute("name").value();
+            const std::shared_ptr<Cell_t> c_ptr = findByName( Cell, c_name );		
+	    if ( !c_ptr ){
+        	std::cout << "[ERROR] Unknown cell label " << c_name 
+                          << " in estimator " << e_name << "\n";
+                std::exit(EXIT_FAILURE);
+       	    }
+       	    c_ptr->addEstimator( set_estimator );
+        }
+        
+        // Estimator filters
+        for ( auto& eChild : e.children() ){
 			// Set bin (for generic estimator) or group (for MGXS)
-        		else if ( (std::string) eChild.name() == "bin" || (std::string) eChild.name() == "group" )
+        		if ( (std::string) eChild.name() == "bin" || (std::string) eChild.name() == "group" )
 			{
 				// Construct bin grid
 				std::vector<double> bin_grid;
@@ -773,23 +791,23 @@ void XML_input
 					std::string type = eChild.attribute("type").value();
         				if ( type != "energy" && type != "time" ) 
 					{
-            					std::cout << "unsuported bin type " << type << " in estimator " << name << std::endl;
+            					std::cout << "unsuported bin type " << type << " in estimator " << e_name << std::endl;
 						throw;
 					}
-					Est->setBin( type, bin_grid ); 
+					set_estimator->setBin( type, bin_grid ); 
 				}
         			// MGXS group
 				else
 				{
 					if ( bin_grid[0] > 0.0 ) { bin_grid.insert( bin_grid.begin(), 0.0 ); }
 					if ( bin_grid.back() > 3.1e7 ) { bin_grid[bin_grid.size()-1] = 3.1e7; }
-					Est->setBin( "energy", bin_grid ); 
+					set_estimator->setBin( "energy", bin_grid ); 
 				}
 			}
     		}
     		
 		// Push new estimator
-    		Estimator.push_back( Est );
+    		Estimator.push_back( set_estimator );
   	}
 
 	// Set source bank

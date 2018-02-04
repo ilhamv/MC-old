@@ -73,8 +73,8 @@
 
 
 <estimators>
-    <estimator name="Leak out right" score="current">
+    <estimator name="Leak out right">
+        <score scores="current"/>
     	<surface name="px3"/>
     </estimator>
 </estimators>
-

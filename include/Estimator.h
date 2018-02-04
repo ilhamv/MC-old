@@ -1,5 +1,5 @@
-#ifndef _ESTIMATOR_HEADER_
-#define _ESTIMATOR_HEADER_
+#ifndef ESTIMATOR_H
+#define ESTIMATOR_H
 
 #include <cmath>    // sqrt
 #include <iostream> // cout
@@ -14,153 +14,261 @@
 #include "Geometry.h"
 #include "Distribution.h"
 
-// Forward declaration
 class Particle_t;
 
-///////////////
-/// Scoring ///
-///////////////
 
-// Score base class
-class Score_t
+//=============================================================================
+// Scoring Kernel
+//   - Supports: Neutron, Track Length, Collision
+//=============================================================================
+
+class ScoreKernel
+{
+    public:
+         ScoreKernel() {};
+        ~ScoreKernel() {};
+
+        virtual double score( const Particle_t& P, const double l ) = 0;
+};
+// Neutron
+class ScoreKernelNeutron : public ScoreKernel
+{
+    public:
+         ScoreKernelNeutron() {};
+        ~ScoreKernelNeutron() {};
+
+        double score( const Particle_t& P, const double l );
+};
+// Track Length
+class ScoreKernelTrackLength : public ScoreKernel
+{
+    public:
+         ScoreKernelTrackLength() {};
+        ~ScoreKernelTrackLength() {};
+
+        double score( const Particle_t& P, const double l );
+};
+// Collision
+class ScoreKernelCollision : public ScoreKernel
+{
+    public:
+         ScoreKernelCollision() {};
+        ~ScoreKernelCollision() {};
+
+        double score( const Particle_t& P, const double l );
+};
+
+
+//=============================================================================
+// Score
+//   - Specified Scoring Kernel
+//   - Supports: Flux, Absorption, Scatter, Capture, Fission,
+//               NuFission, Total
+//=============================================================================
+
+class Score
 {
     private:
-	const std::string s_name;
+        const std::string s_name;
+
+    protected:
+        std::shared_ptr<ScoreKernel> s_kernel;
+
     public:
-    	 Score_t( const std::string n ) : s_name(n) {};
-	~Score_t() {};
+    	Score( const std::string n, const std::shared_ptr<ScoreKernel>& k )
+            : s_name(n), s_kernel(k) {};
+        ~Score() {};
 
-	// Get score type name
-	virtual std::string name() final { return s_name; }
+	// Get score name
+        virtual std::string name() final {return s_name;}
 
-	// Get score to be added at event
+        // Get score to be added at event
 	virtual double score( const Particle_t& P, const double l ) = 0;
 };
 
-// Event
-class Event_Score : public Score_t
+// Flux
+class ScoreFlux : public Score
 {
     public:
-	Event_Score() : Score_t( "Event" ) {};
-	~Event_Score() {};
+	ScoreFlux( const std::string n,
+                    const std::shared_ptr<ScoreKernel>& k )
+            : Score(n,k) {};
+	~ScoreFlux() {};
+
+	double score( const Particle_t& P, const double l );
+};
+// Absorption
+class ScoreAbsorption : public Score
+{
+    public:
+	ScoreAbsorption( const std::string n,
+                         const std::shared_ptr<ScoreKernel>& k )
+            : Score(n,k) {};
+	~ScoreAbsorption() {};
+
+	double score( const Particle_t& P, const double l );
+};
+// Scatter
+class ScoreScatter : public Score
+{
+    public:
+	ScoreScatter( const std::string n,
+                      const std::shared_ptr<ScoreKernel>& k )
+            : Score(n,k) {};
+	~ScoreScatter() {};
+
+	double score( const Particle_t& P, const double l );
+};
+// Capture
+class ScoreCapture : public Score
+{
+    public:
+	ScoreCapture( const std::string n,
+                      const std::shared_ptr<ScoreKernel>& k )
+            : Score(n,k) {};
+	~ScoreCapture() {};
+
+	double score( const Particle_t& P, const double l );
+};
+// Fission
+class ScoreFission : public Score
+{
+    public:
+	ScoreFission( const std::string n,
+                      const std::shared_ptr<ScoreKernel>& k )
+            : Score(n,k) {};
+	~ScoreFission() {};
+
+	double score( const Particle_t& P, const double l );
+};
+// NuFission
+class ScoreNuFission : public Score
+{
+    public:
+	ScoreNuFission( const std::string n,
+                        const std::shared_ptr<ScoreKernel>& k )
+            : Score(n,k) {};
+	~ScoreNuFission() {};
+
+	double score( const Particle_t& P, const double l );
+};
+// Total
+class ScoreTotal : public Score
+{
+    public:
+	ScoreTotal( const std::string n,
+                         const std::shared_ptr<ScoreKernel>& k )
+            : Score(n,k) {};
+	~ScoreTotal() {};
 
 	double score( const Particle_t& P, const double l );
 };
 
-// Flux (path length)
-class Flux_Score : public Score_t
+
+//==============================================================================
+// Tally: the estimated mean with its uncertainty
+//==============================================================================
+
+class Tally
 {
-	public:
-		 Flux_Score() : Score_t( "Flux" ) {};
-		~Flux_Score() {};
-
-		double score( const Particle_t& P, const double l );
-};
-
-// Absorption (path length)
-class Absorption_Score : public Score_t
-{
-	public:
-		 Absorption_Score() : Score_t( "Abs. Rate" ) {};
-		~Absorption_Score() {};
-
-		double score( const Particle_t& P, const double l );
-};
-
-// Scatter (path length)
-class Scatter_Score : public Score_t
-{
-	public:
-		 Scatter_Score() : Score_t( "Scat. Rate" ) {};
-		~Scatter_Score() {};
-
-		double score( const Particle_t& P, const double l );
-};
-
-// Capture (path length)
-class Capture_Score : public Score_t
-{
-	public:
-		 Capture_Score() : Score_t( "Capt. Rate" ) {};
-		~Capture_Score() {};
-
-		double score( const Particle_t& P, const double l );
-};
-
-// Fission (path length)
-class Fission_Score : public Score_t
-{
-	public:
-		 Fission_Score() : Score_t( "Fis. Rate" ) {};
-		~Fission_Score() {};
-
-		double score( const Particle_t& P, const double l );
-};
-
-
-// Nu Fission (path length)
-class nuFission_Score : public Score_t
-{
-	public:
-		 nuFission_Score() : Score_t( "Prod. Rate" ) {};
-		~nuFission_Score() {};
-
-		double score( const Particle_t& P, const double l );
-};
-
-
-// Total (path length)
-class Total_Score : public Score_t
-{
-	public:
-		 Total_Score() : Score_t( "Tot. Rate" ) {};
-		~Total_Score() {};
-
-		double score( const Particle_t& P, const double l );
-};
-
-
-
-/////////////
-/// Tally ///
-/////////////
-
-class Tally_t
-{
-	public:
-		double hist    = 0.0; // History sum
-		double sum     = 0.0; // Sum over all histories
-	       	double squared = 0.0; // Sum of history sum squared over all histories
+    public:
+        double hist    = 0.0; // History sum
+	double sum     = 0.0; // Sum over all histories
+	double squared = 0.0; // Sum of history sum squared over all histories
 		
-                double mean  = 0.0;   // Estimated mean
-		double uncer = 0.0;   // Uncertainty of the estimated mean
-		double uncer_rel;     // Relative uncertainty of estimated mean
-		double FOM   = 0.0;   // Figure of merit		
+        double mean  = 0.0;   // Estimated mean
+	double uncer = 0.0;   // Uncertainty of the estimated mean
+	double uncer_rel;     // Relative uncertainty of estimated mean
+	double FOM   = 0.0;   // Figure of merit		
 	
-	public:
-		 Tally_t() {};
-		~Tally_t() {};
+	 Tally() {};
+	~Tally() {};
 };
 
 
+//==============================================================================
+// Filter
+//   - Supports: ID(Surface, Cell), Energy, Time
+//==============================================================================
 
-///////////
-/// Bin ///
-///////////
+class Filter
+{
+    private:
+        const std::string f_name;
+        const std::string f_unit;
+
+    protected:
+        const std::vector<double> f_grid;
+        const int                 f_Nbin;
+
+    public:
+         Filter( const std::string n, const std::string u, 
+                 const std::vector<double> g): f_name(n), f_unit(u), 
+                                               f_grid(g), f_Nbin(g.size()-1) {};
+        ~Filter() {};
+
+        // Get the index and the corresponding track length to be scored
+        virtual std::vector<std::pair<int,double>> idx_tl( const Particle_t& P,
+                                                           const double l,
+                                                           const double id) = 0;
+        // Getters
+        virtual std::vector<double> grid() final { return f_grid; }
+        virtual std::string name() final { return f_name; }
+        virtual std::string unit() final { return f_unit; }
+};
+// ID
+class FilterID : public Filter
+{
+    public:
+         FilterID( const std::string n, const std::string u, 
+                        const std::vector<double> b ): Filter(n,u,b) {};
+        ~FilterID() {};
+
+        // Get the index and the corresponding track length to be scored
+        std::vector<std::pair<int,double>> idx_tl( const Particle_t& P,
+                                                   const double l,
+                                                   const double id);
+};
+// Energy
+class FilterEnergy : public Filter
+{
+    public:
+         FilterEnergy( const std::string n, const std::string u, 
+                        const std::vector<double> b ): Filter(n,u,b) {};
+        ~FilterEnergy() {};
+
+        // Get the index and the corresponding track length to be scored
+        std::vector<std::pair<int,double>> idx_tl( const Particle_t& P,
+                                                   const double l,
+                                                   const double id);
+};
+// Time
+class FilterTime : public Filter
+{
+    public:
+         FilterTime( const std::string n, const std::string u, 
+                        const std::vector<double> b ): Filter(n,u,b) {};
+        ~FilterTime() {};
+
+        // Get the index and the corresponding track length to be scored
+        std::vector<std::pair<int,double>> idx_tl( const Particle_t& P,
+                                                   const double l,
+                                                   const double told);
+};
 
 // Bin base class 
 class Bin_t
 {
 	public:
-		std::vector<std::vector<Tally_t>>     tally;  // Bin tallies ( indexing --> [bin#][score#] )
+		std::vector<std::vector<Tally>>     tally;  // Bin tallies ( indexing --> [bin#][score#] )
 		const int                             Nbin;   // # of bins
-		std::vector<std::shared_ptr<Score_t>> scores; // Things to be scored
+		std::vector<std::shared_ptr<Score>> scores; // Things to be scored
 		const int                             Nscore; // # of scores
 		const std::string                     unit;   // result unit, for report
 	
 	public:
 		// Constructor: pass grid points and construct bin and their tallies
-		Bin_t( const std::vector<double>& grid, const std::vector<Tally_t> total_tally, std::vector<std::shared_ptr<Score_t>>& s, 
+		Bin_t( const std::vector<double>& grid, const std::vector<Tally> total_tally, std::vector<std::shared_ptr<Score>>& s, 
 				 const std::string str ) : Nbin(grid.size() - 1), unit(str), Nscore(s.size())
 		{ 
 			// Store scores
@@ -180,7 +288,7 @@ class Energy_Bin : public Bin_t
 {
 	public:
 		// Constructor: pass grid points
-		 Energy_Bin( const std::vector<double>& grid, const std::vector<Tally_t> total_tally, std::vector<std::shared_ptr<Score_t>>& s ) : 
+		 Energy_Bin( const std::vector<double>& grid, const std::vector<Tally> total_tally, std::vector<std::shared_ptr<Score>>& s ) : 
 			 Bin_t(grid,total_tally,s,"eV") {};
 		~Energy_Bin() {};
 
@@ -192,7 +300,7 @@ class Time_Bin : public Bin_t
 {
 	public:
 		// Constructor: pass grid points
-		 Time_Bin( const std::vector<double>& grid, const std::vector<Tally_t> total_tally, std::vector<std::shared_ptr<Score_t>>& s ) : 
+		 Time_Bin( const std::vector<double>& grid, const std::vector<Tally> total_tally, std::vector<std::shared_ptr<Score>>& s ) : 
 			 Bin_t(grid,total_tally,s,"sec") {};
 		~Time_Bin() {};
 
@@ -219,7 +327,7 @@ class Estimator_t
 		~Estimator_t() {};
 
 		// Add thing to be scored
-		virtual void addScore( const std::shared_ptr<Score_t>& S ) = 0;
+		virtual void addScore( const std::shared_ptr<Score>& S ) = 0;
 
 		// Set bin grid and corresponding tallies
 		virtual void setBin( const std::string type, std::vector<double> bin ) = 0;
@@ -234,7 +342,7 @@ class Estimator_t
 		// Report results
 		virtual void report( std::ostringstream& output ) = 0;
 		
-                std::vector<Tally_t>                  total_tally; // Total tallies [Nscore]
+                std::vector<Tally>                  total_tally; // Total tallies [Nscore]
 };
 
 
@@ -244,7 +352,7 @@ class Estimator_t
 class Generic_Estimator : public Estimator_t
 {
 	public:
-		std::vector<std::shared_ptr<Score_t>> scores;      // Things to be scored
+		std::vector<std::shared_ptr<Score>> scores;      // Things to be scored
 		int                                   Nscore = 0;  // # of scores (things to be scored)
 		
 		std::vector<double>                   grid;        // Bin grid
@@ -256,15 +364,15 @@ class Generic_Estimator : public Estimator_t
 		~Generic_Estimator() {};
 
 		// Add thing to be scored and push new total tally
-		void addScore( const std::shared_ptr<Score_t>& S );
+		void addScore( const std::shared_ptr<Score>& S );
 
 		// Set bin
 		virtual void setBin( const std::string type, const std::vector<double> gr );
 		
 		// Tally operations
-		void tally_endHistory( Tally_t& T );
-                void tally_endCycle( Tally_t& T, const double tracks );
-		void tally_average( Tally_t& T );
+		void tally_endHistory( Tally& T );
+                void tally_endCycle( Tally& T, const double tracks );
+		void tally_average( Tally& T );
 		
 		// Score at events
 		virtual void score( const Particle_t& P, const double told, const double track = 0.0 );
@@ -280,7 +388,7 @@ class Generic_Estimator : public Estimator_t
 
 // Homogenized MG Constant Generator
 ////////////////////////////////////
-
+/*
 class MGXS_Estimator : public Generic_Estimator
 {
 	protected:
@@ -312,7 +420,7 @@ class MGXS_Estimator : public Generic_Estimator
 		// Report results
 		void report( std::ostringstream& output );
 };
+*/
 
-
-#endif
+#endif // ESTIMATOR_H
 

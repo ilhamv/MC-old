@@ -105,8 +105,9 @@
 
 
 <estimators>
-    <estimator name="Detector" score="flux absorption">
-    	<cell name="detector"/>
+    <estimator name="Detector">
+        <score scores="flux absorption"/>
+    	<cell  name="detector"/>
     </estimator>
 </estimators>
 

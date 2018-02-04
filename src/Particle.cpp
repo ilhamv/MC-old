@@ -72,4 +72,5 @@ void Particle_t::searchCell( const std::vector<std::shared_ptr<Cell_t>>& Cell )
 	}
 	std::cout<< "[WARNING] A particle is lost:\n( x, y, z )  (" << p_pos.x << ", " << p_pos.y << ", " << p_pos.z << " )\n";
         std::exit(EXIT_FAILURE);
+        // Might want to just kill the particle instead of the whole process
 }
