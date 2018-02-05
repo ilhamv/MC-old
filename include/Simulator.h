@@ -18,35 +18,37 @@
 class Simulator_t
 {
     public:
-        std::string                                  simName;          // Simulation name
+        std::string simulation_name;
         
-        unsigned long long                           nSample;          // Number of particle samples per cycle
-        unsigned long long                           nCycle   = 1;     // Number of iteration/cycle
-        unsigned long long                           nPassive = 0;     // Number of passive cycle
+        unsigned long long Nsample;     
+        unsigned long long Ncycle   = 1; 
+        unsigned long long Npassive = 0; 
 
-        bool                                         ksearch  = false; // ksearch mode flag
-        bool                                         tally    = false; // Estimator activation toggle
+        bool ksearch  = false; // ksearch mode flag
+        bool tally    = false; // Estimator activation toggle
         
-        std::vector<double>                          k_cycle;          // Criticality estimate at each cycle
-        double                                       k = 1.0;
-        std::vector<double>                          entropy_cycle;    // Entropy at each cycle
-        
-        double                                       Ecut_off = 0.0;   // Energy cut-off
-        double                                       tcut_off = MAX;   // Time cut-off
+        double Ecut_off = 0.0;
+        double tcut_off = MAX;
 
-        unsigned long long                           tracks   = 0;     // # of particle tracks
-        double                                       wr       = 0.25;  // Weight rouletting
-        double                                       ws       = 1.0;  // Survival weight
-        
-        Source_Bank                                  Fbank;            // Fission bank
-        Source_Bank                                  Sbank;            // Sample bank
-        std::stack  < Particle_t >                   Pbank;            // Particle bank
+        double wr = 0.25; // Weight rouletting
+        double ws = 1.0;  // Survival weight
 
-        std::vector < std::shared_ptr<Surface_t>   > Surface;          // Surfaces
-        std::vector < std::shared_ptr<Cell_t>      > Cell;             // Cells
-        std::vector < std::shared_ptr<Nuclide_t>   > Nuclide;          // Nuclides
-        std::vector < std::shared_ptr<Material_t>  > Material;         // Materials
-        std::vector < std::shared_ptr<Estimator_t> > Estimator;        // Estimators  	
+        unsigned long long  tracks = 0; // # of particle tracks
+        
+        Source_Bank            Fbank; // Fission bank
+        Source_Bank            Sbank; // Sample bank
+        std::stack<Particle_t> Pbank; // Particle bank
+
+        std::vector<std::shared_ptr<Surface_t>> Surface;   // Surfaces
+        std::vector<std::shared_ptr<Cell_t>> Cell;         // Cells
+        std::vector<std::shared_ptr<Nuclide_t>> Nuclide;   // Nuclides
+        std::vector<std::shared_ptr<Material_t>> Material; // Materials
+        
+        std::vector<std::shared_ptr<Estimator>> estimator;
+        std::shared_ptr<Estimator>              k_estimator;
+        
+        std::vector<double> k_cycle;          // Criticality estimate at each cycle
+        double              k = 1.0;
         
         // User-defined distributions
         std::vector < std::shared_ptr<Distribution_t<double>> > Distribution_Double;

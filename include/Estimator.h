@@ -208,24 +208,25 @@ class Filter
         ~Filter() {};
 
         // Get the index and the corresponding track length to be scored
-        virtual std::vector<std::pair<int,double>> idx_tl( const Particle_t& P,
+        virtual std::vector<std::pair<int,double>> idx_l( const Particle_t& P,
                                                            const double l,
-                                                           const double id) = 0;
+                                                           const double x) = 0;
         // Getters
+        virtual int                 size() final { return f_grid.size(); }
         virtual std::vector<double> grid() final { return f_grid; }
-        virtual std::string name() final { return f_name; }
-        virtual std::string unit() final { return f_unit; }
+        virtual std::string         name() final { return f_name; }
+        virtual std::string         unit() final { return f_unit; }
 };
 // ID
 class FilterID : public Filter
 {
     public:
          FilterID( const std::string n, const std::string u, 
-                        const std::vector<double> b ): Filter(n,u,b) {};
+                        const std::vector<double> g ): Filter(n,u,g) {};
         ~FilterID() {};
 
         // Get the index and the corresponding track length to be scored
-        std::vector<std::pair<int,double>> idx_tl( const Particle_t& P,
+        std::vector<std::pair<int,double>> idx_l( const Particle_t& P,
                                                    const double l,
                                                    const double id);
 };
@@ -234,193 +235,69 @@ class FilterEnergy : public Filter
 {
     public:
          FilterEnergy( const std::string n, const std::string u, 
-                        const std::vector<double> b ): Filter(n,u,b) {};
+                        const std::vector<double> g ): Filter(n,u,g) {};
         ~FilterEnergy() {};
 
         // Get the index and the corresponding track length to be scored
-        std::vector<std::pair<int,double>> idx_tl( const Particle_t& P,
+        std::vector<std::pair<int,double>> idx_l( const Particle_t& P,
                                                    const double l,
-                                                   const double id);
+                                                   const double x);
 };
 // Time
 class FilterTime : public Filter
 {
     public:
          FilterTime( const std::string n, const std::string u, 
-                        const std::vector<double> b ): Filter(n,u,b) {};
+                        const std::vector<double> g ): Filter(n,u,g) {};
         ~FilterTime() {};
 
         // Get the index and the corresponding track length to be scored
-        std::vector<std::pair<int,double>> idx_tl( const Particle_t& P,
+        std::vector<std::pair<int,double>> idx_l( const Particle_t& P,
                                                    const double l,
                                                    const double told);
 };
 
-// Bin base class 
-class Bin_t
-{
-	public:
-		std::vector<std::vector<Tally>>     tally;  // Bin tallies ( indexing --> [bin#][score#] )
-		const int                             Nbin;   // # of bins
-		std::vector<std::shared_ptr<Score>> scores; // Things to be scored
-		const int                             Nscore; // # of scores
-		const std::string                     unit;   // result unit, for report
-	
-	public:
-		// Constructor: pass grid points and construct bin and their tallies
-		Bin_t( const std::vector<double>& grid, const std::vector<Tally> total_tally, std::vector<std::shared_ptr<Score>>& s, 
-				 const std::string str ) : Nbin(grid.size() - 1), unit(str), Nscore(s.size())
-		{ 
-			// Store scores
-			scores = s;
-			
-			// Each bin is set with the same # of score tallies as the total tally of the estimator
-			tally.resize( Nbin, total_tally );
-		}
-		~Bin_t() {};
 
-		// Score bin
-		virtual void score( const Particle_t& P, const std::vector<double>& grid, const double told, const double track = 0.0 ) = 0;
+//==============================================================================
+/// Estimator
+//==============================================================================
+
+// Basic Estimator
+class Estimator
+{
+    private:
+	const std::string                    e_name;  
+        std::vector<std::shared_ptr<Score>>  e_scores;
+        std::vector<std::shared_ptr<Filter>> e_filters;
+        std::vector<Tally>                   e_tally;
+        // Tally structure: [score][filter1][filter2]... casted into 1D
+        //   filter1 are the geometries that the estimator is attached to
+        
+        // Indexes and track length to be scored on each individual filter
+        std::vector<std::vector<std::pair<int,double>>> e_idx_l;
+
+        // Multiplication of filter size with index > i
+        std::vector<double> idx_factor;
+
+    public:
+	 Estimator( const std::string n ) : e_name(n) {};
+	~Estimator() {};
+
+        // Initialization
+	void add_score( const std::shared_ptr<Score>& S );
+	void add_filter( const std::shared_ptr<Filter>& F );
+        void initialize_tallies();
+        
+        void score( const Particle_t& P, const double l, 
+                    const double x );	
+	// Loop closeouts
+	void end_history();              
+	void end_cycle( const int N, const double tracks );
+	void end_simulation( const int N );
+	void report( std::ostringstream& output );	
+
+        Tally tally( const int i );
 };
 
-// Energy bin (multi score)
-class Energy_Bin : public Bin_t
-{
-	public:
-		// Constructor: pass grid points
-		 Energy_Bin( const std::vector<double>& grid, const std::vector<Tally> total_tally, std::vector<std::shared_ptr<Score>>& s ) : 
-			 Bin_t(grid,total_tally,s,"eV") {};
-		~Energy_Bin() {};
-
-		void score( const Particle_t& P, const std::vector<double>& grid, const double told, const double track = 0.0 );
-}; 
-
-// Time bin (multi score)
-class Time_Bin : public Bin_t
-{
-	public:
-		// Constructor: pass grid points
-		 Time_Bin( const std::vector<double>& grid, const std::vector<Tally> total_tally, std::vector<std::shared_ptr<Score>>& s ) : 
-			 Bin_t(grid,total_tally,s,"sec") {};
-		~Time_Bin() {};
-
-		void score( const Particle_t& P, const std::vector<double>& grid, const double told, const double track = 0.0 );
-};
-
-
-
-/////////////////
-/// Estimator ///
-/////////////////
-
-// Estimator base class
-class Estimator_t
-{
-	protected:
-		const std::string    e_name;     // Estimator name
-		unsigned long long   nhist = 0;  // # of histories estimated
-		unsigned long long   ncycle = 0;  // # of histories estimated
-
-	public:
-		// Constructor: pass the estimator name and bin grid
-		 Estimator_t( const std::string n ) : e_name(n) {};
-		~Estimator_t() {};
-
-		// Add thing to be scored
-		virtual void addScore( const std::shared_ptr<Score>& S ) = 0;
-
-		// Set bin grid and corresponding tallies
-		virtual void setBin( const std::string type, std::vector<double> bin ) = 0;
-		
-		// Score at events
-		virtual void score( const Particle_t& P, const double told, const double track = 0.0  ) = 0;
-		
-		// Closeout
-		virtual void endHistory() = 0;              
-		virtual void endCycle( const double tracks ) = 0;              
-		
-		// Report results
-		virtual void report( std::ostringstream& output ) = 0;
-		
-                std::vector<Tally>                  total_tally; // Total tallies [Nscore]
-};
-
-
-// Generic estimator
-////////////////////
-
-class Generic_Estimator : public Estimator_t
-{
-	public:
-		std::vector<std::shared_ptr<Score>> scores;      // Things to be scored
-		int                                   Nscore = 0;  // # of scores (things to be scored)
-		
-		std::vector<double>                   grid;        // Bin grid
-		std::shared_ptr<Bin_t>                bin;         // Estimator bin
-		int                                   Nbin = 0;    // # of bins
-
-		// Constructor: pass the estimator name
-		 Generic_Estimator( const std::string n ) : Estimator_t(n) {};
-		~Generic_Estimator() {};
-
-		// Add thing to be scored and push new total tally
-		void addScore( const std::shared_ptr<Score>& S );
-
-		// Set bin
-		virtual void setBin( const std::string type, const std::vector<double> gr );
-		
-		// Tally operations
-		void tally_endHistory( Tally& T );
-                void tally_endCycle( Tally& T, const double tracks );
-		void tally_average( Tally& T );
-		
-		// Score at events
-		virtual void score( const Particle_t& P, const double told, const double track = 0.0 );
-
-		// Closeout
-                virtual void endHistory();
-                virtual void endCycle( const double tracks );
-
-		// Report results
-		virtual void report( std::ostringstream& output );
-};
-
-
-// Homogenized MG Constant Generator
-////////////////////////////////////
-/*
-class MGXS_Estimator : public Generic_Estimator
-{
-	protected:
-		std::vector<std::vector<std::shared_ptr<Bin_t>>> tensor_bin; // Legendre components tensor ( N x G x G )
-		                                                             //   consists of GxG scattering matrix for each legendre order n=[0,N]
-		const unsigned int                               N;          // Legendre order considered
-		std::vector<double>                              Pl;         // To store legendre polynomials value		
-		// Simple group constants are handled by generic estimator bin
-	
-	public:
-		// Constructor: pass the estimator name and energy grids
-		MGXS_Estimator( const std::string n, const unsigned int pn ) : Generic_Estimator(n), N(pn) {};
-		~MGXS_Estimator() {};
-		
-		// Set bin (or group structure)
-		void setBin( const std::string type, const std::vector<double> gr );
-
-		// Calculate Legendre polynomials at mu
-		void calculatePl( const double mu );
-
-		// Score at events
-		void score( const Particle_t& P, const double told, const double track = 0.0 );
-		
-		// Closeout history
-		// Update the sum and sum of squared, and restart history sum of all tallies
-		void endHistory();
-                void endCycle( const double tracks );
-
-		// Report results
-		void report( std::ostringstream& output );
-};
-*/
 
 #endif // ESTIMATOR_H
-

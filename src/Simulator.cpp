@@ -13,20 +13,20 @@
 // Constructor: Set up the simulator with XML parser
 Simulator_t::Simulator_t( const std::string input_file )
 {
-    XML_input( input_file, simName, nSample, ksearch, nCycle, nPassive, Ecut_off, tcut_off, Fbank, Surface, Cell, Nuclide, Material, Estimator, Distribution_Double, Distribution_Point );
+    XML_input( input_file, simulation_name, Nsample, ksearch, Ncycle, Npassive, Ecut_off, tcut_off, Fbank, Surface, Cell, Nuclide, Material, estimator, Distribution_Double, Distribution_Point );
     
-    k_cycle.resize(nCycle, 0.0);
+    k_cycle.resize(Ncycle, 0.0);
 }
 
 void Simulator_t::start()
 {
     // Simulation loop
-    for ( unsigned long long icycle = 0; icycle < nCycle ; icycle++ ){
-        if ( icycle == nPassive ) { tally = true; }
+    for ( unsigned long long icycle = 0; icycle < Ncycle ; icycle++ ){
+        if ( icycle == Npassive ) { tally = true; }
         Sbank = Fbank; Fbank.reset();
 
         // Cycle loop
-        for ( unsigned long long isample = 0 ; isample < nSample ; isample++ ){
+        for ( unsigned long long isample = 0 ; isample < Nsample ; isample++ ){
             Pbank.push( Sbank.getSource( Cell ) );
                     
             // History loop
@@ -97,7 +97,7 @@ void Simulator_t::start()
 
             // Estimator history closeout
             if (tally)
-            { for ( auto& E : Estimator ) { E->endHistory(); } }
+            { for ( auto& E : estimator ) { E->end_history(); } }
 
             // Start next history
 
@@ -105,10 +105,10 @@ void Simulator_t::start()
 
         // Estimator history closeout
         if (tally)
-        { for ( auto& E : Estimator ) { E->endCycle(tracks); } }
+        { for ( auto& E : estimator ) { E->end_cycle(Nsample, tracks); } }
 
         if (ksearch){
-            k_cycle[icycle] /= nSample;
+            k_cycle[icycle] /= Nsample;
             k = k_cycle[icycle];
         }
 
@@ -116,34 +116,35 @@ void Simulator_t::start()
         tracks = 0.0;
     
     } // All cycles are done, end of simulation loop
+    { for ( auto& E : estimator ) { E->end_simulation(Ncycle); } }
 }
 
 void Simulator_t::report()
 {
     // Generate outputs
     std::ostringstream output;                       // Output text
-    std::ofstream file( simName + " - output.txt" ); // .txt file
+    std::ofstream file( simulation_name + " - output.txt" ); // .txt file
 	
     // Header
     output << "\n";
-    for ( int i = 0 ; i < simName.length()+6 ; i++ ) { output << "="; }
+    for ( int i = 0 ; i < simulation_name.length()+6 ; i++ ) { output << "="; }
     output << "\n";
-    output << "== " + simName + " ==\n";
-    for ( int i = 0 ; i < simName.length()+6 ; i++ ) { output << "="; }
+    output << "== " + simulation_name + " ==\n";
+    for ( int i = 0 ; i < simulation_name.length()+6 ; i++ ) { output << "="; }
     output << "\n";
-    output << "Number of passive cycles   : " << nPassive << "\n";
-    output << "Number of active cycles    : " << nCycle - nPassive << "\n";
-    output << "Number of samples per cycle: " << nSample << "\n\n";
+    output << "Number of passive cycles   : " << Npassive << "\n";
+    output << "Number of active cycles    : " << Ncycle - Npassive << "\n";
+    output << "Number of samples per cycle: " << Nsample << "\n\n";
     
     if (ksearch ) { 
         k = 0.0;
-        for( int i = nPassive; i < nCycle; i++ ) { k += k_cycle[i]; }
-        k /= (nCycle - nPassive);
+        for( int i = Npassive; i < Ncycle; i++ ) { k += k_cycle[i]; }
+        k /= (Ncycle - Npassive);
         output << "k-eigenvalue: " << k << "\n"; 
     }
 
     // Report tallies
-    for ( auto& E : Estimator ) { E->report( output ); }
+    for ( auto& E : estimator ) { E->report( output ); }
 	
     // Print on monitor and file
     std::cout<< output.str();

@@ -114,10 +114,10 @@ void XML_input
 (
     const std::string                                        file_name,
     std::string&                                             simName,
-    unsigned long long&                                      nSample,          
+    unsigned long long&                                      Nsample,          
     bool&                                                    ksearch,
-    unsigned long long&                                      nCycle,          
-    unsigned long long&                                      nPassive,          
+    unsigned long long&                                      Ncycle,          
+    unsigned long long&                                      Npassive,          
     double&                                                  Ecut_off,
     double&                                                  tcut_off,
     Source_Bank&                                             Sbank,
@@ -125,7 +125,7 @@ void XML_input
     std::vector < std::shared_ptr<Cell_t>      >&            Cell,    
     std::vector < std::shared_ptr<Nuclide_t>   >&            Nuclide,   
     std::vector < std::shared_ptr<Material_t>  >&            Material, 
-    std::vector < std::shared_ptr<Estimator_t> >&            Estimator,
+    std::vector < std::shared_ptr<Estimator> >&            estimator,
     std::vector < std::shared_ptr<Distribution_t<double>> >& Distribution_Double,
     std::vector < std::shared_ptr<Distribution_t<Point_t>>>& Distribution_Point
 )
@@ -150,7 +150,7 @@ void XML_input
 	if( (std::string) s.name() == "description" )
 	{
 	    simName = s.attribute("name").value();         
-	    nSample   = s.attribute("samples").as_double();
+	    Nsample   = s.attribute("samples").as_double();
 	}
 	else if ( (std::string) s.name() == "cut-off" )
 	{
@@ -162,8 +162,8 @@ void XML_input
             unsigned long long active;
             ksearch  = true;
 	    active   = s.attribute("active_cycles").as_double();
-	    nPassive = s.attribute("passive_cycles").as_double();
-            nCycle   = active + nPassive;
+	    Npassive = s.attribute("passive_cycles").as_double();
+            Ncycle   = active + Npassive;
 	}
     }
         
@@ -492,21 +492,21 @@ void XML_input
 		if ( type == "plane_x" ) 
 		{
       			const double x = s.attribute("x").as_double();
-			S = std::make_shared< PlaneX_Surface > ( name, bc, x );
+			S = std::make_shared< PlaneX_Surface > ( name, Surface.size(), bc, x );
     		}
 
 		// Plane-y
 		else if ( type == "plane_y" ) 
 		{
       			const double y = s.attribute("y").as_double();
-			S = std::make_shared< PlaneY_Surface > ( name, bc, y );
+			S = std::make_shared< PlaneY_Surface > ( name, Surface.size(), bc, y );
     		}
 		
 		// Plane-z
 		else if ( type == "plane_z" ) 
 		{
       			const double z = s.attribute("z").as_double();
-			S = std::make_shared< PlaneZ_Surface > ( name, bc, z );
+			S = std::make_shared< PlaneZ_Surface > ( name, Surface.size(), bc, z );
     		}
 
 		// Generic plane
@@ -516,7 +516,7 @@ void XML_input
       			const double b = s.attribute("b").as_double();
       			const double c = s.attribute("c").as_double();
       			const double d = s.attribute("d").as_double();
-			S = std::make_shared< Plane_Surface > ( name, bc, a, b, c, d );
+			S = std::make_shared< Plane_Surface > ( name, Surface.size(), bc, a, b, c, d );
     		}
     		
 		// Sphere
@@ -526,7 +526,7 @@ void XML_input
       			const double y = s.attribute("y").as_double();
       			const double z = s.attribute("z").as_double();
       			const double r = s.attribute("r").as_double();
-      			S = std::make_shared< Sphere_Surface > ( name, bc, x, y, z, r );
+      			S = std::make_shared< Sphere_Surface > ( name, Surface.size(), bc, x, y, z, r );
 		}
 		
 		// Cylinder-x
@@ -535,7 +535,7 @@ void XML_input
       			const double y = s.attribute("y").as_double();
       			const double z = s.attribute("z").as_double();
       			const double r = s.attribute("r").as_double();
-      			S = std::make_shared< CylinderX_Surface > ( name, bc, y, z, r );
+      			S = std::make_shared< CylinderX_Surface > ( name, Surface.size(), bc, y, z, r );
 		}
 		
 		// Cylinder-z
@@ -544,7 +544,7 @@ void XML_input
       			const double x = s.attribute("x").as_double();
       			const double y = s.attribute("y").as_double();
       			const double r = s.attribute("r").as_double();
-      			S = std::make_shared< CylinderZ_Surface > ( name, bc, x, y, r );
+      			S = std::make_shared< CylinderZ_Surface > ( name, Surface.size(), bc, x, y, r );
 		}
 
 		// Cone-X
@@ -554,7 +554,7 @@ void XML_input
       			const double y = s.attribute("y").as_double();
       			const double z = s.attribute("z").as_double();
       			const double r = s.attribute("r").as_double();
-      			S = std::make_shared< ConeX_Surface > ( name, bc, x, y, z, r );
+      			S = std::make_shared< ConeX_Surface > ( name, Surface.size(), bc, x, y, z, r );
 		}
 		
 		// Cone-Y
@@ -564,7 +564,7 @@ void XML_input
       			const double y = s.attribute("y").as_double();
       			const double z = s.attribute("z").as_double();
       			const double r = s.attribute("r").as_double();
-      			S = std::make_shared< ConeX_Surface > ( name, bc, x, y, z, r );
+      			S = std::make_shared< ConeX_Surface > ( name, Surface.size(), bc, x, y, z, r );
 		}
 
 		// Cone-Z
@@ -574,7 +574,7 @@ void XML_input
       			const double y = s.attribute("y").as_double();
       			const double z = s.attribute("z").as_double();
       			const double r = s.attribute("r").as_double();
-      			S = std::make_shared< ConeX_Surface > ( name, bc, x, y, z, r );
+      			S = std::make_shared< ConeX_Surface > ( name, Surface.size(), bc, x, y, z, r );
 		}
 		
 		// Unknown surface type
@@ -601,7 +601,7 @@ void XML_input
                 importance = r.attribute("importance").as_double();
             }
         
-    		Reg  = std::make_shared<Cell_t> ( name, importance );
+    		Reg  = std::make_shared<Cell_t> ( name, Cell.size(), importance );
 
     		// Set cell material
     		if ( r.attribute("material") ) 
@@ -649,168 +649,164 @@ void XML_input
 		Cell.push_back( Reg );
   	}
     
-    //==========================================================================
-    // Set estimators
-    //==========================================================================
+//==========================================================================
+// Set estimators
+//==========================================================================
     
-    // Loop over estimators
-    for ( auto& e : input_file.child("estimators").children("estimator") ){
-        std::shared_ptr<Estimator_t> set_estimator;
+// Loop over estimators
+for ( auto& e : input_file.child("estimators").children("estimator") ){
+    std::shared_ptr<Estimator> set_estimator;
 
-        // Estimator name
-        std::string e_name = "Estimator #" + std::to_string(Estimator.size()+1);
-        if ( e.attribute("name") ){ e_name = e.attribute("name").value(); }
-	set_estimator = std::make_shared<Generic_Estimator> ( e_name );
+    // Estimator name
+    std::string e_name = "Estimator #" + std::to_string(estimator.size()+1);
+    if ( e.attribute("name") ){ e_name = e.attribute("name").value(); }
+    set_estimator = std::make_shared<Estimator> ( e_name );
 
-        // Estimator scores
-        std::vector<std::string> e_scores;
-        if ( !e.child("score").attribute("scores") ){
-            std::cout<< "[ERROR] There is no score in estimator " << e_name 
+    // Estimator scores
+    std::vector<std::string> e_scores;
+    if ( !e.child("score").attribute("scores") ){
+        std::cout<< "[ERROR] There is no score in estimator " << e_name 
+                 << "\n";
+        std::exit(EXIT_FAILURE);
+    }
+    for ( auto& score : e.children("score") ){
+        // Type
+        std::shared_ptr<ScoreKernel> sk;
+        std::string                  sk_type = "TL";
+        if ( score.attribute("type") ){
+            sk_type = score.attribute("type").value();
+        }
+        if ( sk_type == "TL" ){ 
+            sk = std::make_shared<ScoreKernelTrackLength>();
+        }else if ( sk_type == "C" ){
+            sk = std::make_shared<ScoreKernelCollision>();
+        }else if ( sk_type == "N" ){
+            sk = std::make_shared<ScoreKernelNeutron>();
+        }else{
+            std::cout<< "[ERROR] Unsupported score type in estimator " 
+                     << e_name << "\n";
+            std::exit(EXIT_FAILURE);
+        }    
+        // Score
+        std::shared_ptr<Score> e_score;
+        std::istringstream iss( score.attribute("scores").value() );
+        for ( std::string s; iss >> s; ) { e_scores.push_back(s); }
+        for ( auto& s : e_scores ){
+            if ( s == "flux" ){
+                e_score = std::make_shared<ScoreFlux>(s,sk);
+            }else if ( s == "absorption" ){ 
+                e_score = std::make_shared<ScoreAbsorption>(s,sk);
+            }else if ( s == "scatter" ){ 
+                e_score = std::make_shared<ScoreScatter>(s,sk); 
+            }else if ( s == "capture" ){ 
+                e_score = std::make_shared<ScoreCapture>(s,sk);
+            }else if ( s == "fission" ){ 
+                e_score = std::make_shared<ScoreFission>(s,sk); 
+            }else if ( s == "nu-fission" ){ 
+                e_score = std::make_shared<ScoreNuFission>(s,sk);
+            }else if ( s == "total" ){ 
+                e_score = std::make_shared<ScoreTotal>(s,sk);
+            }else if ( s == "current" ){ 
+                sk = std::make_shared<ScoreKernelNeutron>();
+                e_score = std::make_shared<ScoreFlux>(s,sk);
+            }else{
+                std::cout<< "[ERROR] Unsuported score type " << s 
+                         << " in estimator " << e_name << "\n";
+                std::exit(EXIT_FAILURE);
+            }
+            set_estimator->add_score( e_score );
+        }
+    }
+
+    // Estimator filters
+    std::string             f_name;
+    std::string             f_unit;
+    std::vector<double>     f_grid;
+    // Attach estimator on geometries (and build the corresponding filter)
+    f_unit = "#";
+    if ( !e.child("surface") && !e.child("cell") ){
+        std::cout<< "[ERROR] Estimator " << e_name 
+                 << " needs to be attached somewhere\n";
+        std::exit(EXIT_FAILURE);
+    }
+    for ( auto& surface : e.children("surface") ){
+        const std::string s_name = surface.attribute("name").value();
+        const std::shared_ptr<Surface_t> s_ptr = findByName( Surface, s_name );
+        if ( !s_ptr ){
+    	std::cout << "[ERROR] Unknown surface label " << s_name 
+                      << " in estimator " << e_name << "\n";
+            std::exit(EXIT_FAILURE);
+   	}
+   	s_ptr->addEstimator( set_estimator );
+        f_name = "surface";
+        f_grid.push_back(s_ptr->ID());
+    }
+    for ( auto& cell : e.children("cell") ){
+        const std::string c_name = cell.attribute("name").value();
+        const std::shared_ptr<Cell_t> c_ptr = findByName( Cell, c_name );		
+        if ( !c_ptr ){
+    	std::cout << "[ERROR] Unknown cell label " << c_name 
+                      << " in estimator " << e_name << "\n";
+            std::exit(EXIT_FAILURE);
+   	}    
+        c_ptr->addEstimator( set_estimator );
+        f_name = "cell";
+        f_grid.push_back(c_ptr->ID());
+    }
+    set_estimator->add_filter( std::make_shared<FilterID>
+                               (f_name,f_unit,f_grid) );
+    // Other filters
+    std::shared_ptr<Filter> e_filter;
+    for ( auto& f : e.children("filter") ){
+        // Filter grid
+        f_grid.clear();
+	if( f.attribute("grid") ){
+	    const std::string   grid_string = f.attribute("grid").value();
+	    std::istringstream  iss( grid_string );
+	    for( double s; iss >> s; ) { f_grid.push_back(s); }
+	} else if( f.attribute("grid_linear") ){
+	    const std::string grid_string = f.attribute("grid_linear").value();
+	    double a, b, step;
+	    std::istringstream  iss( grid_string );
+	    iss >> a >> step >> b;
+	    f_grid.push_back(a);
+	    while( f_grid.back() < b )
+	    {
+		f_grid.push_back( f_grid.back() + step );
+	    }
+	    f_grid.pop_back();
+	    f_grid.push_back(b);
+	} else{
+            std::cout<< "[ERROR] Need filter grid for estimator " << e_name 
                      << "\n";
             std::exit(EXIT_FAILURE);
         }
-        for ( auto& score : e.children("score") ){
-            // Type
-            std::shared_ptr<ScoreKernel> sk;
-            std::string                  sk_type = "TL";
-            if ( score.attribute("type") ){
-                sk_type = score.attribute("type").value();
-            }
-            if ( sk_type == "TL" ){ 
-                sk = std::make_shared<ScoreKernelTrackLength>();
-            }else if ( sk_type == "C" ){
-                sk = std::make_shared<ScoreKernelCollision>();
-            }else if ( sk_type == "N" ){
-                sk = std::make_shared<ScoreKernelNeutron>();
-            }else{
-                std::cout<< "[ERROR] Unsupported score type in estimator " 
-                         << e_name << "\n";
-                std::exit(EXIT_FAILURE);
-            }    
-            // Score
-            std::istringstream iss( score.attribute("scores").value() );
-            for ( std::string s; iss >> s; ) { e_scores.push_back(s); }
-            for ( auto& s : e_scores ){
-                if ( s == "flux" ){
-                    set_estimator->addScore
-                        ( std::make_shared<ScoreFlux>(s,sk) );
-                }else if ( s == "absorption" ){ 
-                    set_estimator->addScore
-                        ( std::make_shared<ScoreAbsorption>(s,sk) );
-                }else if ( s == "scatter" ){ 
-                    set_estimator->addScore
-                        ( std::make_shared<ScoreScatter>(s,sk) ); 
-                }else if ( s == "capture" ){ 
-                    set_estimator->addScore
-                        ( std::make_shared<ScoreCapture>(s,sk) ); 
-                }else if ( s == "fission" ){ 
-                    set_estimator->addScore
-                        ( std::make_shared<ScoreFission>(s,sk) ); 
-                }else if ( s == "nu-fission" ){ 
-                    set_estimator->addScore
-                        ( std::make_shared<ScoreNuFission>(s,sk) ); 
-                }else if ( s == "total" ){ 
-                    set_estimator->addScore
-                        ( std::make_shared<ScoreTotal>(s,sk) ); 
-                }else if ( s == "current" ){ 
-                    sk = std::make_shared<ScoreKernelNeutron>();
-                    set_estimator->addScore
-                        ( std::make_shared<ScoreFlux>(s,sk) ); 
-                }else{
-                    std::cout<< "[ERROR] Unsuported score type " << s 
-                             << " in estimator " << e_name << "\n";
-                    std::exit(EXIT_FAILURE);
-                }
-            }
-        }
-
-        // Attach estimator on geometries (and build the corresponding filter)
-        if ( !e.child("surface") && !e.child("cell") ){
-            std::cout<< "[ERROR] Estimator " << e_name 
-                     << " needs to be attached somewhere\n";
+        // Filter type
+        if ( !f.attribute("type") ){
+            std::cout<< "[ERROR] Need filter type for estimator " << e_name 
+                     << "\n";
             std::exit(EXIT_FAILURE);
         }
-        for ( auto& surface : e.children("surface") ){
-            const std::string s_name = surface.attribute("name").value();
-            const std::shared_ptr<Surface_t> s_ptr = findByName( Surface, s_name );
-	    if ( !s_ptr ){
-        	std::cout << "[ERROR] Unknown surface label " << s_name 
-                          << " in estimator " << e_name << "\n";
-                std::exit(EXIT_FAILURE);
-       	    }
-       	    s_ptr->addEstimator( set_estimator );
+        f_name = f.attribute("type").value();
+        if( f.attribute("type").value() == "energy" ){
+            f_unit = "eV";
+            e_filter = std::make_shared<FilterEnergy> (f_name,f_unit,f_grid);
+        } else if( f.attribute("type").value() == "time" ){
+            f_unit = "s";
+            e_filter = std::make_shared<FilterTime> (f_name,f_unit,f_grid);
+        } else{
+            std::cout<< "[ERROR] Unknown filter type for estimator " << e_name
+                     << "\n";
+            std::exit(EXIT_FAILURE);
         }
-        for ( auto& cell : e.children("cell") ){
-            const std::string c_name = cell.attribute("name").value();
-            const std::shared_ptr<Cell_t> c_ptr = findByName( Cell, c_name );		
-	    if ( !c_ptr ){
-        	std::cout << "[ERROR] Unknown cell label " << c_name 
-                          << " in estimator " << e_name << "\n";
-                std::exit(EXIT_FAILURE);
-       	    }
-       	    c_ptr->addEstimator( set_estimator );
-        }
-        
-        // Estimator filters
-        for ( auto& eChild : e.children() ){
-			// Set bin (for generic estimator) or group (for MGXS)
-        		if ( (std::string) eChild.name() == "bin" || (std::string) eChild.name() == "group" )
-			{
-				// Construct bin grid
-				std::vector<double> bin_grid;
-				// Just grids
-				if( eChild.attribute("grid") )
-				{
-					const std::string   bin_string = eChild.attribute("grid").value();
-					std::istringstream  iss( bin_string );
-					for( double s; iss >> s; )
-					{ bin_grid.push_back(s); }
-				}
-				// Linear spaced grid
-				if( eChild.attribute("grid_linear") )
-				{
-					const std::string   bin_string = eChild.attribute("grid_linear").value();
-					double a, b, range; // Begin, end, step size
-					std::istringstream  iss( bin_string );
+        set_estimator->add_filter(e_filter);
+    }
+    // Push new estimator
+    set_estimator->initialize_tallies();
+    estimator.push_back( set_estimator );
+}
 
-					iss >> a >> range >> b;
-
-					bin_grid.push_back(a);
-					while( bin_grid.back() < b )
-					{
-						bin_grid.push_back( bin_grid.back() + range );
-					}
-					bin_grid.pop_back();
-					bin_grid.push_back(b);
-				}
-				
-        			// Generic estimator bin type
-				if ( (std::string) eChild.name() == "bin" )
-				{
-					// Type
-					std::string type = eChild.attribute("type").value();
-        				if ( type != "energy" && type != "time" ) 
-					{
-            					std::cout << "unsuported bin type " << type << " in estimator " << e_name << std::endl;
-						throw;
-					}
-					set_estimator->setBin( type, bin_grid ); 
-				}
-        			// MGXS group
-				else
-				{
-					if ( bin_grid[0] > 0.0 ) { bin_grid.insert( bin_grid.begin(), 0.0 ); }
-					if ( bin_grid.back() > 3.1e7 ) { bin_grid[bin_grid.size()-1] = 3.1e7; }
-					set_estimator->setBin( "energy", bin_grid ); 
-				}
-			}
-    		}
-    		
-		// Push new estimator
-    		Estimator.push_back( set_estimator );
-  	}
-
-	// Set source bank
+        // Set source bank
   	pugi::xml_node input_sources = input_file.child("sources");
   	for ( const auto& s : input_sources )
 	{

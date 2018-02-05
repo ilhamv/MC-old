@@ -52,7 +52,7 @@ void XML_input
     std::vector < std::shared_ptr<Cell_t>    >&              Cell,    
     std::vector < std::shared_ptr<Nuclide_t>   >&            Nuclide,   
     std::vector < std::shared_ptr<Material_t>  >&            Material, 
-    std::vector < std::shared_ptr<Estimator_t> >&            Estimator,
+    std::vector < std::shared_ptr<Estimator> >&            estimator,
     std::vector < std::shared_ptr<Distribution_t<double>> >& Distribution_Double,
     std::vector < std::shared_ptr<Distribution_t<Point_t>>>& Distribution_Point
 );

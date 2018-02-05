@@ -38,7 +38,9 @@ void Surface_t::hit( Particle_t& P, const std::vector<std::shared_ptr<Cell_t>>& 
         if (tally)
         {
 	    const double told = P.time(); // crossing surface happends instantly
-	    for ( auto& e : estimators ) { e->score( P, told ); }
+	    for ( auto& e : estimators ){ 
+                e->score( P, 0.0, told ); 
+            }
         }
 }
 
@@ -381,7 +383,7 @@ void Cell_t::moveParticle( Particle_t& P, const double dmove, const bool tally )
         // Score track length estimator
         if (tally){ 
             for ( const auto& e : estimators ) { 
-                e->score( P, told, dmove ); 
+                e->score( P, dmove, told ); 
             } 
         }
 }

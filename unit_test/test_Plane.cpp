@@ -16,8 +16,8 @@ TEST_CASE( "Generic Plane Surface", "" )
     const double d =  4.0;
 
 
-    Plane_Surface planeT( "my_Plane", "transmission", a, b, c, d );
-    Plane_Surface planeR( "my_RPlane", "reflective", a, b, c, d );
+    Plane_Surface planeT( "my_Plane", 1, "transmission", a, b, c, d );
+    Plane_Surface planeR( "my_RPlane", 1, "reflective", a, b, c, d );
 
     // test returns appropriate name
     SECTION ( " return surface name and bc " ) 

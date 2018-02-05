@@ -13,7 +13,7 @@
 
 
 // Forward declaration
-class Estimator_t;
+class Estimator;
 class Source_Bank;
 
 
@@ -22,19 +22,21 @@ class Geometry_t
 {
     private:
 	const std::string g_name; // Geometry name
+        const int         g_ID;
 	
     protected:
-	std::vector< std::shared_ptr< Estimator_t > > estimators; // Estimators attached
+	std::vector< std::shared_ptr< Estimator > > estimators; // Estimators attached
         
     public:
-     	Geometry_t( const std::string n ) : g_name(n) {}; // Pass the name
+     	Geometry_t( const std::string n, const int i ) : g_name(n), g_ID(i) {}; // Pass the name
     	~Geometry_t() {};
 
 	// Get name
 	virtual std::string name()  final { return g_name; };
+	virtual int         ID()    final { return g_ID; };
 	
 	// Add an estimator
-	virtual void addEstimator( const std::shared_ptr< Estimator_t >& E ) final 
+	virtual void addEstimator( const std::shared_ptr< Estimator >& E ) final 
 	{ estimators.push_back( E ); }
 };
 
@@ -62,7 +64,7 @@ class Surface_t : public Geometry_t
 	virtual void reflect ( Particle_t& P ) = 0;
 		
     public:
-     	Surface_t( const std::string n, const std::string b ) : Geometry_t(n), bc(b) {}; // Pass the name
+     	Surface_t( const std::string n, const int i, const std::string b ) : Geometry_t(n,i), bc(b) {}; // Pass the name
     	~Surface_t() {};
 
 	// Hit implementation
@@ -86,8 +88,8 @@ class PlaneX_Surface : public Surface_t
 		void reflect ( Particle_t& P );
 
   	public:
-     		 PlaneX_Surface( const std::string n, const std::string bc, const double loc ) : 
-			 Surface_t(n,bc), x(loc) {};
+     		 PlaneX_Surface( const std::string n, const int i, const std::string bc, const double loc ) : 
+			 Surface_t(n,i,bc), x(loc) {};
     		~PlaneX_Surface() {};
 
 		double eval    ( const Point_t& p );
@@ -105,8 +107,8 @@ class PlaneY_Surface : public Surface_t
 		void reflect ( Particle_t& P );
 
   	public:
-     		 PlaneY_Surface( const std::string n, const std::string bc, const double loc ) : 
-			 Surface_t(n,bc), y(loc) {};
+     		 PlaneY_Surface( const std::string n, const int i, const std::string bc, const double loc ) : 
+			 Surface_t(n,i,bc), y(loc) {};
     		~PlaneY_Surface() {};
 
 		double eval    ( const Point_t& p );
@@ -124,8 +126,8 @@ class PlaneZ_Surface : public Surface_t
 		void reflect ( Particle_t& P );
 
   	public:
-     		 PlaneZ_Surface( const std::string n, const std::string bc, const double loc ) : 
-			 Surface_t(n,bc), z(loc) {};
+     		 PlaneZ_Surface( const std::string n, const int i, const std::string bc, const double loc ) : 
+			 Surface_t(n,i,bc), z(loc) {};
     		~PlaneZ_Surface() {};
 
 		double eval    ( const Point_t& p );
@@ -144,8 +146,8 @@ class Plane_Surface : public Surface_t
 		void reflect ( Particle_t& P );
 
   	public:
-     		 Plane_Surface( const std::string n, const std::string bc, const double pa, const double pb, const double pc, const double pd ) : 
-			 Surface_t(n,bc), a(pa), b(pb), c(pc), d(pd)
+     		 Plane_Surface( const std::string n, const int i, const std::string bc, const double pa, const double pb, const double pc, const double pd ) : 
+			 Surface_t(n,i,bc), a(pa), b(pb), c(pc), d(pd)
 		{
 			const double L = 2.0 / ( a*a + b*b + c*c );
 			modx = L * a;
@@ -169,8 +171,8 @@ class Sphere_Surface : public Surface_t
 		void reflect ( Particle_t& P );
 
 	public:
-     		 Sphere_Surface( const std::string n, const std::string b, const double p1, const double p2, const double p3, const double p4 ) : 
-       			Surface_t(n,b), x0(p1), y0(p2), z0(p3), rad(p4), rad_sq(p4*p4) {};
+     		 Sphere_Surface( const std::string n, const int i, const std::string b, const double p1, const double p2, const double p3, const double p4 ) : 
+       			Surface_t(n,i,b), x0(p1), y0(p2), z0(p3), rad(p4), rad_sq(p4*p4) {};
     		~Sphere_Surface() {};
 
      		double eval    ( const Point_t& p );
@@ -188,8 +190,8 @@ class CylinderX_Surface : public Surface_t
 		void reflect ( Particle_t& P );
 
 	public:
-		 CylinderX_Surface( const std::string n, const std::string b, const double p1, const double p2, const double p3 ) :
-			Surface_t(n,b), y0(p1), z0(p2), rad(p3), rad_sq(p3*p3) {};
+		 CylinderX_Surface( const std::string n, const int i, const std::string b, const double p1, const double p2, const double p3 ) :
+			Surface_t(n,i,b), y0(p1), z0(p2), rad(p3), rad_sq(p3*p3) {};
 		~CylinderX_Surface() {};
 
 		double eval    ( const Point_t& p );
@@ -207,8 +209,8 @@ class CylinderY_Surface : public Surface_t
 		void reflect ( Particle_t& P );
 
 	public:
-		 CylinderY_Surface( const std::string n, const std::string b, const double p1, const double p2, const double p3 ) :
-			Surface_t(n,b), x0(p1), z0(p2), rad(p3), rad_sq(p3*p3) {};
+		 CylinderY_Surface( const std::string n, const int i, const std::string b, const double p1, const double p2, const double p3 ) :
+			Surface_t(n,i,b), x0(p1), z0(p2), rad(p3), rad_sq(p3*p3) {};
 		~CylinderY_Surface() {};
 
 		double eval    ( const Point_t& p );
@@ -226,8 +228,8 @@ class CylinderZ_Surface : public Surface_t
 		void reflect ( Particle_t& P );
 
 	public:
-		 CylinderZ_Surface( const std::string n, const std::string b, const double p1, const double p2, const double p3 ) :
-			Surface_t(n,b), x0(p1), y0(p2), rad(p3), rad_sq(p3*p3) {};
+		 CylinderZ_Surface( const std::string n, const int i, const std::string b, const double p1, const double p2, const double p3 ) :
+			Surface_t(n,i,b), x0(p1), y0(p2), rad(p3), rad_sq(p3*p3) {};
 		~CylinderZ_Surface() {};
 
 		double eval    ( const Point_t& p );
@@ -245,8 +247,8 @@ class ConeX_Surface : public Surface_t
 		void reflect ( Particle_t& P );
 
 	public:
-		 ConeX_Surface( const std::string n, const std::string b, const double p1, const double p2, const double p3, const double p4 ) :
-       			Surface_t(n,b), x0(p1), y0(p2), z0(p3), rad(p4), rad_sq(p4*p4) {};
+		 ConeX_Surface( const std::string n, const int i, const std::string b, const double p1, const double p2, const double p3, const double p4 ) :
+       			Surface_t(n,i,b), x0(p1), y0(p2), z0(p3), rad(p4), rad_sq(p4*p4) {};
 		~ConeX_Surface() {};
 
 		double eval    ( const Point_t& p );
@@ -264,8 +266,8 @@ class ConeY_Surface : public Surface_t
 		void reflect ( Particle_t& P );
 
 	public:
-		 ConeY_Surface( const std::string n, const std::string b, const double p1, const double p2, const double p3, const double p4 ) :
-       			Surface_t(n,b), x0(p1), y0(p2), z0(p3), rad(p4), rad_sq(p4*p4) {};
+		 ConeY_Surface( const std::string n, const int i, const std::string b, const double p1, const double p2, const double p3, const double p4 ) :
+       			Surface_t(n,i,b), x0(p1), y0(p2), z0(p3), rad(p4), rad_sq(p4*p4) {};
 		~ConeY_Surface() {};
 
 		double eval    ( const Point_t& p );
@@ -283,8 +285,8 @@ class ConeZ_Surface : public Surface_t
 		void reflect ( Particle_t& P );
 
 	public:
-		 ConeZ_Surface( const std::string n, const std::string b, const double p1, const double p2, const double p3, const double p4 ) :
-       			Surface_t(n,b), x0(p1), y0(p2), z0(p3), rad(p4), rad_sq(p4*p4) {};
+		 ConeZ_Surface( const std::string n, const int i, const std::string b, const double p1, const double p2, const double p3, const double p4 ) :
+       			Surface_t(n,i,b), x0(p1), y0(p2), z0(p3), rad(p4), rad_sq(p4*p4) {};
 		~ConeZ_Surface() {};
 
 		double eval    ( const Point_t& p );
@@ -307,8 +309,8 @@ class Cell_t : public Geometry_t
 		std::shared_ptr< Material_t >                                 material = NULL; // Contained material, default NULL means vacuum
 
 	public:
-     		 Cell_t( const std::string n, const double imp ) : // Pass name and importance
-			 Geometry_t(n), r_importance(imp) {};
+     		 Cell_t( const std::string n, const int i, const double imp ) : // Pass name and importance
+			 Geometry_t(n,i), r_importance(imp) {};
     		~Cell_t() {};
 
     		// Getters
