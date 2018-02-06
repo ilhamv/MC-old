@@ -188,7 +188,7 @@ class Tally
 
 //==============================================================================
 // Filter
-//   - Supports: ID(Surface, Cell), Energy, Time
+//   - Supports: recently crossed Surface, Cell, Energy, Time
 //==============================================================================
 
 class Filter
@@ -209,26 +209,36 @@ class Filter
 
         // Get the index and the corresponding track length to be scored
         virtual std::vector<std::pair<int,double>> idx_l( const Particle_t& P,
-                                                           const double l,
-                                                           const double x) = 0;
+                                                           const double l ) = 0;
         // Getters
         virtual int                 size() final { return f_grid.size(); }
         virtual std::vector<double> grid() final { return f_grid; }
         virtual std::string         name() final { return f_name; }
         virtual std::string         unit() final { return f_unit; }
 };
-// ID
-class FilterID : public Filter
+// Surface
+class FilterSurface : public Filter
 {
     public:
-         FilterID( const std::string n, const std::string u, 
+         FilterSurface( const std::string n, const std::string u, 
                         const std::vector<double> g ): Filter(n,u,g) {};
-        ~FilterID() {};
+        ~FilterSurface() {};
 
         // Get the index and the corresponding track length to be scored
         std::vector<std::pair<int,double>> idx_l( const Particle_t& P,
-                                                   const double l,
-                                                   const double id);
+                                                  const double l );
+};
+// Cell
+class FilterCell : public Filter
+{
+    public:
+         FilterCell( const std::string n, const std::string u, 
+                     const std::vector<double> g ): Filter(n,u,g) {};
+        ~FilterCell() {};
+
+        // Get the index and the corresponding track length to be scored
+        std::vector<std::pair<int,double>> idx_l( const Particle_t& P,
+                                                  const double l );
 };
 // Energy
 class FilterEnergy : public Filter
@@ -240,8 +250,7 @@ class FilterEnergy : public Filter
 
         // Get the index and the corresponding track length to be scored
         std::vector<std::pair<int,double>> idx_l( const Particle_t& P,
-                                                   const double l,
-                                                   const double x);
+                                                   const double l );
 };
 // Time
 class FilterTime : public Filter
@@ -253,8 +262,7 @@ class FilterTime : public Filter
 
         // Get the index and the corresponding track length to be scored
         std::vector<std::pair<int,double>> idx_l( const Particle_t& P,
-                                                   const double l,
-                                                   const double told);
+                                                   const double l );
 };
 
 
@@ -288,8 +296,8 @@ class Estimator
 	void add_filter( const std::shared_ptr<Filter>& F );
         void initialize_tallies();
         
-        void score( const Particle_t& P, const double l, 
-                    const double x );	
+        void score( const Particle_t& P, const double l );	
+
 	// Loop closeouts
 	void end_history();              
 	void end_cycle( const int N, const double tracks );

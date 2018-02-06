@@ -24,8 +24,8 @@ class Simulator_t
         unsigned long long Ncycle   = 1; 
         unsigned long long Npassive = 0; 
 
-        bool ksearch  = false; // ksearch mode flag
-        bool tally    = false; // Estimator activation toggle
+        bool ksearch = false; // ksearch mode flag
+        bool tally   = false; // Estimator activation toggle
         
         double Ecut_off = 0.0;
         double tcut_off = MAX;
@@ -39,15 +39,15 @@ class Simulator_t
         Source_Bank            Sbank; // Sample bank
         std::stack<Particle_t> Pbank; // Particle bank
 
-        std::vector<std::shared_ptr<Surface_t>> Surface;   // Surfaces
-        std::vector<std::shared_ptr<Cell_t>> Cell;         // Cells
-        std::vector<std::shared_ptr<Nuclide_t>> Nuclide;   // Nuclides
+        std::vector<std::shared_ptr<Surface_t>>  Surface;   // Surfaces
+        std::vector<std::shared_ptr<Cell_t>>     Cell;         // Cells
+        std::vector<std::shared_ptr<Nuclide_t>>  Nuclide;   // Nuclides
         std::vector<std::shared_ptr<Material_t>> Material; // Materials
         
         std::vector<std::shared_ptr<Estimator>> estimator;
-        std::shared_ptr<Estimator>              k_estimator;
+        std::shared_ptr<Estimator>              k_C;
         
-        std::vector<double> k_cycle;          // Criticality estimate at each cycle
+        std::vector<double> k_cycle; // Criticality estimate at each cycle
         double              k = 1.0;
         
         // User-defined distributions

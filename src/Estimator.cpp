@@ -83,30 +83,42 @@ double ScoreTotal::score( const Particle_t& P, const double l )
 
 //==============================================================================
 // Filter
-//   - Supports: ID(Surface, Cell), Energy, Time
+//   - Supports: recently crossed Surface, Cell, Energy, Time
 //==============================================================================
 
-// ID
-std::vector<std::pair<int,double>> FilterID::idx_l( const Particle_t& P,
-                                                    const double l,
-                                                    const double id )
+// Surface
+std::vector<std::pair<int,double>> FilterSurface::idx_l( const Particle_t& P,
+                                                         const double l )
 {
     std::vector<std::pair<int,double>> v_i_l;
     std::pair<int,double> i_l;
 
     // Index location
-    i_l.first  = Binary_Search( id, f_grid ) + 1;
+    i_l.first  = Binary_Search( P.surface_old()->ID(), f_grid ) + 1;
     // Track length to score
     i_l.second = l;
 
     v_i_l.push_back(i_l);
     return v_i_l;
 }
+// Cell
+std::vector<std::pair<int,double>> FilterCell::idx_l( const Particle_t& P,
+                                                      const double l )
+{
+    std::vector<std::pair<int,double>> v_i_l;
+    std::pair<int,double> i_l;
 
+    // Index location
+    i_l.first  = Binary_Search( P.cell()->ID(), f_grid ) + 1;
+    // Track length to score
+    i_l.second = l;
+
+    v_i_l.push_back(i_l);
+    return v_i_l;
+}
 // Energy
 std::vector<std::pair<int,double>> FilterEnergy::idx_l( const Particle_t& P,
-                                                        const double l,
-                                                        const double x )
+                                                        const double l )
 {
     std::vector<std::pair<int,double>> v_i_l;
     std::pair<int,double> i_l;
@@ -124,14 +136,13 @@ std::vector<std::pair<int,double>> FilterEnergy::idx_l( const Particle_t& P,
 
 // Time
 std::vector<std::pair<int,double>> FilterTime::idx_l( const Particle_t& P,
-                                                      const double l,
-                                                      const double told )
+                                                      const double l )
 {
     std::vector<std::pair<int,double>> v_i_l;
     std::pair<int,double> i_l;
     
     // Edge bin locations
-    int loc1 = Binary_Search( told, f_grid );     // before track generation
+    int loc1 = Binary_Search( P.time_old(), f_grid );     // before track generation
     int loc2 = Binary_Search( P.time(), f_grid ); // after
     
     // Distribute score into spanned bins
@@ -152,7 +163,7 @@ std::vector<std::pair<int,double>> FilterTime::idx_l( const Particle_t& P,
 	double new_track;                 // to hold bin track
 	// First partial bin
 	if ( loc1 >= 0 ){
-	    new_track = ( f_grid[loc1+1] - told ) * P.speed();
+	    new_track = ( f_grid[loc1+1] - P.time_old() ) * P.speed();
 	    v_i_l.push_back( std::make_pair( loc1, new_track ) );
 	}
 	// Intermediate full bin
@@ -206,11 +217,12 @@ void Estimator::initialize_tallies()
 }
 
 // Score
-void Estimator::score( const Particle_t& P, const double l, const double x )
+void Estimator::score( const Particle_t& P, const double l )
 {
     // Individual filter indexes and l
     for( int i = 0; i < e_filters.size(); i++ ){
-        e_idx_l[i] = e_filters[i]->idx_l(P,l,x);
+        e_idx_l[i] = e_filters[i]->idx_l(P,l);
+        if( e_idx_l[i].size() == 0 ) { return; }
     }
 
     // Iterate over all possible filter grid combination
@@ -225,7 +237,7 @@ void Estimator::score( const Particle_t& P, const double l, const double x )
         //   (Need to convert multi-D index to 1-D)
         int idx_1D = 0;
         for( int i = 0; i < e_filters.size(); i++ ){
-            idx_1D += idx[i] * idx_factor[i+1];
+            idx_1D += e_idx_l[i][idx[i]].first * idx_factor[i+1];
         }
         for( int s = 0; s < e_scores.size(); s++ ){
             e_tally[idx_1D].hist += e_scores[s]->score(P,l);
@@ -240,6 +252,8 @@ void Estimator::score( const Particle_t& P, const double l, const double x )
                 idx[i]++; 
             }
         }
+
+        if( e_filters.size() == 0 ) { return; }
     }
 }
 

@@ -7,57 +7,55 @@
 #include "Point.h"
 #include "Geometry.h"
 
-
-// Forward declarations
 class Cell_t;
+class Surface_t;
 
-
-// Particle base class
 class Particle_t
 {
     private:
-        Point_t                 p_pos;          // Position
-        Point_t                 p_dir;          // Direction
-        bool                    p_alive = true; // Alive/dead flag
-        double                  p_weight;       // Weight
-        double                  p_time;         // Elapsed time, s
-        std::shared_ptr<Cell_t> p_cell;         // Cell particle currently in
-        double                  p_energy;       // Energy, eV
-        double                  p_speed;        // Speed, m/s
+        Point_t p_pos;         
+        Point_t p_dir;         
+        bool p_alive = true;
+        double p_weight;      
+        double p_time;        
+        double p_time_old;
+        std::shared_ptr<Cell_t> p_cell;        
+        std::shared_ptr<Cell_t> p_cell_old;
+        std::shared_ptr<Surface_t> p_surface_old;
+        double p_energy;      
+        double p_speed;       
 
     public:
-        // Constructor: Pass position and direction and initialize particle
-        //Particle_t( const Point_t& p1, const Point_t& p2, const double E = 2e6, const double t = 0.0, const double w = 1.0 ) :
-        //    p_pos(p1), p_dir(p2), p_time(t), p_weight(w) { setEnergy(E); }
-        Particle_t( const Point_t& p1, const Point_t& p2, const double E, const double t, const double w ) :
+        Particle_t( const Point_t& p1, const Point_t& p2, const double E, 
+                    const double t, const double w ) :
             p_pos(p1), p_dir(p2), p_time(t), p_weight(w) { setEnergy(E); }
         ~Particle_t() {};
 
         // Getters
-        Point_t                 pos()    const; // Position
-        Point_t                 dir()    const; // Direction 
-        bool                    alive()  const; // Alive/dead flag
-        double                  weight() const; // Weight
-        double                  time()   const; // Time
-        double                  energy() const; // Energy
-        double                  speed()  const; // Speed
-        std::shared_ptr<Cell_t> cell()   const; // Particle cell
+        Point_t pos() const;
+        Point_t dir() const;
+        bool alive() const;
+        double weight() const;
+        double time() const;
+        double time_old() const;
+        double energy() const;
+        double speed() const;
+        std::shared_ptr<Cell_t> cell() const;
+        std::shared_ptr<Cell_t> cell_old() const;
+        std::shared_ptr<Surface_t> surface_old() const;
 
         // Setters
-        void setDirection( const Point_t& p );                 // Direction
-        void setWeight   ( const double w );                   // Weight
-        void setCell     ( const std::shared_ptr<Cell_t>& C ); // Particle cell
-        void setTime     ( const double t );                   // Elapsed time
-        void setEnergy   ( const double E );                   // Energy, and speed
-        void setSpeed    ( const double v );                   // Speed, and energy
+        void setDirection( const Point_t& p );
+        void setWeight( const double w );
+        void setCell( const std::shared_ptr<Cell_t>& C );
+        void setTime( const double t );
+        void setEnergy( const double E );
+        void setSpeed( const double v );
+        void set_surface_old( const std::shared_ptr<Surface_t>& S );
 
-        // Kill particle: live/die flag --> False, weight = 0
+        // Modifiers
         void kill();		                                                   
-		
-        // Move particle a distance dmove along its current trajectory
         void move( const double dmove );                                           
-
-        // Search and set particle cell (Where am I now?)
         void searchCell( const std::vector<std::shared_ptr<Cell_t>>& Cell ); 
 };
 

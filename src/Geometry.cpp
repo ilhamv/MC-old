@@ -5,43 +5,39 @@
 #include "Solver.h" // solve_quad
 
 
+//==============================================================================
+// Surfaces
+//==============================================================================
 
-////////////////
-/// Surfaces ///
-///////////////
-
-// Crossing the surface --> an epsilon kick to the working particle
+// Eepsilon kick at crossing
 void Surface_t::cross ( Particle_t& P ) { P.move( EPSILON ); }
 
 // Hit implementation
-void Surface_t::hit( Particle_t& P, const std::vector<std::shared_ptr<Cell_t>>& Cell, const bool tally )
+void Surface_t::hit( Particle_t& P,
+                     const std::vector<std::shared_ptr<Cell_t>>& Cell, 
+                     const bool tally )
 {
-	// Note: new particle cell search is only performed in transmission
-	// Transmission
-	if ( bc == "transmission" )
-	{
-		// Cross the surface (Epsilon kick)
-		cross( P );
-		// Search and set new cell
-		P.searchCell( Cell );
-	}
-	// Reflective
-	else
-	{
-		// Reflect angle
-		reflect( P );
-		// Cross the surface (Epsilon kick)
-		cross ( P );
-	}
+    // Note: new particle cell search is only performed in transmission
+    // Transmission or reflective
+    if ( bc == "transmission" ){
+	// Cross the surface (Epsilon kick)
+	cross( P );
+	// Search and set new cell
+	P.searchCell( Cell );
+    } else{
+        // Reflect angle
+	reflect( P );
+	// Cross the surface (Epsilon kick)
+	cross ( P );
+    }
 	
-	// Score estimators 
-        if (tally)
-        {
-	    const double told = P.time(); // crossing surface happends instantly
-	    for ( auto& e : estimators ){ 
-                e->score( P, 0.0, told ); 
-            }
+    // Score estimators 
+    P.setTime( P.time() );
+    if (tally){
+	for ( auto& e : estimators ){ 
+            e->score( P, 0.0 ); 
         }
+    }
 }
 
 
@@ -377,13 +373,12 @@ bool Cell_t::testPoint( const Point_t& p )
 // Move particle and score any estimators
 void Cell_t::moveParticle( Particle_t& P, const double dmove, const bool tally )
 {
-	const double told = P.time();
 	P.move( dmove );
 
         // Score track length estimator
         if (tally){ 
             for ( const auto& e : estimators ) { 
-                e->score( P, dmove, told ); 
+                e->score( P, dmove ); 
             } 
         }
 }

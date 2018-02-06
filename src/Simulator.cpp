@@ -13,9 +13,18 @@
 // Constructor: Set up the simulator with XML parser
 Simulator_t::Simulator_t( const std::string input_file )
 {
-    XML_input( input_file, simulation_name, Nsample, ksearch, Ncycle, Npassive, Ecut_off, tcut_off, Fbank, Surface, Cell, Nuclide, Material, estimator, Distribution_Double, Distribution_Point );
+    XML_input( input_file, simulation_name, Nsample, ksearch, Ncycle, Npassive,
+               Ecut_off, tcut_off, Fbank, Surface, Cell, Nuclide, Material,
+               estimator, Distribution_Double, Distribution_Point );
     
-    k_cycle.resize(Ncycle, 0.0);
+    if(ksearch){
+        k_cycle.resize(Ncycle, 0.0);
+        k_C = std::make_shared<Estimator>("k-eigenvalue: collision");
+        k_C->add_score(std::make_shared<ScoreNuFission>("k_eigenvalue: collision",
+            std::make_shared<ScoreKernelCollision>()));
+        k_C->initialize_tallies();
+        estimator.push_back(k_C);
+    }
 }
 
 void Simulator_t::start()
@@ -37,7 +46,8 @@ void Simulator_t::start()
 
                 // Particle loop
                 while ( P.alive() ){
-                    std::pair< std::shared_ptr< Surface_t >, double > SnD; // To hold nearest surface and its distance
+                     // To hold nearest surface and its distance
+                    std::pair< std::shared_ptr< Surface_t >, double > SnD;
                                     
                     // Determine nearest surface and its distance
                     SnD = C->surface_intersect( P );
@@ -47,33 +57,39 @@ void Simulator_t::start()
                                     
                     // Hit surface?
                     if ( dcol > SnD.second ){	
-                        // Surface hit! Move particle to surface, tally if there is any Cell Tally
+                        // Surface hit! Move particle to surface, 
+                        //   tally if there is any Cell Tally
                         C->moveParticle( P, SnD.second, tally );
+                        P.set_surface_old(SnD.first);
 
                         // Implement surface hit:
-                        // 	Reflect angle for reflective surface
-                        // 	Cross the surface (move epsilon distance)
-                        // 	Search new particle cell for transmission surface
-                        // 	Tally if there is any Surface Tally
-                        // 	Note: particle weight and working cell are not updated yet
+                        //   Reflect angle for reflective surface
+                        //   Cross the surface (move epsilon distance)
+                        //   Search new particle cell for transmission surface
+                        //   Tally if there is any Surface Tally
+                        //   Particle weight and working cell not updated yet
                         SnD.first->hit( P, Cell, tally );
 
                         // Splitting & Roulette Variance Reduction Technique
-                        // 	More important : split
-                        // 	Less important : roulette
-                        // 	Same importance: do nothing
-                        // 	Note: old working cell has the previous cell importance and will be updated
+                        //   More important : split
+                        //   Less important : roulette
+                        //   Same importance: do nothing
+                        //   Old working cell has the previous cell importance
                         Split_Roulette( C, P, Pbank );
                     }
                                     
                     // Collide!!
                     else{
-                        // Move particle to collision site and sample the collision and tally if there is any cell tally
+                        // Move particle to collision site
+                        //   tally if there is any surface tally
                         C->moveParticle( P, dcol, tally );
                         
                         // New estimate k
-                        if (ksearch)
-                        { k_cycle[icycle] += C->nuSigmaF(P.energy()) * P.weight() / C->SigmaT(P.energy()); }
+                        if (ksearch){ 
+                            k_cycle[icycle] += C->nuSigmaF(P.energy()) * P.weight() / C->SigmaT(P.energy());
+                            if (tally) { k_C->score(P,dcol); }
+                        }
+                        
                         C->collision( P, Pbank, ksearch, Fbank, k );			
                     }
                             
@@ -110,13 +126,14 @@ void Simulator_t::start()
         if (ksearch){
             k_cycle[icycle] /= Nsample;
             k = k_cycle[icycle];
+            std::cout<<icycle<<"  "<<k<<"\n";
         }
 
         // Start next cycle
         tracks = 0.0;
     
     } // All cycles are done, end of simulation loop
-    { for ( auto& E : estimator ) { E->end_simulation(Ncycle); } }
+    { for ( auto& E : estimator ) { E->end_simulation(Ncycle-Npassive); } }
 }
 
 void Simulator_t::report()

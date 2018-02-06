@@ -740,6 +740,8 @@ for ( auto& e : input_file.child("estimators").children("estimator") ){
    	s_ptr->addEstimator( set_estimator );
         f_name = "surface";
         f_grid.push_back(s_ptr->ID());
+        set_estimator->add_filter( std::make_shared<FilterSurface>
+                                   (f_name,f_unit,f_grid) );
     }
     for ( auto& cell : e.children("cell") ){
         const std::string c_name = cell.attribute("name").value();
@@ -752,9 +754,9 @@ for ( auto& e : input_file.child("estimators").children("estimator") ){
         c_ptr->addEstimator( set_estimator );
         f_name = "cell";
         f_grid.push_back(c_ptr->ID());
+        set_estimator->add_filter( std::make_shared<FilterCell>
+                                   (f_name,f_unit,f_grid) );
     }
-    set_estimator->add_filter( std::make_shared<FilterID>
-                               (f_name,f_unit,f_grid) );
     // Other filters
     std::shared_ptr<Filter> e_filter;
     for ( auto& f : e.children("filter") ){
@@ -788,10 +790,10 @@ for ( auto& e : input_file.child("estimators").children("estimator") ){
             std::exit(EXIT_FAILURE);
         }
         f_name = f.attribute("type").value();
-        if( f.attribute("type").value() == "energy" ){
+        if( f_name == "energy" ){
             f_unit = "eV";
             e_filter = std::make_shared<FilterEnergy> (f_name,f_unit,f_grid);
-        } else if( f.attribute("type").value() == "time" ){
+        } else if( f_name == "time" ){
             f_unit = "s";
             e_filter = std::make_shared<FilterTime> (f_name,f_unit,f_grid);
         } else{
