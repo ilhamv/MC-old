@@ -93,6 +93,7 @@ void Particle_t::searchCell( const std::vector<std::shared_ptr<Cell_t>>& Cell )
 		// check if particle is in the current cell C
 		if ( C->testPoint( p_pos ) )
 		{
+                        p_cell_old = p_cell;
 			p_cell = C;
 			return;
 		}

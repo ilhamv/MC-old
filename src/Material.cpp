@@ -119,7 +119,7 @@ void Material_t::collision_sample( Particle_t& P, std::stack<Particle_t>& Pbank,
                 s += n.first->nusigmaF( P.energy() ) / nuSigmaF( P.energy() );
                 if ( r < s )
                 {
-                    Fbank.addSource( std::make_shared<Fission_Source>( P.pos(), isotropic.sample(), n.first->Chi( P.energy() ), 1.0, P.time() ) );
+                    Fbank.addSource( std::make_shared<Delta_Source>( P.pos(), isotropic.sample(), n.first->Chi( P.energy() ), 1.0, P.time() ) );
                     break;
                 }
             }

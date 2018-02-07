@@ -13,9 +13,9 @@
 // Constructor: Set up the simulator with XML parser
 Simulator_t::Simulator_t( const std::string input_file )
 {
-    XML_input( input_file, simulation_name, Nsample, ksearch, Ncycle, Npassive,
+    XML_input( input_file, simulation_name, Nsample, ksearch, tdmc, Ncycle, Npassive,
                Ecut_off, tcut_off, Fbank, Surface, Cell, Nuclide, Material,
-               estimator, Distribution_Double, Distribution_Point );
+               estimator, Distribution_Double, Distribution_Point, tdmc_time );
     
     if(ksearch){
         k_cycle.resize(Ncycle, 0.0);
@@ -25,6 +25,18 @@ Simulator_t::Simulator_t( const std::string input_file )
         k_C->initialize_tallies();
         estimator.push_back(k_C);
     }
+}
+
+// Move particle
+void Simulator_t::move_particle( Particle_t& P, const double l )
+{
+    P.move( l );
+    // Score track length estimators
+    if (tally){ for( auto& e : P.cell()->estimators ) { e->score( P, l ); } }
+}
+
+void Simulator_t::collision( Particle_t& P )
+{;
 }
 
 void Simulator_t::start()
@@ -40,8 +52,7 @@ void Simulator_t::start()
                     
             // History loop
             while ( !Pbank.empty() ){
-                Particle_t              P = Pbank.top(); // Working particle
-                std::shared_ptr<Cell_t> C = P.cell();    // Working cell
+                Particle_t P = Pbank.top(); // Working particle
                 Pbank.pop();
 
                 // Particle loop
@@ -50,47 +61,61 @@ void Simulator_t::start()
                     std::pair< std::shared_ptr< Surface_t >, double > SnD;
                                     
                     // Determine nearest surface and its distance
-                    SnD = C->surface_intersect( P );
+                    SnD = P.cell()->surface_intersect( P );
 
                     // Determine collision distance
-                    const double dcol = C->collision_distance( P.energy() );
+                    double dcol = P.cell()->collision_distance( P.energy() );
+
+                    // Exceeding TDMC time boundary?
+                    if(tdmc){
+                        double dbound = (tdmc_time[icycle] - P.time()) 
+                                        * P.speed();
+                        if( std::min(SnD.second,dcol) > dbound ){
+                            move_particle( P, dbound );
+                            Fbank.addSource( std::make_shared<Delta_Source>
+                                             ( P.pos(), P.dir(), P.energy(), 
+                                               P.weight(), P.time() ) );
+                            P.kill();
+                            continue;
+                        }
+                    }
                                     
                     // Hit surface?
                     if ( dcol > SnD.second ){	
-                        // Surface hit! Move particle to surface, 
-                        //   tally if there is any Cell Tally
-                        C->moveParticle( P, SnD.second, tally );
+                        // Surface hit!
                         P.set_surface_old(SnD.first);
+
+                        // Move particle to surface, 
+                        //   tally if there is any cell tally
+                        move_particle( P, SnD.second );
 
                         // Implement surface hit:
                         //   Reflect angle for reflective surface
                         //   Cross the surface (move epsilon distance)
                         //   Search new particle cell for transmission surface
-                        //   Tally if there is any Surface Tally
-                        //   Particle weight and working cell not updated yet
+                        //   Tally if there is any surface tally
                         SnD.first->hit( P, Cell, tally );
 
                         // Splitting & Roulette Variance Reduction Technique
                         //   More important : split
                         //   Less important : roulette
                         //   Same importance: do nothing
-                        //   Old working cell has the previous cell importance
-                        Split_Roulette( C, P, Pbank );
+                        Split_Roulette( P, Pbank );
                     }
                                     
                     // Collide!!
                     else{
                         // Move particle to collision site
                         //   tally if there is any surface tally
-                        C->moveParticle( P, dcol, tally );
+                        move_particle( P, dcol );
                         
                         // New estimate k
                         if (ksearch){ 
-                            k_cycle[icycle] += C->nuSigmaF(P.energy()) * P.weight() / C->SigmaT(P.energy());
+                            k_cycle[icycle] += P.cell()->nuSigmaF(P.energy()) * P.weight() / P.cell()->SigmaT(P.energy());
                             if (tally) { k_C->score(P,dcol); }
                         }
                         
-                        C->collision( P, Pbank, ksearch, Fbank, k );			
+                        P.cell()->collision( P, Pbank, ksearch, Fbank, k );			
                     }
                             
                     // add # of tracks

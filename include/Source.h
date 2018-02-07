@@ -23,8 +23,8 @@ class Source_t
 };
 
 
-// Fission Source
-class Fission_Source : public Source_t
+// Delta Source
+class Delta_Source : public Source_t
 {
     private:
         const Point_t pos;
@@ -34,8 +34,8 @@ class Fission_Source : public Source_t
         const double  t;
 
     public:
-        Fission_Source( const Point_t p, const Point_t d, const double p_E, const double p_w, const double p_t ): pos(p), dir(d), E(p_E), w(p_w), t(p_t) {};
-        ~Fission_Source() {};
+        Delta_Source( const Point_t p, const Point_t d, const double p_E, const double p_w, const double p_t ): pos(p), dir(d), E(p_E), w(p_w), t(p_t) {};
+        ~Delta_Source() {};
 
         Particle_t getSource();
 };

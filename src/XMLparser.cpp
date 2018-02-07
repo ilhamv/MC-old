@@ -113,9 +113,10 @@ void setNuclide( const std::string name, const std::string label, std::shared_pt
 void XML_input
 (
     const std::string                                        file_name,
-    std::string&                                             simName,
+    std::string&                                             simulation_name,
     unsigned long long&                                      Nsample,          
     bool&                                                    ksearch,
+    bool&                                                    tdmc,
     unsigned long long&                                      Ncycle,          
     unsigned long long&                                      Npassive,          
     double&                                                  Ecut_off,
@@ -127,7 +128,8 @@ void XML_input
     std::vector < std::shared_ptr<Material_t>  >&            Material, 
     std::vector < std::shared_ptr<Estimator> >&            estimator,
     std::vector < std::shared_ptr<Distribution_t<double>> >& Distribution_Double,
-    std::vector < std::shared_ptr<Distribution_t<Point_t>>>& Distribution_Point
+    std::vector < std::shared_ptr<Distribution_t<Point_t>>>& Distribution_Point,
+    std::vector<double>& tdmc_time
 )
 {
     // XML input file
@@ -141,31 +143,49 @@ void XML_input
 	std::cout<< load_result.description() << std::endl;
         std::exit(EXIT_FAILURE);
     }
-	
-    // Set simulation descriptions
-    pugi::xml_node input_simulation = input_file.child("simulation");
-    	
-    for ( const auto& s : input_simulation )
-    {
-	if( (std::string) s.name() == "description" )
-	{
-	    simName = s.attribute("name").value();         
-	    Nsample   = s.attribute("samples").as_double();
-	}
-	else if ( (std::string) s.name() == "cut-off" )
-	{
-	    if ( s.attribute("energy") ) { Ecut_off = s.attribute("energy").as_double(); }
-	    if ( s.attribute("time") )   { tcut_off = s.attribute("time").as_double(); }
-	}
-	else if ( (std::string) s.name() == "ksearch" )
-	{
-            unsigned long long active;
-            ksearch  = true;
-	    active   = s.attribute("active_cycles").as_double();
-	    Npassive = s.attribute("passive_cycles").as_double();
-            Ncycle   = active + Npassive;
-	}
+
+    
+//==============================================================================
+// Set simulation
+//==============================================================================
+
+pugi::xml_node input_simulation  = input_file.child("simulation");    
+pugi::xml_node input_description = input_simulation.child("description");
+pugi::xml_node input_ksearch     = input_simulation.child("ksearch");
+pugi::xml_node input_tdmc        = input_simulation.child("tdmc");
+
+// Description
+simulation_name = input_description.attribute("name").value();
+Nsample         = input_description.attribute("samples").as_double();
+
+// Cut-off
+if( input_file.child("cut-off").attribute("energy") ){
+    Ecut_off = input_file.child("cut-off").attribute("energy").as_double();
+}
+if( input_file.child("cut-off").attribute("time") ){
+    tcut_off = input_file.child("cut-off").attribute("time").as_double();
+}
+
+// ksearch
+if( input_ksearch ){
+    ksearch  = true;
+    unsigned long long active = input_ksearch.attribute("active_cycles")
+                                .as_double();
+    Npassive = input_ksearch.attribute("passive_cycles").as_double();
+    Ncycle   = active + Npassive;
+}
+
+// TDMC
+if( input_tdmc ){
+    tdmc = true;
+    const std::string grid_string = input_tdmc.attribute("time").value();
+    std::istringstream  iss( grid_string );
+    for( double s; iss >> s; ) { tdmc_time.push_back(s); }
+    if( input_ksearch ){
+        std::cout<<"ksearch and tdmc could not coexist\n";
+        std::exit(EXIT_FAILURE);
     }
+}
         
 	// Set user distributuions
   	pugi::xml_node input_distributions = input_file.child("distributions");

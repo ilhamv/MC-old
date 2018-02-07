@@ -43,6 +43,7 @@ void XML_input
     std::string&                                             simName,
     unsigned long long&                                      nSample,          
     bool&                                                    ksearch,
+    bool&                                                    tdmc,
     unsigned long long&                                      nCycle,          
     unsigned long long&                                      nPassive,          
     double&                                                  Ecut_off,
@@ -54,7 +55,8 @@ void XML_input
     std::vector < std::shared_ptr<Material_t>  >&            Material, 
     std::vector < std::shared_ptr<Estimator> >&            estimator,
     std::vector < std::shared_ptr<Distribution_t<double>> >& Distribution_Double,
-    std::vector < std::shared_ptr<Distribution_t<Point_t>>>& Distribution_Point
+    std::vector < std::shared_ptr<Distribution_t<Point_t>>>& Distribution_Point,
+    std::vector<double>& tdmc_time
 );
 
 

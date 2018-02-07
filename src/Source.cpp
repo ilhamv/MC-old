@@ -17,7 +17,7 @@ Particle_t Point_Source::getSource()
 }
 
 
-Particle_t Fission_Source::getSource()
+Particle_t Delta_Source::getSource()
 {
     Particle_t P( pos, dir, E, t, w );
     return P;

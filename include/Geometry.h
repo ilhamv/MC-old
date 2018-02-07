@@ -24,8 +24,6 @@ class Geometry_t
 	const std::string g_name; // Geometry name
         const int         g_ID;
 	
-    protected:
-	std::vector< std::shared_ptr< Estimator > > estimators; // Estimators attached
         
     public:
      	Geometry_t( const std::string n, const int i ) : g_name(n), g_ID(i) {}; // Pass the name
@@ -38,6 +36,8 @@ class Geometry_t
 	// Add an estimator
 	virtual void addEstimator( const std::shared_ptr< Estimator >& E ) final 
 	{ estimators.push_back( E ); }
+	
+        std::vector< std::shared_ptr< Estimator > > estimators; // Estimators attached
 };
 
 

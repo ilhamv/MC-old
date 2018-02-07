@@ -10,40 +10,35 @@
 
 // Perform Splitting & Rouletting variance reduction technique
 // arguments: Old working cell, working particle, particle bank
-void Split_Roulette( std::shared_ptr<Cell_t>& C, Particle_t& P, std::stack<Particle_t>& Pbank )
+void Split_Roulette( Particle_t& P, std::stack<Particle_t>& Pbank )
 {
-	const double Iold = C->importance();          // Previous importance
-	const double Inew = P.cell()->importance(); // Current importance
-	
-	// Update working cell
-	C = P.cell();
+    // Importances
+    const double Iold = P.cell_old()->importance();
+    const double Inew = P.cell()->importance();
 
-	// Same importance, do nothing
-	if ( Inew == Iold ) { return; }
+    // Same importance, do nothing
+    if ( Inew == Iold ) { return; }
 	
-	const double rat = Inew / Iold; // Ratio of importances
+    const double rat = Inew / Iold; // Ratio of importances
 	
-	// Less important, Russian Roulette
-	if ( rat < 1.0 )
-	{
-		if ( Urand() < rat ) { P.setWeight( P.weight() / rat ); }
-		else                 { P.kill(); }
-	}
+    // Less important, Russian Roulette
+    if ( rat < 1.0 )
+    {
+	if ( Urand() < rat ) { P.setWeight( P.weight() / rat ); }
+	else                 { P.kill(); }
+    }
 
-	// More important, Splitting
-	else
-	{
-		// Sample # of splitting
-		const int n = std::floor( rat + Urand() );
+    // More important, Splitting
+    else
+    {
+	// Sample # of splitting
+	const int n = std::floor( rat + Urand() );
 		
-		// Update working particle weight
-		P.setWeight( P.weight() / double(n) );
+	// Update working particle weight
+	P.setWeight( P.weight() / double(n) );
 
-		// Push n-1 identical particles into particle bank
-		for ( int i = 0 ; i < n-1 ; i++ )
-		{
-			Pbank.push( P );
-		}
-	}
+	// Push n-1 identical particles into particle bank
+	for ( int i = 0 ; i < n-1 ; i++ ){ Pbank.push( P ); }
+    }
 }
 

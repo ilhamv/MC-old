@@ -13,7 +13,7 @@
 
 // Perform Splitting & Rouletting variance reduction technique
 // arguments: Old working cell, working particle, particle bank
-void Split_Roulette( std::shared_ptr<Cell_t>& C, Particle_t& P, std::stack<Particle_t>& Pbank );
+void Split_Roulette( Particle_t& P, std::stack<Particle_t>& Pbank );
 
 
 #endif

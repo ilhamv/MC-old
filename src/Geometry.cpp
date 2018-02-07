@@ -25,6 +25,7 @@ void Surface_t::hit( Particle_t& P,
 	// Search and set new cell
 	P.searchCell( Cell );
     } else{
+        P.setCell( P.cell() );
         // Reflect angle
 	reflect( P );
 	// Cross the surface (Epsilon kick)
