@@ -24,11 +24,13 @@ class Particle_t
         std::shared_ptr<Surface_t> p_surface_old;
         double p_energy;      
         double p_speed;       
+        int    p_tdmc;
 
     public:
         Particle_t( const Point_t& p1, const Point_t& p2, const double E, 
-                    const double t, const double w ) :
-            p_pos(p1), p_dir(p2), p_time(t), p_weight(w) { setEnergy(E); }
+                    const double t, const double w, const int td ) :
+            p_pos(p1), p_dir(p2), p_time(t), p_weight(w), p_tdmc(td) 
+            { setEnergy(E); }
         ~Particle_t() {};
 
         // Getters
@@ -43,6 +45,7 @@ class Particle_t
         std::shared_ptr<Cell_t> cell() const;
         std::shared_ptr<Cell_t> cell_old() const;
         std::shared_ptr<Surface_t> surface_old() const;
+        int tdmc() const;
 
         // Setters
         void setDirection( const Point_t& p );
@@ -52,6 +55,7 @@ class Particle_t
         void setEnergy( const double E );
         void setSpeed( const double v );
         void set_surface_old( const std::shared_ptr<Surface_t>& S );
+        void set_tdmc( const int t );
 
         // Modifiers
         void kill();		                                                   

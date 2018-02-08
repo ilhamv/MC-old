@@ -208,10 +208,10 @@ class Filter
         ~Filter() {};
 
         // Get the index and the corresponding track length to be scored
-        virtual std::vector<std::pair<int,double>> idx_l( const Particle_t& P,
-                                                           const double l ) = 0;
+        virtual std::vector<std::pair<int,double>> idx_l( Particle_t& P,
+                                                          const double l ) = 0;
         // Getters
-        virtual int                 size() final { return f_grid.size(); }
+        virtual int                 size() = 0;
         virtual std::vector<double> grid() final { return f_grid; }
         virtual std::string         name() final { return f_name; }
         virtual std::string         unit() final { return f_unit; }
@@ -225,8 +225,9 @@ class FilterSurface : public Filter
         ~FilterSurface() {};
 
         // Get the index and the corresponding track length to be scored
-        std::vector<std::pair<int,double>> idx_l( const Particle_t& P,
+        std::vector<std::pair<int,double>> idx_l( Particle_t& P,
                                                   const double l );
+        virtual int size() final { return f_grid.size(); }
 };
 // Cell
 class FilterCell : public Filter
@@ -237,8 +238,9 @@ class FilterCell : public Filter
         ~FilterCell() {};
 
         // Get the index and the corresponding track length to be scored
-        std::vector<std::pair<int,double>> idx_l( const Particle_t& P,
+        std::vector<std::pair<int,double>> idx_l( Particle_t& P,
                                                   const double l );
+        virtual int size() final { return f_grid.size(); }
 };
 // Energy
 class FilterEnergy : public Filter
@@ -249,10 +251,11 @@ class FilterEnergy : public Filter
         ~FilterEnergy() {};
 
         // Get the index and the corresponding track length to be scored
-        std::vector<std::pair<int,double>> idx_l( const Particle_t& P,
+        std::vector<std::pair<int,double>> idx_l( Particle_t& P,
                                                    const double l );
+        virtual int size() final { return f_grid.size()-1; }
 };
-// Time
+// Time bin
 class FilterTime : public Filter
 {
     public:
@@ -261,8 +264,22 @@ class FilterTime : public Filter
         ~FilterTime() {};
 
         // Get the index and the corresponding track length to be scored
-        std::vector<std::pair<int,double>> idx_l( const Particle_t& P,
+        std::vector<std::pair<int,double>> idx_l( Particle_t& P,
                                                    const double l );
+        virtual int size() final { return f_grid.size()-1; }
+};
+// Time - TDMC
+class FilterTDMC : public Filter
+{
+    public:
+         FilterTDMC( const std::string n, const std::string u, 
+                        const std::vector<double> g ): Filter(n,u,g) {};
+        ~FilterTDMC() {};
+
+        // Get the index and the corresponding track length to be scored
+        std::vector<std::pair<int,double>> idx_l( Particle_t& P,
+                                                   const double l );
+        virtual int size() final { return f_grid.size(); }
 };
 
 
@@ -296,7 +313,7 @@ class Estimator
 	void add_filter( const std::shared_ptr<Filter>& F );
         void initialize_tallies();
         
-        void score( const Particle_t& P, const double l );	
+        void score( Particle_t& P, const double l );	
 
 	// Loop closeouts
 	void end_history();              

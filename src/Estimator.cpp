@@ -87,7 +87,7 @@ double ScoreTotal::score( const Particle_t& P, const double l )
 //==============================================================================
 
 // Surface
-std::vector<std::pair<int,double>> FilterSurface::idx_l( const Particle_t& P,
+std::vector<std::pair<int,double>> FilterSurface::idx_l( Particle_t& P,
                                                          const double l )
 {
     std::vector<std::pair<int,double>> v_i_l;
@@ -102,7 +102,7 @@ std::vector<std::pair<int,double>> FilterSurface::idx_l( const Particle_t& P,
     return v_i_l;
 }
 // Cell
-std::vector<std::pair<int,double>> FilterCell::idx_l( const Particle_t& P,
+std::vector<std::pair<int,double>> FilterCell::idx_l( Particle_t& P,
                                                       const double l )
 {
     std::vector<std::pair<int,double>> v_i_l;
@@ -117,7 +117,7 @@ std::vector<std::pair<int,double>> FilterCell::idx_l( const Particle_t& P,
     return v_i_l;
 }
 // Energy
-std::vector<std::pair<int,double>> FilterEnergy::idx_l( const Particle_t& P,
+std::vector<std::pair<int,double>> FilterEnergy::idx_l( Particle_t& P,
                                                         const double l )
 {
     std::vector<std::pair<int,double>> v_i_l;
@@ -133,9 +133,8 @@ std::vector<std::pair<int,double>> FilterEnergy::idx_l( const Particle_t& P,
     v_i_l.push_back(i_l);
     return v_i_l;
 }
-
-// Time
-std::vector<std::pair<int,double>> FilterTime::idx_l( const Particle_t& P,
+// Time bin
+std::vector<std::pair<int,double>> FilterTime::idx_l( Particle_t& P,
                                                       const double l )
 {
     std::vector<std::pair<int,double>> v_i_l;
@@ -183,6 +182,23 @@ std::vector<std::pair<int,double>> FilterTime::idx_l( const Particle_t& P,
 
     return v_i_l;
 }
+// Time TDMC
+std::vector<std::pair<int,double>> FilterTDMC::idx_l( Particle_t& P,
+                                                      const double l )
+{
+    std::vector<std::pair<int,double>> v_i_l;
+    std::pair<int,double> i_l;
+    
+    if( P.time() != f_grid[P.tdmc()] ) { return v_i_l; }
+    // Index location
+    i_l.first  = P.tdmc(); 
+    P.set_tdmc(i_l.first+1);
+    // Velocity to score
+    i_l.second = P.speed();
+
+    v_i_l.push_back(i_l);
+    return v_i_l;
+}
 
 
 //==============================================================================
@@ -217,7 +233,7 @@ void Estimator::initialize_tallies()
 }
 
 // Score
-void Estimator::score( const Particle_t& P, const double l )
+void Estimator::score( Particle_t& P, const double l )
 {
     // Individual filter indexes and l
     for( int i = 0; i < e_filters.size(); i++ ){

@@ -9,7 +9,7 @@
 
 TEST_CASE( "Particle", "" )
 {
-    Particle_t P(Point_t(1.0,2.0,3.0),Point_t(1.0,0.0,0.0),1E6,0.0,0.5);
+    Particle_t P(Point_t(1.0,2.0,3.0),Point_t(1.0,0.0,0.0),1E6,0.0,0.5,0);
     SECTION( "creation and getters" )
     {
         REQUIRE( P.pos() == Point_t(1.0,2.0,3.0) );

@@ -12,14 +12,14 @@ Particle_t Point_Source::getSource()
     Point_t p = dist_dir->sample();
     p.normalize();
 	
-    Particle_t P( pos, p, dist_enrg->sample(), dist_time->sample(), 1.0 );
+    Particle_t P( pos, p, dist_enrg->sample(), dist_time->sample(), 1.0, 0 );
     return P;
 }
 
 
 Particle_t Delta_Source::getSource()
 {
-    Particle_t P( pos, dir, E, t, w );
+    Particle_t P( pos, dir, E, t, w, 0 );
     return P;
 }
 
@@ -42,7 +42,7 @@ Particle_t DiskX_Source::getSource()
     y = y * r;
     Point_t pos( x0, y0 + y, z0 + z );
 	
-    Particle_t P( pos, p, dist_enrg->sample(), dist_time->sample(), 1.0 );
+    Particle_t P( pos, p, dist_enrg->sample(), dist_time->sample(), 1.0, 0 );
     return P;
 }
 
@@ -65,7 +65,7 @@ Particle_t DiskZ_Source::getSource()
     y = y * r;
     Point_t pos( x0 + x, y0 + y, z0 );
 	
-    Particle_t P( pos, p, dist_enrg->sample(), dist_time->sample(), 1.0 );
+    Particle_t P( pos, p, dist_enrg->sample(), dist_time->sample(), 1.0, 0 );
     return P;
 }
 
@@ -91,7 +91,7 @@ Particle_t Sphere_Shell_Source::getSource()
 
     Point_t pos( x0 + x, y0 + y, z + z0 );
 
-    Particle_t P( pos, p, dist_enrg->sample(), dist_time->sample(), 1.0 );
+    Particle_t P( pos, p, dist_enrg->sample(), dist_time->sample(), 1.0, 0 );
     return P;
 }
 
@@ -101,7 +101,7 @@ Particle_t Generic_Source::getSource()
     Point_t p = dist_dir->sample();
     p.normalize();
 	
-    Particle_t P ( dist_pos->sample(), p, dist_enrg->sample(), dist_time->sample(), 1.0 );
+    Particle_t P ( dist_pos->sample(), p, dist_enrg->sample(), dist_time->sample(), 1.0, 0 );
     return P;
 }
 

@@ -185,6 +185,7 @@ if( input_tdmc ){
         std::cout<<"ksearch and tdmc could not coexist\n";
         std::exit(EXIT_FAILURE);
     }
+    tcut_off = tdmc_time.back();
 }
         
 	// Set user distributuions
@@ -777,8 +778,16 @@ for ( auto& e : input_file.child("estimators").children("estimator") ){
         set_estimator->add_filter( std::make_shared<FilterCell>
                                    (f_name,f_unit,f_grid) );
     }
-    // Other filters
+    // Filters
     std::shared_ptr<Filter> e_filter;
+    // TDMC filter
+    if(tdmc){
+        f_grid = tdmc_time;
+        e_filter = std::make_shared<FilterTDMC> ("time","s",f_grid);
+        set_estimator->add_filter(e_filter);
+    }
+
+    // Other filters
     for ( auto& f : e.children("filter") ){
         // Filter grid
         f_grid.clear();

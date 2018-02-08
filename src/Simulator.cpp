@@ -32,7 +32,7 @@ void Simulator_t::move_particle( Particle_t& P, const double l )
 {
     P.move( l );
     // Score track length estimators
-    if (tally){ for( auto& e : P.cell()->estimators ) { e->score( P, l ); } }
+    if(tally) { for( auto& e : P.cell()->estimators ) { e->score( P, l ); } }
 }
 
 void Simulator_t::collision( Particle_t& P )
@@ -68,15 +68,15 @@ void Simulator_t::start()
 
                     // Exceeding TDMC time boundary?
                     if(tdmc){
-                        double dbound = (tdmc_time[icycle] - P.time()) 
+                        double dbound = (tdmc_time[P.tdmc()] - P.time()) 
                                         * P.speed();
                         if( std::min(SnD.second,dcol) > dbound ){
                             move_particle( P, dbound );
                             Fbank.addSource( std::make_shared<Delta_Source>
                                              ( P.pos(), P.dir(), P.energy(), 
                                                P.weight(), P.time() ) );
-                            P.kill();
-                            continue;
+                            move_particle( P, dbound );
+                            goto tdmc_skip;
                         }
                     }
                                     
@@ -118,11 +118,12 @@ void Simulator_t::start()
                         P.cell()->collision( P, Pbank, ksearch, Fbank, k );			
                     }
                             
+                    tdmc_skip:
                     // add # of tracks
                     tracks++;
 
                     // Cut-off or kill working particle?
-                    if ( P.energy() < Ecut_off || P.time() > tcut_off || P.weight() == 0.0 ) { P.kill();}
+                    if ( P.energy() <= Ecut_off || P.time() >= tcut_off || P.weight() == 0.0 ) { P.kill();}
                     else{
                         // Weight rouletting
                         if( P.weight() < wr ){

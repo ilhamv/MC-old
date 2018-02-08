@@ -25,6 +25,7 @@ std::shared_ptr<Surface_t> Particle_t::surface_old() const
 { 
     return p_surface_old; 
 }
+int Particle_t::tdmc() const { return p_tdmc; }
 
 //==============================================================================
 // Setters
@@ -61,7 +62,7 @@ void Particle_t::set_surface_old( const std::shared_ptr<Surface_t>& S )
 {
     p_surface_old = S;
 }
-
+void Particle_t::set_tdmc( const int t ) { p_tdmc = t; }
                                
 //==============================================================================
 // Modifiers
