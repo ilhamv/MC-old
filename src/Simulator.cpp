@@ -72,10 +72,6 @@ void Simulator_t::start()
                                         * P.speed();
                         if( std::min(SnD.second,dcol) > dbound ){
                             move_particle( P, dbound );
-                            Fbank.addSource( std::make_shared<Delta_Source>
-                                             ( P.pos(), P.dir(), P.energy(), 
-                                               P.weight(), P.time() ) );
-                            move_particle( P, dbound );
                             goto tdmc_skip;
                         }
                     }
