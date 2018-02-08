@@ -708,6 +708,10 @@ for ( auto& e : input_file.child("estimators").children("estimator") ){
                      << e_name << "\n";
             std::exit(EXIT_FAILURE);
         }    
+        if(tdmc){
+            sk = std::make_shared<ScoreKernelVelocity>();
+        }
+
         // Score
         std::shared_ptr<Score> e_score;
         std::istringstream iss( score.attribute("scores").value() );

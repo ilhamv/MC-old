@@ -30,6 +30,11 @@ double ScoreKernelCollision::score( const Particle_t& P, const double l )
     return P.weight() / P.cell()->SigmaT( P.energy() ); 
 }
 
+// Velocity
+double ScoreKernelVelocity::score( const Particle_t& P, const double l )
+{ 
+    return P.weight() * P.speed(); 
+}
 
 //=============================================================================
 // Score
@@ -192,9 +197,9 @@ std::vector<std::pair<int,double>> FilterTDMC::idx_l( Particle_t& P,
     if( P.time() != f_grid[P.tdmc()] ) { return v_i_l; }
     // Index location
     i_l.first  = P.tdmc(); 
-    P.set_tdmc(i_l.first+1);
+    P.set_tdmc(P.tdmc()+1);
     // Velocity to score
-    i_l.second = P.speed();
+    i_l.second = l;
 
     v_i_l.push_back(i_l);
     return v_i_l;
