@@ -9,11 +9,13 @@
 
 #include "Simulator.h"
 #include "XMLparser.h"
+#include "H5Cpp.h"
 
 // Constructor: Set up the simulator with XML parser
-Simulator_t::Simulator_t( const std::string input_file )
+Simulator_t::Simulator_t( const std::string input_dir )
 {
-    XML_input( input_file, simulation_name, Nsample, ksearch, tdmc, Ncycle, Npassive,
+    io_dir = input_dir+"/";
+    XML_input( io_dir, simulation_name, Nsample, ksearch, tdmc, Ncycle, Npassive,
                Ecut_off, tcut_off, Fbank, Surface, Cell, Nuclide, Material,
                estimator, Distribution_Double, Distribution_Point, tdmc_time, tdmc_split );
     
@@ -172,7 +174,11 @@ void Simulator_t::report()
 {
     // Generate outputs
     std::ostringstream output;                       // Output text
-    std::ofstream file( simulation_name + " - output.txt" ); // .txt file
+    std::ofstream file( io_dir + "output.txt" ); // .txt file
+
+    io_dir += "output.h5";
+    H5std_string FILE_NAME(io_dir);
+    H5::H5File output_H5(FILE_NAME, H5F_ACC_TRUNC);
 	
     // Header
     output << "\n";
@@ -193,7 +199,7 @@ void Simulator_t::report()
     }
 
     // Report tallies
-    for ( auto& E : estimator ) { E->report( output ); }
+    for ( auto& E : estimator ) { E->report( output, output_H5 ); }
 	
     // Print on monitor and file
     std::cout<< output.str();

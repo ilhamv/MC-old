@@ -76,4 +76,5 @@ class Simulator_t
         void move_particle( Particle_t& P, const double l );
         void cut_off( Particle_t&P );
         void collision( Particle_t& P );
+        std::string io_dir;
 };

@@ -42,7 +42,7 @@
 
 
 <estimators>
-    <estimator name="Sphere leakage">
+    <estimator name="sphere_leakage">
         <score scores="current"/>
     	<surface name="suspicious_sphere"/>
 	<filter type="time" grid_linear="0.0 1e-10 1e-8"/>

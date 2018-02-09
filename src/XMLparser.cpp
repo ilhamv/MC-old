@@ -112,7 +112,7 @@ void setNuclide( const std::string name, const std::string label, std::shared_pt
 // XML input pasrese
 void XML_input
 (
-    const std::string                                        file_name,
+    std::string                                              file_dir,
     std::string&                                             simulation_name,
     unsigned long long&                                      Nsample,          
     bool&                                                    ksearch,
@@ -134,13 +134,14 @@ void XML_input
 )
 {
     // XML input file
+    file_dir += "input.xml";
     pugi::xml_document input_file;
-    pugi::xml_parse_result load_result = input_file.load_file( file_name.c_str() );
+    pugi::xml_parse_result load_result = input_file.load_file( file_dir.c_str() );
 
     // Able to load file?
     if ( ! load_result ) 
     {
-        std::cout<< "Unable to load input file " << file_name << ":\n";
+        std::cout<< "Unable to load input file " << file_dir << ":\n";
 	std::cout<< load_result.description() << std::endl;
         std::exit(EXIT_FAILURE);
     }
@@ -748,16 +749,21 @@ for ( auto& e : input_file.child("estimators").children("estimator") ){
     }
 
     // Estimator filters
-    std::string             f_name;
-    std::string             f_unit;
     std::vector<double>     f_grid;
+    std::shared_ptr<Filter> e_filter;
+    // TDMC filter
+    if(tdmc){
+        f_grid = tdmc_time;
+        e_filter = std::make_shared<FilterTDMC> (f_grid);
+        set_estimator->add_filter(e_filter);
+    }
     // Attach estimator on geometries (and build the corresponding filter)
-    f_unit = "#";
     if ( !e.child("surface") && !e.child("cell") ){
         std::cout<< "[ERROR] Estimator " << e_name 
                  << " needs to be attached somewhere\n";
         std::exit(EXIT_FAILURE);
     }
+    f_grid.clear();
     for ( auto& surface : e.children("surface") ){
         const std::string s_name = surface.attribute("name").value();
         const std::shared_ptr<Surface_t> s_ptr = findByName( Surface, s_name );
@@ -767,10 +773,8 @@ for ( auto& e : input_file.child("estimators").children("estimator") ){
             std::exit(EXIT_FAILURE);
    	}
    	s_ptr->addEstimator( set_estimator );
-        f_name = "surface";
         f_grid.push_back(s_ptr->ID());
-        set_estimator->add_filter( std::make_shared<FilterSurface>
-                                   (f_name,f_unit,f_grid) );
+        set_estimator->add_filter( std::make_shared<FilterSurface>(f_grid) );
     }
     for ( auto& cell : e.children("cell") ){
         const std::string c_name = cell.attribute("name").value();
@@ -781,20 +785,9 @@ for ( auto& e : input_file.child("estimators").children("estimator") ){
             std::exit(EXIT_FAILURE);
    	}    
         c_ptr->addEstimator( set_estimator );
-        f_name = "cell";
         f_grid.push_back(c_ptr->ID());
-        set_estimator->add_filter( std::make_shared<FilterCell>
-                                   (f_name,f_unit,f_grid) );
+        set_estimator->add_filter( std::make_shared<FilterCell>(f_grid) );
     }
-    // Filters
-    std::shared_ptr<Filter> e_filter;
-    // TDMC filter
-    if(tdmc){
-        f_grid = tdmc_time;
-        e_filter = std::make_shared<FilterTDMC> ("time","s",f_grid);
-        set_estimator->add_filter(e_filter);
-    }
-
     // Other filters
     for ( auto& f : e.children("filter") ){
         // Filter grid
@@ -826,13 +819,11 @@ for ( auto& e : input_file.child("estimators").children("estimator") ){
                      << "\n";
             std::exit(EXIT_FAILURE);
         }
-        f_name = f.attribute("type").value();
+        std::string f_name = f.attribute("type").value();
         if( f_name == "energy" ){
-            f_unit = "eV";
-            e_filter = std::make_shared<FilterEnergy> (f_name,f_unit,f_grid);
+            e_filter = std::make_shared<FilterEnergy> (f_grid);
         } else if( f_name == "time" ){
-            f_unit = "s";
-            e_filter = std::make_shared<FilterTime> (f_name,f_unit,f_grid);
+            e_filter = std::make_shared<FilterTime> (f_grid);
         } else{
             std::cout<< "[ERROR] Unknown filter type for estimator " << e_name
                      << "\n";

@@ -5,6 +5,7 @@
 #include "Estimator.h"
 #include "Geometry.h"
 #include "Solver.h"  // Binary_Search, Linterpolate
+#include "H5Cpp.h"
 
 
 //=============================================================================
@@ -314,7 +315,7 @@ void Estimator::end_simulation( const int N )
     }
 }
 
-void Estimator::report( std::ostringstream& output )
+void Estimator::report( std::ostringstream& output, H5::H5File& output_H5  )
 {
     output << "\n\n";
     output << "Estimator report: " + e_name + "\n";
@@ -326,6 +327,56 @@ void Estimator::report( std::ostringstream& output )
         output<<tally.mean<<"  +-  "<<tally.uncer<< " " 
               << "(" << tally.uncer_rel*100<<"%)\n";
     }
+    
+    // Populate H5 output file
+    H5::StrType type_str(0, H5T_VARIABLE);
+    H5::DataSpace att_space(H5S_SCALAR);
+
+    H5::Group e_group = output_H5.createGroup("/"+e_name);
+    int idx = 0;
+    std::vector<double> mean(idx_factor[0]);
+    std::vector<double> uncer(idx_factor[0]);
+    for( auto& score : e_scores ){
+        output_H5.createGroup("/"+e_name+"/"+score->name());
+        for( int i = 0; i < idx_factor[0]; i++ ){
+            mean[i] = e_tally[i+idx].mean;
+            uncer[i] = e_tally[i+idx].uncer;
+        }
+        hsize_t dims[e_filters.size()];
+        for( int i = 0; i < e_filters.size(); i++ ){
+            dims[i] = e_filters[i]->grid().size();
+        }
+        H5::DataSpace data_space_mean(e_filters.size(),dims);
+        H5::DataSpace data_space_uncer(e_filters.size(),dims);
+        H5::DataSet data_mean = 
+            output_H5.createDataSet("/"+e_name+"/"+score->name()+"/"+"mean",
+                                    H5::PredType::NATIVE_DOUBLE, data_space_mean );
+        H5::DataSet data_uncer = 
+            output_H5.createDataSet("/"+e_name+"/"+score->name()+"/"+"uncertainty",
+                                    H5::PredType::NATIVE_DOUBLE, data_space_uncer );
+        data_mean.write(mean.data(), H5::PredType::NATIVE_DOUBLE);
+        data_uncer.write(uncer.data(), H5::PredType::NATIVE_DOUBLE);
+        idx += idx_factor[0];
+    }
+
+    for( auto& filter : e_filters ){
+        hsize_t dims[1]; dims[0] = filter->grid().size();
+        H5::DataSpace data_space(1,dims);
+        H5::DataSet data_set = 
+            output_H5.createDataSet("/"+e_name+"/"+filter->name(), 
+                                    H5::PredType::NATIVE_DOUBLE, data_space );
+
+        data_set.write(filter->grid().data(), H5::PredType::NATIVE_DOUBLE);
+        H5::Attribute att = data_set.createAttribute( "unit", type_str, att_space );
+        att.write( type_str, filter->unit() );
+    }
+    
+    H5::Attribute att = e_group.createAttribute( "indexing", type_str, att_space );
+    std::string indexing;
+    for( auto& filter : e_filters ){
+        indexing += "[" + filter->name() + "]";
+    }
+    att.write( type_str, indexing );
 }
 
 Tally Estimator::tally( const int i )

@@ -13,6 +13,7 @@
 #include "Particle.h"
 #include "Geometry.h"
 #include "Distribution.h"
+#include "H5Cpp.h"
 
 class Particle_t;
 
@@ -229,8 +230,8 @@ class Filter
 class FilterSurface : public Filter
 {
     public:
-         FilterSurface( const std::string n, const std::string u, 
-                        const std::vector<double> g ): Filter(n,u,g) {};
+         FilterSurface( const std::vector<double> g ): 
+             Filter("surface","id#",g) {};
         ~FilterSurface() {};
 
         // Get the index and the corresponding track length to be scored
@@ -242,8 +243,8 @@ class FilterSurface : public Filter
 class FilterCell : public Filter
 {
     public:
-         FilterCell( const std::string n, const std::string u, 
-                     const std::vector<double> g ): Filter(n,u,g) {};
+         FilterCell( const std::vector<double> g ): 
+             Filter("cell","id#",g) {};
         ~FilterCell() {};
 
         // Get the index and the corresponding track length to be scored
@@ -255,8 +256,8 @@ class FilterCell : public Filter
 class FilterEnergy : public Filter
 {
     public:
-         FilterEnergy( const std::string n, const std::string u, 
-                        const std::vector<double> g ): Filter(n,u,g) {};
+         FilterEnergy( const std::vector<double> g ): 
+             Filter("energy","eV",g) {};
         ~FilterEnergy() {};
 
         // Get the index and the corresponding track length to be scored
@@ -268,8 +269,8 @@ class FilterEnergy : public Filter
 class FilterTime : public Filter
 {
     public:
-         FilterTime( const std::string n, const std::string u, 
-                        const std::vector<double> g ): Filter(n,u,g) {};
+         FilterTime( const std::vector<double> g ): 
+             Filter("time","s",g) {};
         ~FilterTime() {};
 
         // Get the index and the corresponding track length to be scored
@@ -281,8 +282,8 @@ class FilterTime : public Filter
 class FilterTDMC : public Filter
 {
     public:
-         FilterTDMC( const std::string n, const std::string u, 
-                        const std::vector<double> g ): Filter(n,u,g) {};
+         FilterTDMC( const std::vector<double> g ): 
+             Filter("time","s",g) {};
         ~FilterTDMC() {};
 
         // Get the index and the corresponding track length to be scored
@@ -327,8 +328,8 @@ class Estimator
 	// Loop closeouts
 	void end_history();              
 	void end_cycle( const int N, const double tracks );
-	void end_simulation( const int N );
-	void report( std::ostringstream& output );	
+        void end_simulation( const int N );
+	void report( std::ostringstream& output, H5::H5File& output_H5 );
 
         Tally tally( const int i );
 };
