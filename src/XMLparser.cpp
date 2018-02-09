@@ -129,7 +129,8 @@ void XML_input
     std::vector < std::shared_ptr<Estimator> >&            estimator,
     std::vector < std::shared_ptr<Distribution_t<double>> >& Distribution_Double,
     std::vector < std::shared_ptr<Distribution_t<Point_t>>>& Distribution_Point,
-    std::vector<double>& tdmc_time
+    std::vector<double>& tdmc_time,
+    int& tdmc_split
 )
 {
     // XML input file
@@ -186,6 +187,9 @@ if( input_tdmc ){
         std::exit(EXIT_FAILURE);
     }
     tcut_off = tdmc_time.back();
+    if( input_tdmc.attribute("split") ){
+        tdmc_split = input_tdmc.attribute("split").as_int();
+    }
 }
         
 	// Set user distributuions

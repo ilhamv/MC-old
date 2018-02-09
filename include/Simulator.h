@@ -58,6 +58,7 @@ class Simulator_t
         std::vector<double> k_cycle; // Criticality estimate at each cycle
         double              k = 1.0;
         std::vector<double> tdmc_time;
+        int                 tdmc_split = 1.0;
         
         // User-defined distributions
         std::vector<std::shared_ptr<Distribution_t<double>>> Distribution_Double;
@@ -73,5 +74,6 @@ class Simulator_t
         void report();
 
         void move_particle( Particle_t& P, const double l );
+        void cut_off( Particle_t&P );
         void collision( Particle_t& P );
 };

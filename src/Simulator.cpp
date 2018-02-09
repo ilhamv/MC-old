@@ -15,7 +15,7 @@ Simulator_t::Simulator_t( const std::string input_file )
 {
     XML_input( input_file, simulation_name, Nsample, ksearch, tdmc, Ncycle, Npassive,
                Ecut_off, tcut_off, Fbank, Surface, Cell, Nuclide, Material,
-               estimator, Distribution_Double, Distribution_Point, tdmc_time );
+               estimator, Distribution_Double, Distribution_Point, tdmc_time, tdmc_split );
     
     if(ksearch){
         k_cycle.resize(Ncycle, 0.0);
@@ -33,6 +33,20 @@ void Simulator_t::move_particle( Particle_t& P, const double l )
     P.move( l );
     // Score track length estimators
     if(tally) { for( auto& e : P.cell()->estimators ) { e->score( P, l ); } }
+    tracks++;
+}
+
+// Cut-off and weight rouletting
+void Simulator_t::cut_off( Particle_t& P )
+{
+    if ( P.energy() <= Ecut_off || P.time() >= tcut_off || P.weight() == 0.0 ) { P.kill();}
+    else{
+        // Weight rouletting
+        if( P.weight() < wr ){
+            if( Urand() < P.weight() / ws ) { P.setWeight(ws); }
+            else { P.kill(); }
+        }
+    }
 }
 
 void Simulator_t::collision( Particle_t& P )
@@ -72,7 +86,14 @@ void Simulator_t::start()
                                         * P.speed();
                         if( std::min(SnD.second,dcol) > dbound ){
                             move_particle( P, dbound );
-                            goto tdmc_skip;
+                            cut_off( P );
+                            if(P.alive()){
+                                P.setWeight(P.weight()/tdmc_split);
+                                for( int i = 0; i < tdmc_split - 1; i++ ){
+                                    Pbank.push(P);
+                                }
+                            }
+                            continue;
                         }
                     }
                                     
@@ -114,21 +135,10 @@ void Simulator_t::start()
                         P.cell()->collision( P, Pbank, ksearch, Fbank, k );			
                     }
                             
-                    tdmc_skip:
-                    // add # of tracks
-                    tracks++;
-
-                    // Cut-off or kill working particle?
-                    if ( P.energy() <= Ecut_off || P.time() >= tcut_off || P.weight() == 0.0 ) { P.kill();}
-                    else{
-                        // Weight rouletting
-                        if( P.weight() < wr ){
-                            if( Urand() < P.weight() / ws ) { P.setWeight(ws); }
-                            else { P.kill(); }
-                        }
-                    }
+                    cut_off( P );
 
                 } // Particle is dead, end of particle loop		
+
                 // Transport next Particle in the bank
 
             } // Particle bank is empty, end of history loop
