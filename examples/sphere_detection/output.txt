@@ -1,0 +1,14 @@
+
+========================
+== Detecting a Sphere ==
+========================
+Number of passive cycles   : 0
+Number of active cycles    : 1
+Number of samples per cycle: 10000000
+
+
+
+Estimator report: detector_response
+===================================
+0.0010826  +-  1.3914e-05 (1.28525%)
+6.90638e-05  +-  1.17746e-06 (1.70489%)

@@ -46,7 +46,7 @@ class Geometry_t
 ///////////////
 
 // Forward declaration
-class Cell_t;
+class Cell;
 
 // Surface base class
 class Surface_t : public Geometry_t
@@ -68,7 +68,7 @@ class Surface_t : public Geometry_t
     	~Surface_t() {};
 
 	// Hit implementation
-	virtual void hit( Particle_t& P, const std::vector<std::shared_ptr<Cell_t>>& Cell, const bool tally );
+	virtual void hit( Particle_t& P, const std::vector<std::shared_ptr<Cell>>& Cell, const bool tally );
 
 	// Evaluate point location via the "S" equation
 	virtual double eval( const Point_t& p ) = 0;
@@ -295,60 +295,57 @@ class ConeZ_Surface : public Surface_t
 
 
 
-//////////////
-/// Cell ///
-//////////////
+//==============================================================================
+// Cell
+//==============================================================================
 
-
-// Cell base class
-class Cell_t : public Geometry_t
+class Cell : public Geometry_t
 {
-	private:
-		const double                                                  r_importance;    // Cell importance (for variance reduction)
-		std::vector< std::pair< std::shared_ptr< Surface_t >, int > > surfaces;        // Pairs of bounding surface and its sense
-		std::shared_ptr< Material_t >                                 material = NULL; // Contained material, default NULL means vacuum
+    private:
+	const double r_importance;
+	std::vector<std::pair<std::shared_ptr<Surface_t>, int>> surfaces;
+	std::shared_ptr< Material_t > material = NULL; 
 
-	public:
-     		 Cell_t( const std::string n, const int i, const double imp ) : // Pass name and importance
-			 Geometry_t(n,i), r_importance(imp) {};
-    		~Cell_t() {};
+    public:
+     	Cell( const std::string n, const int i, const double imp ) : // Pass name and importance
+            Geometry_t(n,i), r_importance(imp) {};
+    	~Cell() {};
 
-    		// Getters
-		double importance(); // importance
-		// MacroXsec of the contained material
-		double SigmaT  ( const double E );
-		double SigmaS  ( const double E );
-		double SigmaC  ( const double E );
-		double SigmaF  ( const double E );
-		double SigmaA  ( const double E );
-		double nuSigmaF( const double E );
-		
-		// Set the material
-    		void setMaterial( const std::shared_ptr< Material_t >& M );
-		
-		// Add a bounding surface
-		void addSurface ( const std::shared_ptr< Surface_t  >& S, const int sense );
-    
-        	// Return pointers to surfaces that belong to certain cell
-        	std::vector< std::pair< std::shared_ptr< Surface_t >, int > > listSurfaces () { return surfaces; };
+	// Getters
+	double importance();
+	double SigmaT  ( const double E );
+	double SigmaS  ( const double E );
+	double SigmaC  ( const double E );
+	double SigmaF  ( const double E );
+	double SigmaA  ( const double E );
+	double nuSigmaF( const double E );
+	
+	// Set the material
+	void setMaterial( const std::shared_ptr< Material_t >& M );
+	
+	// Add a bounding surface
+	void addSurface ( const std::shared_ptr< Surface_t  >& S, const int sense );
 
-    		// Test if particle is in the cell
-		bool testPoint( const Point_t& p );
-		
-		// Move particle and score any estimators
-		void moveParticle( Particle_t& P, const double dmove, const bool tally );
-		
-		// Return the closest bounding surface and the corresponding particle hit distance 
-		std::pair< std::shared_ptr< Surface_t >, double > surface_intersect( const Particle_t& P );
-		
-		// Return particle collision distance
-		double collision_distance( const double E );
+	// Return pointers to surfaces that belong to certain cell
+	std::vector< std::pair< std::shared_ptr< Surface_t >, int > > listSurfaces () { return surfaces; };
 
-		// Let the Material take care of the collision sample and reaction process
-		void collision( Particle_t& P, std::stack< Particle_t >& Pbank, const bool ksearch, Source_Bank& Fbank, const double k );
+	// Test if particle is in the cell
+	bool testPoint( const Point_t& p );
+	
+	// Move particle and score any estimators
+	void moveParticle( Particle_t& P, const double dmove, const bool tally );
+	
+	// Return the closest bounding surface and the corresponding particle hit distance 
+	std::pair< std::shared_ptr< Surface_t >, double > surface_intersect( const Particle_t& P );
+	
+	// Return particle collision distance
+	double collision_distance( const double E );
 
-		// Simulate scattering for scattering matrix MGXS
-		void simulate_scatter( Particle_t& P );
+	// Let the Material take care of the collision sample and reaction process
+	void collision( Particle_t& P, std::stack< Particle_t >& Pbank, const bool ksearch, Source_Bank& Fbank, const double k );
+
+	// Simulate scattering for scattering matrix MGXS
+	void simulate_scatter( Particle_t& P );
 };
 
 

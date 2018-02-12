@@ -8,7 +8,7 @@
 #include "Const.h"    // EPSILON
 #include "Geometry.h"
 
-class Cell_t;
+class Cell;
 //class Particle_t;
 
 // Particle source base class
@@ -182,7 +182,7 @@ class Source_Bank
         // Get source
         // sources are sampled wrt to their probability
         // then, particle cell is searched and set
-        Particle_t getSource( const std::vector<std::shared_ptr<Cell_t>>& Cell );
+        Particle_t getSource( const std::vector<std::shared_ptr<Cell>>& Cell );
 };
 
 

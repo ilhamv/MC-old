@@ -109,7 +109,7 @@ Particle_t Generic_Source::getSource()
 // Get source
 // sources are sampled wrt to their probability
 // then, particle cell is searched and set
-Particle_t Source_Bank::getSource( const std::vector<std::shared_ptr<Cell_t>>& Cell )
+Particle_t Source_Bank::getSource( const std::vector<std::shared_ptr<Cell>>& Cell )
 {
     const double xi = total * Urand();
     double s  = 0.0;

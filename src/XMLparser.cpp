@@ -123,7 +123,7 @@ void XML_input
     double&                                                  tcut_off,
     Source_Bank&                                             Sbank,
     std::vector < std::shared_ptr<Surface_t>   >&            Surface,     
-    std::vector < std::shared_ptr<Cell_t>      >&            Cell,    
+    std::vector < std::shared_ptr<Cell>      >&              cell,    
     std::vector < std::shared_ptr<Nuclide_t>   >&            Nuclide,   
     std::vector < std::shared_ptr<Material_t>  >&            Material, 
     std::vector < std::shared_ptr<Estimator> >&            estimator,
@@ -618,7 +618,7 @@ if( input_tdmc ){
   	pugi::xml_node input_cells = input_file.child("cells");
   	for ( const auto& r : input_cells ) 
 	{
-    		std::shared_ptr<Cell_t> Reg;
+    		std::shared_ptr<Cell> Reg;
     		const std::string name       = r.attribute("name").value();
 		    double            importance = 1.0;  // default
 
@@ -627,7 +627,7 @@ if( input_tdmc ){
                 importance = r.attribute("importance").as_double();
             }
         
-    		Reg  = std::make_shared<Cell_t> ( name, Cell.size(), importance );
+    		Reg  = std::make_shared<Cell> ( name, cell.size(), importance );
 
     		// Set cell material
     		if ( r.attribute("material") ) 
@@ -672,7 +672,7 @@ if( input_tdmc ){
     		} 
     		
 		// Push new cell
-		Cell.push_back( Reg );
+		cell.push_back( Reg );
   	}
     
 //==========================================================================
@@ -776,9 +776,9 @@ for ( auto& e : input_file.child("estimators").children("estimator") ){
         f_grid.push_back(s_ptr->ID());
         set_estimator->add_filter( std::make_shared<FilterSurface>(f_grid) );
     }
-    for ( auto& cell : e.children("cell") ){
-        const std::string c_name = cell.attribute("name").value();
-        const std::shared_ptr<Cell_t> c_ptr = findByName( Cell, c_name );		
+    for ( auto& c : e.children("cell") ){
+        const std::string c_name = c.attribute("name").value();
+        const std::shared_ptr<Cell> c_ptr = findByName( cell, c_name );		
         if ( !c_ptr ){
     	std::cout << "[ERROR] Unknown cell label " << c_name 
                       << " in estimator " << e_name << "\n";

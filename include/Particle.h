@@ -7,7 +7,7 @@
 #include "Point.h"
 #include "Geometry.h"
 
-class Cell_t;
+class Cell;
 class Surface_t;
 
 class Particle_t
@@ -19,8 +19,8 @@ class Particle_t
         double p_weight;      
         double p_time;        
         double p_time_old;
-        std::shared_ptr<Cell_t> p_cell;        
-        std::shared_ptr<Cell_t> p_cell_old;
+        std::shared_ptr<Cell> p_cell;        
+        std::shared_ptr<Cell> p_cell_old;
         std::shared_ptr<Surface_t> p_surface_old;
         double p_energy;      
         double p_speed;       
@@ -42,15 +42,15 @@ class Particle_t
         double time_old() const;
         double energy() const;
         double speed() const;
-        std::shared_ptr<Cell_t> cell() const;
-        std::shared_ptr<Cell_t> cell_old() const;
+        std::shared_ptr<Cell> cell() const;
+        std::shared_ptr<Cell> cell_old() const;
         std::shared_ptr<Surface_t> surface_old() const;
         int tdmc() const;
 
         // Setters
         void setDirection( const Point_t& p );
         void setWeight( const double w );
-        void setCell( const std::shared_ptr<Cell_t>& C );
+        void setCell( const std::shared_ptr<Cell>& C );
         void setTime( const double t );
         void setEnergy( const double E );
         void setSpeed( const double v );
@@ -60,7 +60,7 @@ class Particle_t
         // Modifiers
         void kill();		                                                   
         void move( const double dmove );                                           
-        void searchCell( const std::vector<std::shared_ptr<Cell_t>>& Cell ); 
+        void searchCell( const std::vector<std::shared_ptr<Cell>>& Cell ); 
 };
 
 

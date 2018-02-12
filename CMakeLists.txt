@@ -46,7 +46,7 @@ add_definitions(${cxxflags})
 # pugixml library
 #===============================================================================
 
-add_library(pugixml src/pugixml/pugixml.cpp)
+add_library(pugixml src/pugixml.cpp)
 
 #===============================================================================
 # HDF5 for binary output

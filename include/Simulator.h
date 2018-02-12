@@ -46,7 +46,7 @@ class Simulator_t
 
         // Universe
         std::vector<std::shared_ptr<Surface_t>>  Surface; 
-        std::vector<std::shared_ptr<Cell_t>>     Cell;    
+        std::vector<std::shared_ptr<Cell>>       cell;    
         std::vector<std::shared_ptr<Nuclide_t>>  Nuclide; 
         std::vector<std::shared_ptr<Material_t>> Material;
        

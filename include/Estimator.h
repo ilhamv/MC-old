@@ -58,12 +58,21 @@ class ScoreKernelCollision : public ScoreKernel
 
         double score( const Particle_t& P, const double l );
 };
-// Collision
+// Velocity
 class ScoreKernelVelocity : public ScoreKernel
 {
     public:
          ScoreKernelVelocity() {};
         ~ScoreKernelVelocity() {};
+
+        double score( const Particle_t& P, const double l );
+};
+// Track Length Velocity
+class ScoreKernelTrackLengthVelocity : public ScoreKernel
+{
+    public:
+         ScoreKernelTrackLengthVelocity() {};
+        ~ScoreKernelTrackLengthVelocity() {};
 
         double score( const Particle_t& P, const double l );
 };

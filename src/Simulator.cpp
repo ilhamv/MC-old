@@ -16,7 +16,7 @@ Simulator_t::Simulator_t( const std::string input_dir )
 {
     io_dir = input_dir+"/";
     XML_input( io_dir, simulation_name, Nsample, ksearch, tdmc, Ncycle, Npassive,
-               Ecut_off, tcut_off, Fbank, Surface, Cell, Nuclide, Material,
+               Ecut_off, tcut_off, Fbank, Surface, cell, Nuclide, Material,
                estimator, Distribution_Double, Distribution_Point, tdmc_time, tdmc_split );
     
     if(ksearch){
@@ -64,7 +64,7 @@ void Simulator_t::start()
 
         // Cycle loop
         for ( unsigned long long isample = 0 ; isample < Nsample ; isample++ ){
-            Pbank.push( Sbank.getSource( Cell ) );
+            Pbank.push( Sbank.getSource( cell ) );
                     
             // History loop
             while ( !Pbank.empty() ){
@@ -113,7 +113,7 @@ void Simulator_t::start()
                         //   Cross the surface (move epsilon distance)
                         //   Search new particle cell for transmission surface
                         //   Tally if there is any surface tally
-                        SnD.first->hit( P, Cell, tally );
+                        SnD.first->hit( P, cell, tally );
 
                         // Splitting & Roulette Variance Reduction Technique
                         //   More important : split
