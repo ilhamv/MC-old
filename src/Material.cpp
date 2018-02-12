@@ -82,15 +82,14 @@ double Material_t::collision_distance_sample( const double E )
 // Sample collided nuclide
 std::shared_ptr< Nuclide_t > Material_t::nuclide_sample( const double E )
 {
-	double u = SigmaT( E ) * Urand();
-	double s = 0.0;
-	for ( auto& n : nuclides ) 
-	{
-		// first is pointer to nuclide, second is nuclide density
-		s += n.first->sigmaT( E ) * n.second;
-		if ( s > u ) { return n.first; }
-	}
-    assert( false ); // should never reach here
+    double u = SigmaT( E ) * Urand();
+    double s = 0.0;
+    for ( auto& n : nuclides ){
+	// first is pointer to nuclide, second is nuclide density
+	s += n.first->sigmaT( E ) * n.second;
+	if ( s > u ) { return n.first; }
+    }
+    //assert( false ); // should never reach here
     return nullptr;
 }
 
@@ -109,6 +108,7 @@ void Material_t::collision_sample( Particle_t& P, std::stack<Particle_t>& Pbank,
 
         // Bank Fbank
         const double bank_nu = std::floor( P.weight() / k * nuSigmaF(P.energy()) / SigmaT(P.energy()) + Urand() );                
+        
         for ( int i = 0 ; i < bank_nu ; i++ )
         {
             // Determine the emitting nuclide 
