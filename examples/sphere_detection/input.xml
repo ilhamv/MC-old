@@ -85,12 +85,16 @@
 
 
 <estimators>
-    <estimator name="detector_response">
-        <score scores="flux absorption" type="TL"/>
+    <estimator name="detector_TL" scores="flux absorption" type="TL">
     	<cell name="detector"/>
     </estimator>
 </estimators>
 
+<estimators>
+    <estimator name="detector_C" scores="flux absorption" type="C">
+    	<cell name="detector"/>
+    </estimator>
+</estimators>
 
 <distributions>
     <delta name="dir" datatype="point" x = "0.0" y = "0.0" z = "1.0"/>

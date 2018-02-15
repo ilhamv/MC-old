@@ -11,42 +11,44 @@
 #include "Point.h"
 #include "Material.h"
 
-
-// Forward declaration
 class Estimator;
 class Source_Bank;
+class Cell;
 
 
-// Geometry base class
+//=============================================================================
+// Geometry
+//=============================================================================
+
 class Geometry_t
 {
     private:
-	const std::string g_name; // Geometry name
+	const std::string g_name;
         const int         g_ID;
-	
         
     public:
-     	Geometry_t( const std::string n, const int i ) : g_name(n), g_ID(i) {}; // Pass the name
+     	Geometry_t( const std::string n, const int i ) : g_name(n), g_ID(i) {};
     	~Geometry_t() {};
 
-	// Get name
-	virtual std::string name()  final { return g_name; };
-	virtual int         ID()    final { return g_ID; };
+	// Getters
+	virtual std::string name() final { return g_name; }
+	virtual int ID() final { return g_ID; }
 	
-	// Add an estimator
-	virtual void addEstimator( const std::shared_ptr< Estimator >& E ) final 
-	{ estimators.push_back( E ); }
-	
-        std::vector< std::shared_ptr< Estimator > > estimators; // Estimators attached
+        // Attaching estimators
+	virtual void attach_estimator_C( const std::shared_ptr<Estimator>& E )
+            final { estimators_C.push_back( E ); }
+	virtual void attach_estimator_TL( const std::shared_ptr<Estimator>& E )
+            final { estimators_TL.push_back( E ); }
+
+        // Attached estimators
+        std::vector<std::shared_ptr<Estimator>> estimators_C;
+        std::vector<std::shared_ptr<Estimator>> estimators_TL;
 };
 
 
-////////////////
-/// Surfaces ///
-///////////////
-
-// Forward declaration
-class Cell;
+//=============================================================================
+// Surfaces
+//=============================================================================
 
 // Surface base class
 class Surface_t : public Geometry_t

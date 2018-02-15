@@ -685,67 +685,61 @@ for ( auto& e : input_file.child("estimators").children("estimator") ){
 
     // Estimator name
     std::string e_name = "Estimator #" + std::to_string(estimator.size()+1);
-    if ( e.attribute("name") ){ e_name = e.attribute("name").value(); }
-    set_estimator = std::make_shared<Estimator> ( e_name );
+    if ( e.attribute("name") ) { e_name = e.attribute("name").value(); }
+    set_estimator = std::make_shared<Estimator> ( e_name, Nsample, 
+                                                  Ncycle-Npassive );
 
+    // Estimator type
+    std::string e_type = "TL";
+    std::shared_ptr<ScoreKernel> e_sk;
+    if( e.attribute("type") ) { e_type = e.attribute("type").value(); }
+    if( e_type == "TL" ){ 
+        e_sk = std::make_shared<ScoreKernelTrackLength>();
+    } else if( e_type == "C" ){
+        e_sk = std::make_shared<ScoreKernelCollision>();
+    } else{
+        std::cout<< "[ERROR] Unsupported score type in estimator " 
+                 << e_name << "\n";
+        std::exit(EXIT_FAILURE);
+    }    
+    if(tdmc){
+        e_sk = std::make_shared<ScoreKernelVelocity>();
+    }
+    
     // Estimator scores
     std::vector<std::string> e_scores;
-    if ( !e.child("score").attribute("scores") ){
+    if( !e.attribute("scores") ){
         std::cout<< "[ERROR] There is no score in estimator " << e_name 
                  << "\n";
         std::exit(EXIT_FAILURE);
     }
-    for ( auto& score : e.children("score") ){
-        // Type
-        std::shared_ptr<ScoreKernel> sk;
-        std::string                  sk_type = "TL";
-        if ( score.attribute("type") ){
-            sk_type = score.attribute("type").value();
-        }
-        if ( sk_type == "TL" ){ 
-            sk = std::make_shared<ScoreKernelTrackLength>();
-        }else if ( sk_type == "C" ){
-            sk = std::make_shared<ScoreKernelCollision>();
-        }else if ( sk_type == "N" ){
-            sk = std::make_shared<ScoreKernelNeutron>();
-        }else{
-            std::cout<< "[ERROR] Unsupported score type in estimator " 
-                     << e_name << "\n";
-            std::exit(EXIT_FAILURE);
-        }    
-        if(tdmc){
-            sk = std::make_shared<ScoreKernelVelocity>();
-        }
-
-        // Score
+    std::istringstream iss( e.attribute("scores").value() );
+    for( std::string s; iss >> s; ) { e_scores.push_back(s); }
+    for( auto& s : e_scores ){
         std::shared_ptr<Score> e_score;
-        std::istringstream iss( score.attribute("scores").value() );
-        for ( std::string s; iss >> s; ) { e_scores.push_back(s); }
-        for ( auto& s : e_scores ){
-            if ( s == "flux" ){
-                e_score = std::make_shared<ScoreFlux>(s,sk);
-            }else if ( s == "absorption" ){ 
-                e_score = std::make_shared<ScoreAbsorption>(s,sk);
-            }else if ( s == "scatter" ){ 
-                e_score = std::make_shared<ScoreScatter>(s,sk); 
-            }else if ( s == "capture" ){ 
-                e_score = std::make_shared<ScoreCapture>(s,sk);
-            }else if ( s == "fission" ){ 
-                e_score = std::make_shared<ScoreFission>(s,sk); 
-            }else if ( s == "nu-fission" ){ 
-                e_score = std::make_shared<ScoreNuFission>(s,sk);
-            }else if ( s == "total" ){ 
-                e_score = std::make_shared<ScoreTotal>(s,sk);
-            }else if ( s == "current" ){ 
-                sk = std::make_shared<ScoreKernelNeutron>();
-                e_score = std::make_shared<ScoreFlux>(s,sk);
-            }else{
-                std::cout<< "[ERROR] Unsuported score type " << s 
-                         << " in estimator " << e_name << "\n";
-                std::exit(EXIT_FAILURE);
-            }
-            set_estimator->add_score( e_score );
+        if( s == "flux" ){
+            e_score = std::make_shared<ScoreFlux>(s,e_sk);
+        } else if ( s == "absorption" ){ 
+            e_score = std::make_shared<ScoreAbsorption>(s,e_sk);
+        } else if ( s == "scatter" ){ 
+            e_score = std::make_shared<ScoreScatter>(s,e_sk); 
+        } else if ( s == "capture" ){ 
+            e_score = std::make_shared<ScoreCapture>(s,e_sk);
+        } else if ( s == "fission" ){ 
+            e_score = std::make_shared<ScoreFission>(s,e_sk); 
+        } else if ( s == "nu-fission" ){ 
+            e_score = std::make_shared<ScoreNuFission>(s,e_sk);
+        } else if ( s == "total" ){ 
+            e_score = std::make_shared<ScoreTotal>(s,e_sk);
+        } else if ( s == "cross" ){ 
+            e_sk = std::make_shared<ScoreKernelNeutron>();
+            e_score = std::make_shared<ScoreFlux>(s,e_sk);
+        } else{
+            std::cout<< "[ERROR] Unsuported score type " << s 
+                     << " in estimator " << e_name << "\n";
+            std::exit(EXIT_FAILURE);
         }
+        set_estimator->add_score( e_score );
     }
 
     // Estimator filters
@@ -758,13 +752,8 @@ for ( auto& e : input_file.child("estimators").children("estimator") ){
         set_estimator->add_filter(e_filter);
     }
     // Attach estimator on geometries (and build the corresponding filter)
-    if ( !e.child("surface") && !e.child("cell") ){
-        std::cout<< "[ERROR] Estimator " << e_name 
-                 << " needs to be attached somewhere\n";
-        std::exit(EXIT_FAILURE);
-    }
     f_grid.clear();
-    for ( auto& surface : e.children("surface") ){
+    for( auto& surface : e.children("surface") ){
         const std::string s_name = surface.attribute("name").value();
         const std::shared_ptr<Surface_t> s_ptr = findByName( Surface, s_name );
         if ( !s_ptr ){
@@ -772,24 +761,33 @@ for ( auto& e : input_file.child("estimators").children("estimator") ){
                       << " in estimator " << e_name << "\n";
             std::exit(EXIT_FAILURE);
    	}
-   	s_ptr->addEstimator( set_estimator );
+   	s_ptr->attach_estimator_C( set_estimator );
         f_grid.push_back(s_ptr->ID());
-        set_estimator->add_filter( std::make_shared<FilterSurface>(f_grid) );
     }
-    for ( auto& c : e.children("cell") ){
+    for( auto& c : e.children("cell") ){
         const std::string c_name = c.attribute("name").value();
-        const std::shared_ptr<Cell> c_ptr = findByName( cell, c_name );		
+        const std::shared_ptr<Cell> c_ptr = findByName( cell, c_name );
         if ( !c_ptr ){
     	std::cout << "[ERROR] Unknown cell label " << c_name 
                       << " in estimator " << e_name << "\n";
             std::exit(EXIT_FAILURE);
-   	}    
-        c_ptr->addEstimator( set_estimator );
+   	}
+        if( e_type == "TL" ) { c_ptr->attach_estimator_TL( set_estimator ); }
+        if( e_type == "C" ) { c_ptr->attach_estimator_C( set_estimator ); }
         f_grid.push_back(c_ptr->ID());
-        set_estimator->add_filter( std::make_shared<FilterCell>(f_grid) );
     }
+    if( e.child("surface") ){ 
+        set_estimator->add_filter( std::make_shared<FilterSurface>(f_grid) );
+    } else if( e.child("cell") ){
+        set_estimator->add_filter( std::make_shared<FilterCell>(f_grid) );
+    } else{
+        std::cout<< "[ERROR] Estimator " << e_name 
+                 << " needs to be attached somewhere\n";
+        std::exit(EXIT_FAILURE);
+    }
+
     // Other filters
-    for ( auto& f : e.children("filter") ){
+    for( auto& f : e.children("filter") ){
         // Filter grid
         f_grid.clear();
 	if( f.attribute("grid") ){
@@ -834,6 +832,92 @@ for ( auto& e : input_file.child("estimators").children("estimator") ){
     // Push new estimator
     set_estimator->initialize_tallies();
     estimator.push_back( set_estimator );
+}
+
+//==========================================================================
+// TRMM
+//==========================================================================
+
+pugi::xml_node input_trmm = input_file.child("trmm");
+
+if(input_trmm){
+    if(!ksearch){
+        std::cout<< "[ERROR] TRMM should be run in ksearch mode\n" ;
+        std::exit(EXIT_FAILURE);
+    }
+    std::shared_ptr<Estimator>   trmm_estimator;
+    std::shared_ptr<ScoreKernel> trmm_sk;
+    std::shared_ptr<Score>       trmm_score;
+    std::vector<double>          trmm_grid;
+    std::shared_ptr<Filter>      trmm_filter;
+
+    // Estimator
+    trmm_estimator = std::make_shared<Estimator>
+        ( "TRMM[g]", Nsample, Ncycle-Npassive );
+
+    // Score
+    trmm_sk = std::make_shared<ScoreKernelTrackLengthVelocity>();
+    trmm_score = std::make_shared<ScoreTotal>("Collision",trmm_sk);
+    trmm_estimator->add_score( trmm_score );
+    trmm_sk = std::make_shared<ScoreKernelTrackLength>();
+    trmm_score = std::make_shared<ScoreTotal>("Flux",trmm_sk);
+    trmm_estimator->add_score( trmm_score );
+
+    // Filters
+    for( auto& c : input_trmm.children("cell") ){
+        const std::string c_name = c.attribute("name").value();
+        const std::shared_ptr<Cell> c_ptr = findByName( cell, c_name );
+        if ( !c_ptr ){
+            std::cout << "[ERROR] Unknown cell label " << c_name 
+                      << " in trmm\n";
+            std::exit(EXIT_FAILURE);
+   	}
+        c_ptr->attach_estimator_TL( trmm_estimator );
+        trmm_grid.push_back(c_ptr->ID());
+    }
+    trmm_estimator->add_filter( std::make_shared<FilterCell>(trmm_grid) );
+    for( auto& f : input_trmm.children("filter") ){
+        // Filter grid
+        trmm_grid.clear();
+	if( f.attribute("grid") ){
+	    const std::string   grid_string = f.attribute("grid").value();
+	    std::istringstream  iss( grid_string );
+	    for( double s; iss >> s; ) { trmm_grid.push_back(s); }
+	} else if( f.attribute("grid_linear") ){
+	    const std::string grid_string = f.attribute("grid_linear").value();
+	    double a, b, step;
+	    std::istringstream  iss( grid_string );
+	    iss >> a >> step >> b;
+	    trmm_grid.push_back(a);
+	    while( trmm_grid.back() < b )
+	    {
+		trmm_grid.push_back( trmm_grid.back() + step );
+	    }
+	    trmm_grid.pop_back();
+	    trmm_grid.push_back(b);
+	} else{
+            std::cout<< "[ERROR] Need filter grid for trmm\n";
+            std::exit(EXIT_FAILURE);
+        }
+        // Filter type
+        if ( !f.attribute("type") ){
+            std::cout<< "[ERROR] Need filter type for trmm\n";
+            std::exit(EXIT_FAILURE);
+        }
+        std::string f_name = f.attribute("type").value();
+        if( f_name == "energy" ){
+            trmm_filter = std::make_shared<FilterEnergy> (trmm_grid);
+        } else if( f_name == "time" ){
+            trmm_filter = std::make_shared<FilterTime> (trmm_grid);
+        } else{
+            std::cout<< "[ERROR] Unknown filter type for trmm\n";
+            std::exit(EXIT_FAILURE);
+        }
+        trmm_estimator->add_filter(trmm_filter);
+    }
+    // Push new estimator
+    trmm_estimator->initialize_tallies();
+    estimator.push_back( trmm_estimator );
 }
 
         // Set source bank

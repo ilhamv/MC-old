@@ -13,8 +13,8 @@ TEST_CASE( "Integral Simulation Tests", "" )
         Sim.start();
         Sim.report();
 
-        double mean  = Sim.estimator[0]->tally(0).mean;
-        double uncer = Sim.estimator[0]->tally(0).uncer;
+        double mean  = Sim.Estimators[0]->tally(0).mean;
+        double uncer = Sim.Estimators[0]->tally(0).uncer;
         
         REQUIRE( std::abs( mean - 0.0149956 ) <= uncer  );
     }
@@ -25,8 +25,8 @@ TEST_CASE( "Integral Simulation Tests", "" )
         Sim.start();
         Sim.report();
 
-        double mean  = Sim.estimator[0]->tally(1).mean;
-        double uncer = Sim.estimator[0]->tally(1).uncer;
+        double mean  = Sim.Estimators[0]->tally(1).mean;
+        double uncer = Sim.Estimators[0]->tally(1).uncer;
         
         REQUIRE( std::abs( mean - 6.9276e-5 ) <= uncer+1.15e-6  );
     }

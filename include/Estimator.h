@@ -184,9 +184,9 @@ class ScoreTotal : public Score
 };
 
 
-//==============================================================================
+//=============================================================================
 // Tally: the estimated mean with its uncertainty
-//==============================================================================
+//=============================================================================
 
 class Tally
 {
@@ -197,18 +197,16 @@ class Tally
 		
         double mean  = 0.0;   // Estimated mean
 	double uncer = 0.0;   // Uncertainty of the estimated mean
-	double uncer_rel;     // Relative uncertainty of estimated mean
-	double FOM   = 0.0;   // Figure of merit		
 	
 	 Tally() {};
 	~Tally() {};
 };
 
 
-//==============================================================================
+//=============================================================================
 // Filter
 //   - Supports: recently crossed Surface, Cell, Energy, Time
-//==============================================================================
+//=============================================================================
 
 class Filter
 {
@@ -223,7 +221,7 @@ class Filter
     public:
          Filter( const std::string n, const std::string u, 
                  const std::vector<double> g): f_name(n), f_unit(u), 
-                                               f_grid(g), f_Nbin(g.size()-1) {};
+                                               f_grid(g), f_Nbin(g.size()-1){};
         ~Filter() {};
 
         // Get the index and the corresponding track length to be scored
@@ -302,9 +300,9 @@ class FilterTDMC : public Filter
 };
 
 
-//==============================================================================
+//=============================================================================
 /// Estimator
-//==============================================================================
+//=============================================================================
 
 // Basic Estimator
 class Estimator
@@ -323,8 +321,12 @@ class Estimator
         // Multiplication of filter size with index > i
         std::vector<double> idx_factor;
 
+        const unsigned long long e_Nsample, e_Nactive;
+
     public:
-	 Estimator( const std::string n ) : e_name(n) {};
+	 Estimator( const std::string n, const unsigned long long Ns,
+                    const unsigned long long Na ) : e_name(n), e_Nsample(Ns),
+                                                    e_Nactive(Na) {};
 	~Estimator() {};
 
         // Initialization
@@ -336,12 +338,45 @@ class Estimator
 
 	// Loop closeouts
 	void end_history();              
-	void end_cycle( const int N, const double tracks );
-        void end_simulation( const int N );
+	void end_cycle( const double tracks );
+        void end_simulation();
 	void report( std::ostringstream& output, H5::H5File& output_H5 );
 
         Tally tally( const int i );
 };
 
+// k-eigenvalue
+class EstimatorK
+{
+    private:
+        double              k_sum_C  = 0.0;
+        double              k_sum_TL = 0.0;
+        double              k_sq_C   = 0.0;
+        double              k_sq_TL  = 0.0;
+        std::vector<double> k_cycle, k_avg, k_uncer;
+        unsigned long long  Navg   = 0;
+        unsigned long long  icycle = 0;
+        double              k_C  = 0.0;
+        double              k_TL = 0.0;
+        unsigned long long Nsample, Nactive;
+
+        // Accumulator
+        double uncer_sq_accumulator = 0.0;
+        double mean_accumulator  = 0.0;
+    
+    public:
+        EstimatorK( const unsigned long long Ncycle, 
+                    const unsigned long long Na,
+                    const unsigned long long Ns );
+        ~EstimatorK() {};
+
+        void end_history();
+        void report_cycle( const bool tally );
+        //void report();
+        void estimate_C( const Particle_t& P );
+        void estimate_TL( const Particle_t& P, const double l );
+
+        double k;
+};
 
 #endif // ESTIMATOR_H

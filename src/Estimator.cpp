@@ -34,7 +34,8 @@ double ScoreKernelVelocity::score( const Particle_t& P, const double l )
     return P.weight() * P.speed(); 
 }
 // Track Length Velocity
-double ScoreKernelTrackLengthVelocity::score( const Particle_t& P, const double l )
+double ScoreKernelTrackLengthVelocity::score( const Particle_t& P, 
+                                              const double l )
 { 
     return P.weight() * l * P.speed(); 
 }
@@ -89,10 +90,10 @@ double ScoreTotal::score( const Particle_t& P, const double l )
 }
 
 
-//==============================================================================
+//=============================================================================
 // Filter
 //   - Supports: recently crossed Surface, Cell, Energy, Time
-//==============================================================================
+//=============================================================================
 
 // Surface
 std::vector<std::pair<int,double>> FilterSurface::idx_l( Particle_t& P,
@@ -149,8 +150,8 @@ std::vector<std::pair<int,double>> FilterTime::idx_l( Particle_t& P,
     std::pair<int,double> i_l;
     
     // Edge bin locations
-    int loc1 = Binary_Search( P.time_old(), f_grid );     // before track generation
-    int loc2 = Binary_Search( P.time(), f_grid ); // after
+    int loc1 = Binary_Search( P.time_old(), f_grid ); // before track generation
+    int loc2 = Binary_Search( P.time(), f_grid );     // after
     
     // Distribute score into spanned bins
     if ( loc1 == loc2 ) // 1 bin spanned
@@ -209,9 +210,9 @@ std::vector<std::pair<int,double>> FilterTDMC::idx_l( Particle_t& P,
 }
 
 
-//==============================================================================
-/// Estimator
-//==============================================================================
+//=============================================================================
+// Basic Estimator
+//=============================================================================
 
 // Initialization
 void Estimator::add_score( const std::shared_ptr<Score>& S )
@@ -290,33 +291,27 @@ void Estimator::end_history()
         tally.hist     = 0.0;
     }
 }
-void Estimator::end_cycle( const int N, const double tracks )
+void Estimator::end_cycle( const double tracks )
 {
     for( auto& tally : e_tally ){
-        const double mean          = tally.sum / N;
-        const double uncer_squared = ( tally.squared / N - mean*mean ) 
-                                     / ( N - 1.0 );
-        const double uncer_rel     = std::sqrt(uncer_squared) / mean;
-        const double FOM           = 1.0 / ( uncer_rel*uncer_rel * tracks );
+        const double mean          = tally.sum / e_Nsample;
+        const double uncer_squared = ( tally.squared / e_Nsample - mean*mean ) 
+                                     / ( e_Nsample - 1.0 );
 
         tally.mean  += mean;
         tally.uncer += uncer_squared;
-        tally.FOM   += FOM;
 
         tally.sum     = 0.0;
         tally.squared = 0.0;
     }
 }
-void Estimator::end_simulation( const int N )
+void Estimator::end_simulation()
 {
     for( auto& tally : e_tally ){
-        tally.mean      = tally.mean / N;
-        tally.uncer     = std::sqrt( tally.uncer ) / N;
-        tally.uncer_rel = tally.uncer / tally.mean;
-        tally.FOM       = tally.FOM / N;
+        tally.mean      = tally.mean / e_Nactive;
+        tally.uncer     = std::sqrt( tally.uncer ) / e_Nactive;
     }
 }
-
 void Estimator::report( std::ostringstream& output, H5::H5File& output_H5  )
 {
     output << "\n\n";
@@ -327,7 +322,7 @@ void Estimator::report( std::ostringstream& output, H5::H5File& output_H5  )
     for ( auto& tally : e_tally )
     {
         output<<tally.mean<<"  +-  "<<tally.uncer<< " " 
-              << "(" << tally.uncer_rel*100<<"%)\n";
+              << "(" << tally.uncer/tally.mean*100<<"%)\n";
     }
     
     // Populate H5 output file
@@ -352,10 +347,13 @@ void Estimator::report( std::ostringstream& output, H5::H5File& output_H5  )
         H5::DataSpace data_space_uncer(e_filters.size(),dims);
         H5::DataSet data_mean = 
             output_H5.createDataSet("/"+e_name+"/"+score->name()+"/"+"mean",
-                                    H5::PredType::NATIVE_DOUBLE, data_space_mean );
+                                    H5::PredType::NATIVE_DOUBLE, 
+                                    data_space_mean );
         H5::DataSet data_uncer = 
-            output_H5.createDataSet("/"+e_name+"/"+score->name()+"/"+"uncertainty",
-                                    H5::PredType::NATIVE_DOUBLE, data_space_uncer );
+            output_H5.createDataSet("/"+e_name+"/"+score->name()+"/"
+                                    +"uncertainty", 
+                                    H5::PredType::NATIVE_DOUBLE, 
+                                    data_space_uncer );
         data_mean.write(mean.data(), H5::PredType::NATIVE_DOUBLE);
         data_uncer.write(uncer.data(), H5::PredType::NATIVE_DOUBLE);
         idx += idx_factor[0];
@@ -369,11 +367,13 @@ void Estimator::report( std::ostringstream& output, H5::H5File& output_H5  )
                                     H5::PredType::NATIVE_DOUBLE, data_space );
 
         data_set.write(filter->grid().data(), H5::PredType::NATIVE_DOUBLE);
-        H5::Attribute att = data_set.createAttribute( "unit", type_str, att_space );
+        H5::Attribute att = data_set.createAttribute( "unit", type_str,
+                                                      att_space );
         att.write( type_str, filter->unit() );
     }
     
-    H5::Attribute att = e_group.createAttribute( "indexing", type_str, att_space );
+    H5::Attribute att = e_group.createAttribute( "indexing", type_str, 
+                                                 att_space );
     std::string indexing;
     for( auto& filter : e_filters ){
         indexing += "[" + filter->name() + "]";
@@ -384,4 +384,73 @@ void Estimator::report( std::ostringstream& output, H5::H5File& output_H5  )
 Tally Estimator::tally( const int i )
 {
     return e_tally[i];
+}
+
+
+//=============================================================================
+// k-eigenvalue Estimator
+//=============================================================================
+
+EstimatorK::EstimatorK( const unsigned long long Ncycle, 
+                        const unsigned long long Na,
+                        const unsigned long long Ns )
+{
+    Nactive = Na;
+    Nsample = Ns;
+    k_cycle.resize(Ncycle,0.0);
+    k_avg.resize(Nactive,0.0);
+    k_uncer.resize(Nactive,0.0);
+}
+
+void EstimatorK::estimate_C( const Particle_t& P )
+{
+    k_C += P.cell()->nuSigmaF(P.energy()) * P.weight() 
+           / P.cell()->SigmaT(P.energy());
+}
+
+void EstimatorK::estimate_TL( const Particle_t& P, const double l )
+{
+    k_TL += P.cell()->nuSigmaF(P.energy()) * P.weight() * l;
+}
+
+void EstimatorK::end_history()
+{
+    k_sum_C  += k_C;
+    k_sum_TL += k_TL;
+    k_sq_C   += k_C*k_C;
+    k_sq_TL  += k_TL*k_TL;
+    k_C  = 0;
+    k_TL = 0;
+}
+void EstimatorK::report_cycle( const bool tally )
+{
+    const double mean_C  = k_sum_C / Nsample;
+    const double mean_TL = k_sum_TL / Nsample;
+    const double mean    = (mean_C + mean_TL)/2;
+
+    k_cycle[icycle] = mean;
+    k = k_cycle[icycle];
+    std::cout<<icycle+1<<"   "<<k_cycle[icycle];
+
+    if(tally){
+        const double uncer_squared_C  = ( k_sq_C / Nsample - mean_C*mean_C ) 
+                                        / ( Nsample - 1.0 );
+        const double uncer_squared_TL = ( k_sq_TL / Nsample - mean_TL*mean_TL )
+                                        / ( Nsample - 1.0 );
+        const double uncer_squared    = uncer_squared_C + uncer_squared_TL;
+
+        Navg++;
+        mean_accumulator     += mean;
+        uncer_sq_accumulator += uncer_squared;
+        k_avg[Navg-1]   = mean_accumulator/Navg;
+        k_uncer[Navg-1] = std::sqrt(uncer_sq_accumulator)/Navg/2;
+        std::cout<<"   "<<k_avg[Navg-1]<<"   +/-   "<<k_uncer[Navg-1];
+    }
+    
+    std::cout<<"\n";
+    k_sum_C  = 0.0;
+    k_sum_TL = 0.0;
+    k_sq_C   = 0.0;
+    k_sq_TL  = 0.0;
+    icycle++;
 }

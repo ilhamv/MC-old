@@ -20,10 +20,12 @@ class Simulator_t
 {
     public:
         std::string simulation_name;
+        std::string io_dir;
         
         unsigned long long Nsample;     
         unsigned long long Ncycle   = 1; 
-        unsigned long long Npassive = 0; 
+        unsigned long long Npassive = 0;
+        unsigned long long icycle, isample;
 
         // Mode flags
         bool ksearch = false; // ksearch mode flag
@@ -45,18 +47,20 @@ class Simulator_t
         std::stack<Particle_t> Pbank; // Particle bank
 
         // Universe
-        std::vector<std::shared_ptr<Surface_t>>  Surface; 
-        std::vector<std::shared_ptr<Cell>>       cell;    
-        std::vector<std::shared_ptr<Nuclide_t>>  Nuclide; 
-        std::vector<std::shared_ptr<Material_t>> Material;
+        std::vector<std::shared_ptr<Surface_t>>  Surfaces;
+        std::vector<std::shared_ptr<Cell>>       Cells;
+        std::vector<std::shared_ptr<Nuclide_t>>  Nuclides;
+        std::vector<std::shared_ptr<Material_t>> Materials;
        
         // Estimators
-        std::vector<std::shared_ptr<Estimator>> estimator;
+        std::vector<std::shared_ptr<Estimator>> Estimators;
         std::shared_ptr<Estimator>              k_C;
         
-        // Mode specific
-        std::vector<double> k_cycle; // Criticality estimate at each cycle
-        double              k = 1.0;
+        // ksearch  specific
+        std::shared_ptr<EstimatorK> k_estimator;
+        double k = 1.0;
+
+        // TDMC specific
         std::vector<double> tdmc_time;
         int                 tdmc_split = 1.0;
         
@@ -76,5 +80,4 @@ class Simulator_t
         void move_particle( Particle_t& P, const double l );
         void cut_off( Particle_t&P );
         void collision( Particle_t& P );
-        std::string io_dir;
 };

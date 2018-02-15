@@ -35,7 +35,7 @@ void Surface_t::hit( Particle_t& P,
     // Score estimators 
     P.setTime( P.time() );
     if (tally){
-	for ( auto& e : estimators ){ 
+	for ( auto& e : estimators_C ){ 
             e->score( P, 0.0 ); 
         }
     }
@@ -368,20 +368,6 @@ bool Cell::testPoint( const Point_t& p )
     		if ( S.first->eval( p ) * S.second < 0 ) { return false; }  
   	}
   	return true;
-}
-
-
-// Move particle and score any estimators
-void Cell::moveParticle( Particle_t& P, const double dmove, const bool tally )
-{
-	P.move( dmove );
-
-        // Score track length estimator
-        if (tally){ 
-            for ( const auto& e : estimators ) { 
-                e->score( P, dmove ); 
-            } 
-        }
 }
 
 
