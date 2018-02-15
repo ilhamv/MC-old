@@ -860,7 +860,7 @@ if(input_trmm){
     trmm_score = std::make_shared<ScoreTotal>("Collision",trmm_sk);
     trmm_estimator->add_score( trmm_score );
     trmm_sk = std::make_shared<ScoreKernelTrackLength>();
-    trmm_score = std::make_shared<ScoreTotal>("Flux",trmm_sk);
+    trmm_score = std::make_shared<ScoreFlux>("Flux",trmm_sk);
     trmm_estimator->add_score( trmm_score );
 
     // Filters
