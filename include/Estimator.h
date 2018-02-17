@@ -225,7 +225,7 @@ class Filter
         ~Filter() {};
 
         // Get the index and the corresponding track length to be scored
-        virtual std::vector<std::pair<int,double>> idx_l( Particle_t& P,
+        virtual std::vector<std::pair<int,double>> idx_l( const Particle_t& P,
                                                           const double l ) = 0;
         // Getters
         virtual int                 size() = 0;
@@ -242,7 +242,7 @@ class FilterSurface : public Filter
         ~FilterSurface() {};
 
         // Get the index and the corresponding track length to be scored
-        std::vector<std::pair<int,double>> idx_l( Particle_t& P,
+        std::vector<std::pair<int,double>> idx_l( const Particle_t& P,
                                                   const double l );
         virtual int size() final { return f_grid.size(); }
 };
@@ -255,7 +255,7 @@ class FilterCell : public Filter
         ~FilterCell() {};
 
         // Get the index and the corresponding track length to be scored
-        std::vector<std::pair<int,double>> idx_l( Particle_t& P,
+        std::vector<std::pair<int,double>> idx_l( const Particle_t& P,
                                                   const double l );
         virtual int size() final { return f_grid.size(); }
 };
@@ -268,8 +268,21 @@ class FilterEnergy : public Filter
         ~FilterEnergy() {};
 
         // Get the index and the corresponding track length to be scored
-        std::vector<std::pair<int,double>> idx_l( Particle_t& P,
-                                                   const double l );
+        std::vector<std::pair<int,double>> idx_l( const Particle_t& P,
+                                                  const double l );
+        virtual int size() final { return f_grid.size()-1; }
+};
+// Energy - old
+class FilterEnergyOld : public Filter
+{
+    public:
+         FilterEnergyOld( const std::vector<double> g ): 
+             Filter("energy_initial","eV",g) {};
+        ~FilterEnergyOld() {};
+
+        // Get the index and the corresponding track length to be scored
+        std::vector<std::pair<int,double>> idx_l( const Particle_t& P,
+                                                  const double l );
         virtual int size() final { return f_grid.size()-1; }
 };
 // Time bin
@@ -281,8 +294,8 @@ class FilterTime : public Filter
         ~FilterTime() {};
 
         // Get the index and the corresponding track length to be scored
-        std::vector<std::pair<int,double>> idx_l( Particle_t& P,
-                                                   const double l );
+        std::vector<std::pair<int,double>> idx_l( const Particle_t& P,
+                                                  const double l );
         virtual int size() final { return f_grid.size()-1; }
 };
 // Time - TDMC
@@ -294,8 +307,8 @@ class FilterTDMC : public Filter
         ~FilterTDMC() {};
 
         // Get the index and the corresponding track length to be scored
-        std::vector<std::pair<int,double>> idx_l( Particle_t& P,
-                                                   const double l );
+        std::vector<std::pair<int,double>> idx_l( const Particle_t& P,
+                                                  const double l );
         virtual int size() final { return f_grid.size(); }
 };
 
@@ -334,7 +347,7 @@ class Estimator
 	void add_filter( const std::shared_ptr<Filter>& F );
         void initialize_tallies();
         
-        void score( Particle_t& P, const double l );	
+        virtual void score( const Particle_t& P, const double l );
 
 	// Loop closeouts
 	void end_history();              
@@ -344,6 +357,25 @@ class Estimator
 
         Tally tally( const int i );
 };
+// Scattering simulation estimator
+//   It simulates scattering event before scoring
+class EstimatorScatter : public Estimator
+{
+    public:
+	 EstimatorScatter( const std::string n, const unsigned long long Ns,
+                           const unsigned long long Na ) :Estimator(n,Ns,Na){};
+	~EstimatorScatter() {};
+        void score( const Particle_t& P, const double l );
+};
+// Fission simulation estimator
+/*class EstimatorFission : public Estimator
+{
+    public:
+	 EstimatorFission( const std::string n, const unsigned long long Ns,
+                           const unsigned long long Na ) :Estimator(n,Ns,Na){};
+	~EstimatorFission() {};
+        void score( const Particle_t& P, const double l );
+};*/
 
 // k-eigenvalue
 class EstimatorK
@@ -378,5 +410,6 @@ class EstimatorK
 
         double k;
 };
+
 
 #endif // ESTIMATOR_H

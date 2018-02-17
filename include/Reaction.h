@@ -11,23 +11,26 @@
 #include "Point.h"
 #include "XSec.h"
 
-// Forward declaration
 class Particle_t;
 
-// Reaction base class
+//=============================================================================
+// Base
+//=============================================================================
+
 class Reaction_t
 {
     private:
-	std::shared_ptr<XSec_t> r_xs;  // Reaction microXs in E[eV]
+	std::shared_ptr<XSec_t> r_xs;
         const int r_type;
 	
     protected:
-	std::shared_ptr<XSec_t> r_nu; // Nubar	
-	std::shared_ptr< Distribution_t<double> > Chi_dist;  // Fission neutron energy distribution
+	std::shared_ptr<XSec_t> r_nu;
+	std::shared_ptr< Distribution_t<double> > Chi_dist;
 
     public:
 	// Constructor: Pass the microXs
-       	 Reaction_t( std::shared_ptr<XSec_t> x, const int t, std::shared_ptr<XSec_t> n = std::make_shared<Constant_XSec>(0.0) ) : r_xs(x), r_type(t), r_nu(n) {}; // Pass the microXs
+       	 Reaction_t( std::shared_ptr<XSec_t> x, const int t,
+                     std::shared_ptr<XSec_t> n = std::make_shared<Constant_XSec>(0.0) ) : r_xs(x), r_type(t), r_nu(n) {}; // Pass the microXs
 	~Reaction_t() {};
 
 	// Get the microXs
@@ -50,7 +53,10 @@ class Reaction_t
 };
 
 
-// Capture reaction
+//=============================================================================
+// Capture
+//=============================================================================
+
 class Capture_Reaction : public Reaction_t 
 {
     public:
@@ -63,7 +69,9 @@ class Capture_Reaction : public Reaction_t
 };
 
 
+//=============================================================================
 // Scatter reaction, room temperature
+//=============================================================================
 class Scatter_Reaction : public Reaction_t 
 {
     private:
@@ -97,7 +105,9 @@ class Scatter_Zero_Reaction : public Reaction_t
 };
 
 
+//=============================================================================
 // Fission reaction
+//=============================================================================
 class Fission_Reaction : public Reaction_t 
 {
     private:

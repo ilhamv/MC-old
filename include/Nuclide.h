@@ -20,10 +20,6 @@ class Nuclide_t
 	const double                                 n_A;
 	std::vector< std::shared_ptr< Reaction_t > > n_reactions;
 
-        // Simulator
-	std::shared_ptr<Reaction_t> scatter;
-	std::shared_ptr<Reaction_t> fission;
-
         // To avoid redundant table look-up
 	unsigned long long idx_help  = 0;
 	double             E_current = 0; 
@@ -65,6 +61,11 @@ class Nuclide_t
 	// Simulator
 	void simulate_scatter( Particle_t& P );
 	void simulate_fission( Particle_t& P );
+        
+        // Simulator
+	std::shared_ptr<Reaction_t> scatter = NULL;
+	std::shared_ptr<Reaction_t> fission = NULL;
+
 };
 
 

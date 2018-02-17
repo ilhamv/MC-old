@@ -51,7 +51,9 @@ class Material_t
 	double collision_distance_sample( const double E );
 	
 	// Sample collided nuclide
-	std::shared_ptr< Nuclide_t > nuclide_sample( const double E );
+	std::shared_ptr<Nuclide_t> nuclide_sample( const double E );
+	std::shared_ptr<Nuclide_t> nuclide_scatter( const double E );
+	std::shared_ptr<Nuclide_t> nuclide_nufission( const double E );
 
 	// Handle collision event
 	// Sample entire collision (nuclide, then nuclide reaction)

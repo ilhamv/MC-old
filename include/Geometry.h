@@ -306,7 +306,6 @@ class Cell : public Geometry_t
     private:
 	const double r_importance;
 	std::vector<std::pair<std::shared_ptr<Surface_t>, int>> surfaces;
-	std::shared_ptr< Material_t > material = NULL; 
 
     public:
      	Cell( const std::string n, const int i, const double imp ) : // Pass name and importance
@@ -348,6 +347,8 @@ class Cell : public Geometry_t
 
 	// Simulate scattering for scattering matrix MGXS
 	void simulate_scatter( Particle_t& P );
+	
+        std::shared_ptr< Material_t > material = NULL;
 };
 
 

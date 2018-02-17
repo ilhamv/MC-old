@@ -11,7 +11,11 @@
 #include "XMLparser.h"
 #include "H5Cpp.h"
 
-// Constructor: Set up the simulator with XML parser
+
+//=============================================================================
+// Set up
+//=============================================================================
+
 Simulator_t::Simulator_t( const std::string input_dir )
 {
     io_dir = input_dir+"/";
@@ -26,7 +30,11 @@ Simulator_t::Simulator_t( const std::string input_dir )
     }
 }
 
+
+//=============================================================================
 // Move particle
+//=============================================================================
+
 void Simulator_t::move_particle( Particle_t& P, const double l )
 {
     P.move( l );
@@ -34,10 +42,13 @@ void Simulator_t::move_particle( Particle_t& P, const double l )
     if(tally){ 
         for( auto& e : P.cell()->estimators_TL ) { e->score( P, l ); }
     }
-    tracks++;
+    Ntrack++;
 }
 
+
+//=============================================================================
 // Collision
+//=============================================================================
 void Simulator_t::collision( Particle_t& P )
 {
     if (ksearch) { k_estimator->estimate_C(P); }
@@ -48,7 +59,11 @@ void Simulator_t::collision( Particle_t& P )
     P.cell()->collision( P, Pbank, ksearch, Fbank, k );			
 }
 
+
+//=============================================================================
 // Cut-off and weight rouletting
+//=============================================================================
+
 void Simulator_t::cut_off( Particle_t& P )
 {
     if ( P.energy() <= Ecut_off || P.time() >= tcut_off || P.weight() == 0.0 ){
@@ -62,6 +77,10 @@ void Simulator_t::cut_off( Particle_t& P )
         }
     }
 }
+
+//=============================================================================
+// THE Simulation
+//=============================================================================
 
 void Simulator_t::start()
 {
@@ -96,7 +115,9 @@ void Simulator_t::start()
                                         * P.speed();
                         if( std::min(SnD.second,dcol) > dbound ){
                             move_particle( P, dbound );
+                            P.set_tdmc(P.tdmc()+1);
                             cut_off( P );
+                            // Time splitting
                             if(P.alive()){
                                 P.setWeight(P.weight()/tdmc_split);
                                 for( int i = 0; i < tdmc_split - 1; i++ ){
@@ -120,10 +141,7 @@ void Simulator_t::start()
                         collision( P );
                     }        
                     cut_off( P );
-
                 } 
-
-
             }
 
             // Estimator history closeout
@@ -133,16 +151,21 @@ void Simulator_t::start()
         }
 
         // Estimator cycle closeout
-        if (tally) { for ( auto& E : Estimators ) { E->end_cycle(tracks); } }
+        if (tally) { for ( auto& E : Estimators ) { E->end_cycle(Ntrack); } }
         if (ksearch){ 
             k_estimator->report_cycle(tally);
             k = k_estimator->k;
         }
-        tracks = 0.0;
+        Ntrack = 0.0;
     
     } // All cycles are done, end of simulation loop
     for ( auto& E : Estimators ) { E->end_simulation(); }
 }
+
+
+//=============================================================================
+// Report results
+//=============================================================================
 
 void Simulator_t::report()
 {

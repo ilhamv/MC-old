@@ -96,7 +96,7 @@ double ScoreTotal::score( const Particle_t& P, const double l )
 //=============================================================================
 
 // Surface
-std::vector<std::pair<int,double>> FilterSurface::idx_l( Particle_t& P,
+std::vector<std::pair<int,double>> FilterSurface::idx_l( const Particle_t& P,
                                                          const double l )
 {
     std::vector<std::pair<int,double>> v_i_l;
@@ -111,7 +111,7 @@ std::vector<std::pair<int,double>> FilterSurface::idx_l( Particle_t& P,
     return v_i_l;
 }
 // Cell
-std::vector<std::pair<int,double>> FilterCell::idx_l( Particle_t& P,
+std::vector<std::pair<int,double>> FilterCell::idx_l( const Particle_t& P,
                                                       const double l )
 {
     std::vector<std::pair<int,double>> v_i_l;
@@ -126,7 +126,7 @@ std::vector<std::pair<int,double>> FilterCell::idx_l( Particle_t& P,
     return v_i_l;
 }
 // Energy
-std::vector<std::pair<int,double>> FilterEnergy::idx_l( Particle_t& P,
+std::vector<std::pair<int,double>> FilterEnergy::idx_l( const Particle_t& P,
                                                         const double l )
 {
     std::vector<std::pair<int,double>> v_i_l;
@@ -142,15 +142,32 @@ std::vector<std::pair<int,double>> FilterEnergy::idx_l( Particle_t& P,
     v_i_l.push_back(i_l);
     return v_i_l;
 }
+// Energy - old
+std::vector<std::pair<int,double>> FilterEnergyOld::idx_l( const Particle_t& P,
+                                                           const double l )
+{
+    std::vector<std::pair<int,double>> v_i_l;
+    std::pair<int,double> i_l;
+    
+    // Index location
+    i_l.first  = Binary_Search( P.energy_old(), f_grid );
+    // Check if inside the grids
+    if ( i_l.first < 0 && i_l.first >= f_Nbin ) { return v_i_l; }
+    // Track length to score
+    i_l.second = l;
+
+    v_i_l.push_back(i_l);
+    return v_i_l;
+}
 // Time bin
-std::vector<std::pair<int,double>> FilterTime::idx_l( Particle_t& P,
+std::vector<std::pair<int,double>> FilterTime::idx_l( const Particle_t& P,
                                                       const double l )
 {
     std::vector<std::pair<int,double>> v_i_l;
     std::pair<int,double> i_l;
     
     // Edge bin locations
-    int loc1 = Binary_Search( P.time_old(), f_grid ); // before track generation
+    int loc1 = Binary_Search( P.time_old(), f_grid ); // before track
     int loc2 = Binary_Search( P.time(), f_grid );     // after
     
     // Distribute score into spanned bins
@@ -192,7 +209,7 @@ std::vector<std::pair<int,double>> FilterTime::idx_l( Particle_t& P,
     return v_i_l;
 }
 // Time TDMC
-std::vector<std::pair<int,double>> FilterTDMC::idx_l( Particle_t& P,
+std::vector<std::pair<int,double>> FilterTDMC::idx_l( const Particle_t& P,
                                                       const double l )
 {
     std::vector<std::pair<int,double>> v_i_l;
@@ -201,7 +218,6 @@ std::vector<std::pair<int,double>> FilterTDMC::idx_l( Particle_t& P,
     if( P.time() != f_grid[P.tdmc()] ) { return v_i_l; }
     // Index location
     i_l.first  = P.tdmc(); 
-    P.set_tdmc(P.tdmc()+1);
     // Velocity to score
     i_l.second = l;
 
@@ -242,7 +258,7 @@ void Estimator::initialize_tallies()
 }
 
 // Score
-void Estimator::score( Particle_t& P, const double l )
+void Estimator::score( const Particle_t& P, const double l )
 {
     // Individual filter indexes and l
     for( int i = 0; i < e_filters.size(); i++ ){
@@ -385,6 +401,39 @@ Tally Estimator::tally( const int i )
 {
     return e_tally[i];
 }
+
+// Scattering simulation estimator
+//   It simulates scattering event before scoring
+void EstimatorScatter::score( const Particle_t& P, const double l )
+{
+    Particle_t P_simulated = P;
+    P.cell()->simulate_scatter(P_simulated);
+    Estimator::score( P_simulated, l );
+}
+// Fissio simulation estimator
+//   It simulates scattering event before scoring
+/*void EstimatorFission::score( const Particle_t& P, const double l )
+{
+    Particle_t P_simulated = P;
+
+    // Determine the emitting nuclide 
+    const double r = Urand();
+    double       s = 0.0;
+    for( auto& n : nuclides )
+    {
+        s += n.first->nusigmaF( P.energy() ) / nuSigmaF( P.energy() );
+        if ( r < s )
+        {
+            Fbank.addSource( 
+                            std::make_shared<Delta_Source>
+                            ( P.pos(), isotropic.sample(),
+                              n.first->Chi( P.energy() ), 1.0, 
+                              P.time() ) );
+            break;
+        }
+    }
+    Estimator::score( P_simulated, l );
+}*/
 
 
 //=============================================================================

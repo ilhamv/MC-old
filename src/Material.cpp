@@ -80,7 +80,7 @@ double Material_t::collision_distance_sample( const double E )
 
 
 // Sample collided nuclide
-std::shared_ptr< Nuclide_t > Material_t::nuclide_sample( const double E )
+std::shared_ptr<Nuclide_t> Material_t::nuclide_sample( const double E )
 {
     double u = SigmaT( E ) * Urand();
     double s = 0.0;
@@ -93,58 +93,73 @@ std::shared_ptr< Nuclide_t > Material_t::nuclide_sample( const double E )
     return nullptr;
 }
 
+// Sample scattered nuclide
+std::shared_ptr<Nuclide_t> Material_t::nuclide_scatter( const double E )
+{
+    double u = SigmaS( E ) * Urand();
+    double s = 0.0;
+    for ( auto& n : nuclides ){
+	// first is pointer to nuclide, second is nuclide density
+	s += n.first->sigmaS( E ) * n.second;
+	if ( s > u ) { return n.first; }
+    }
+    //assert( false ); // should never reach here
+    return nullptr;
+}
 
-//==============================================================================
+// Sample nu-fission nuclide
+std::shared_ptr<Nuclide_t> Material_t::nuclide_nufission( const double E )
+{
+    double u = nuSigmaF( E ) * Urand();
+    double s = 0.0;
+    for ( auto& n : nuclides ){
+	// first is pointer to nuclide, second is nuclide density
+	s += n.first->nusigmaF( E ) * n.second;
+	if ( s > u ) { return n.first; }
+    }
+    //assert( false ); // should never reach here
+    return nullptr;
+}
+
+//=============================================================================
 // Collision
-//==============================================================================
+//=============================================================================
 
-void Material_t::collision_sample( Particle_t& P, std::stack<Particle_t>& Pbank,
+void Material_t::collision_sample( Particle_t& P,std::stack<Particle_t>& Pbank,
                                    const bool ksearch, Source_Bank& Fbank, 
                                    const double k )
 {
-    // Note that we implement Implicit Capture or Absorption (if ksearch)
-    double implicit  = SigmaC(P.energy());
+    // Implicit Fission (k is always 1 in non ksearch modes)
+    const double bank_nu = std::floor( P.weight() / k * nuSigmaF(P.energy()) 
+                                       / SigmaT(P.energy()) + Urand() );
 
-    // The implicit fission
+    std::shared_ptr<Nuclide_t> N_fission = nuclide_nufission( P.energy() );
     if (ksearch){ 
-        implicit += SigmaF(P.energy()); 
-
-        // Bank Fbank
-        const double bank_nu = std::floor( P.weight() / k 
-                                           * nuSigmaF(P.energy()) 
-                                           / SigmaT(P.energy()) + Urand() );
-        for ( int i = 0 ; i < bank_nu ; i++ )
-        {
-            // Determine the emitting nuclide 
-            const double r = Urand();
-            double       s = 0.0;
-            for( auto& n : nuclides )
-            {
-                s += n.first->nusigmaF( P.energy() ) / nuSigmaF( P.energy() );
-                if ( r < s )
-                {
-                    Fbank.addSource( 
-                                    std::make_shared<Delta_Source>
-                                    ( P.pos(), isotropic.sample(),
-                                      n.first->Chi( P.energy() ), 1.0, 
-                                      P.time() ) );
-                    break;
-                }
-            }
+        for ( int i = 0 ; i < bank_nu ; i++ ){
+            Fbank.addSource( std::make_shared<Delta_Source>
+                    ( P.pos(), isotropic.sample(), N_fission->Chi(P.energy()),
+                      1.0, P.time() ) );
+        }
+    } else{
+        for ( int i = 0 ; i < bank_nu ; i++ ){
+            Particle_t P_new ( P.pos(), isotropic.sample(),
+                                    N_fission->Chi( P.energy() ), P.time(), 
+                                    1.0, P.tdmc() );
+            P_new.setCell( P.cell() );
+            Pbank.push(P_new);
         }
     }
     
-    // The implicit capture/absorption
-    P.setWeight( P.weight() * ( SigmaT(P.energy()) - implicit ) / SigmaT(P.energy()) );
+    // Implicit Absorption
+    const double implicit = SigmaC(P.energy()) + SigmaF(P.energy());
+    P.setWeight( P.weight() * ( SigmaT(P.energy()) - implicit ) 
+                 / SigmaT(P.energy()) );
 
-    // First sample nuclide
-    std::shared_ptr< Nuclide_t >  N = nuclide_sample( P.energy() );
-
-    // Now get the reaction
-    std::shared_ptr< Reaction_t > R = N->reaction_sample( P.energy(), ksearch );
-	
-    // Finally process the reaction on the Particle
-    if( R ) { R->sample( P, Pbank ); }
+    std::shared_ptr<Nuclide_t> N_scatter = nuclide_scatter( P.energy() );
+    if(!N_scatter){ return; }
+    
+    std::shared_ptr<Reaction_t > R = N_scatter->scatter;
+    R->sample( P, Pbank );
 }
 		
 

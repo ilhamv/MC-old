@@ -26,6 +26,7 @@ class Simulator_t
         unsigned long long Ncycle   = 1; 
         unsigned long long Npassive = 0;
         unsigned long long icycle, isample;
+        unsigned long long Ntrack = 0;
 
         // Mode flags
         bool ksearch = false; // ksearch mode flag
@@ -40,23 +41,20 @@ class Simulator_t
         double wr = 0.25; // Weight rouletting
         double ws = 1.0;  // Survival weight
 
-        unsigned long long  tracks = 0; // # of particle tracks
         
+        // Banks
         Source_Bank            Fbank; // Fission bank
         Source_Bank            Sbank; // Sample bank
         std::stack<Particle_t> Pbank; // Particle bank
 
-        // Universe
+        // THE OBJECTS
         std::vector<std::shared_ptr<Surface_t>>  Surfaces;
         std::vector<std::shared_ptr<Cell>>       Cells;
         std::vector<std::shared_ptr<Nuclide_t>>  Nuclides;
         std::vector<std::shared_ptr<Material_t>> Materials;
-       
-        // Estimators
-        std::vector<std::shared_ptr<Estimator>> Estimators;
-        std::shared_ptr<Estimator>              k_C;
+        std::vector<std::shared_ptr<Estimator>>  Estimators;
         
-        // ksearch  specific
+        // ksearch specific
         std::shared_ptr<EstimatorK> k_estimator;
         double k = 1.0;
 

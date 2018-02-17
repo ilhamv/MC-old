@@ -23,6 +23,7 @@ class Particle_t
         std::shared_ptr<Cell> p_cell_old;
         std::shared_ptr<Surface_t> p_surface_old;
         double p_energy;      
+        double p_energy_old;      
         double p_speed;       
         int    p_tdmc;
 
@@ -41,6 +42,7 @@ class Particle_t
         double time() const;
         double time_old() const;
         double energy() const;
+        double energy_old() const;
         double speed() const;
         std::shared_ptr<Cell> cell() const;
         std::shared_ptr<Cell> cell_old() const;
@@ -58,8 +60,8 @@ class Particle_t
         void set_tdmc( const int t );
 
         // Modifiers
-        void kill();		                                                   
-        void move( const double dmove );                                           
+        void kill();		                                               
+        void move( const double dmove );                                      
         void searchCell( const std::vector<std::shared_ptr<Cell>>& Cell ); 
 };
 
