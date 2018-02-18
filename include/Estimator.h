@@ -368,14 +368,14 @@ class EstimatorScatter : public Estimator
         void score( const Particle_t& P, const double l );
 };
 // Fission simulation estimator
-/*class EstimatorFission : public Estimator
+class EstimatorFission : public Estimator
 {
     public:
 	 EstimatorFission( const std::string n, const unsigned long long Ns,
                            const unsigned long long Na ) :Estimator(n,Ns,Na){};
 	~EstimatorFission() {};
         void score( const Particle_t& P, const double l );
-};*/
+};
 
 // k-eigenvalue
 class EstimatorK

@@ -336,14 +336,15 @@ void ConeZ_Surface::reflect( Particle_t& P ) { return; }
 //////////////
 
 // Getters
-double      Cell::importance() { return r_importance; } // importance
+double Cell::importance() { return r_importance; } // importance
 // Get macroXsec of the contained material
-double      Cell::SigmaT  ( const double E ) { return material->SigmaT( E ); }
-double      Cell::SigmaA  ( const double E ) { return material->SigmaA( E ); }
-double      Cell::SigmaS  ( const double E ) { return material->SigmaS( E ); }
-double      Cell::SigmaC  ( const double E ) { return material->SigmaC( E ); }
-double      Cell::SigmaF  ( const double E ) { return material->SigmaF( E ); }
-double      Cell::nuSigmaF( const double E ) { return material->nuSigmaF( E ); }
+double Cell::SigmaT  ( const double E ) { return c_material->SigmaT( E ); }
+double Cell::SigmaA  ( const double E ) { return c_material->SigmaA( E ); }
+double Cell::SigmaS  ( const double E ) { return c_material->SigmaS( E ); }
+double Cell::SigmaC  ( const double E ) { return c_material->SigmaC( E ); }
+double Cell::SigmaF  ( const double E ) { return c_material->SigmaF( E ); }
+double Cell::nuSigmaF( const double E ) { return c_material->nuSigmaF( E ); }
+std::shared_ptr<Material_t> Cell::material() { return c_material; }
 
 
 // Take in a pair of surface pointer and integer describing sense
@@ -354,7 +355,7 @@ void Cell::addSurface( const std::shared_ptr< Surface_t >& S, const int sense )
 
 // Add the material
 void Cell::setMaterial( const std::shared_ptr< Material_t >& M ) 
-{ material = M; }
+{ c_material = M; }
 
 
 // Test if point is inside the cell
@@ -392,8 +393,8 @@ std::pair< std::shared_ptr< Surface_t >, double > Cell::surface_intersect( const
 // Return particle collision distance
 double Cell::collision_distance( const double E )
 { 
-	if ( material ) 
-	{ return material->collision_distance_sample( E ); }
+	if ( c_material ) 
+	{ return c_material->collision_distance_sample( E ); }
 	// Vacuum --> return sligthly less than very large number for collision distance
 	// to ensure collision if no surface intersection
 	else { return MAX_less; } // MAX_less = 0.9 MAX
@@ -404,8 +405,8 @@ double Cell::collision_distance( const double E )
 // Let the Material take care of the collision sample and reaction process
 void Cell::collision( Particle_t& P, std::stack< Particle_t >& Pbank, const bool ksearch, Source_Bank& Fbank, const double k )
 { 
-	if ( material ) 
-	{ material->collision_sample( P, Pbank, ksearch, Fbank, k ); }
+	if ( c_material ) 
+	{ c_material->collision_sample( P, Pbank, ksearch, Fbank, k ); }
 	// Vacuum --> Kill particle at collision
 	else { return P.kill(); }
 }	
@@ -413,4 +414,4 @@ void Cell::collision( Particle_t& P, std::stack< Particle_t >& Pbank, const bool
 
 // Simulate scattering for scattering matrix MGXS
 void Cell::simulate_scatter( Particle_t& P )
-{ material->simulate_scatter( P ); }
+{ c_material->simulate_scatter( P ); }

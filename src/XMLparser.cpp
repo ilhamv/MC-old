@@ -847,6 +847,7 @@ if(input_trmm){
     }
     std::shared_ptr<Estimator>   trmm_estimator;
     std::shared_ptr<Estimator>   trmm_estimator_scatter;
+    std::shared_ptr<Estimator>   trmm_estimator_fission;
     std::shared_ptr<ScoreKernel> trmm_sk;
     std::shared_ptr<Score>       trmm_score;
     std::vector<double>          trmm_grid;
@@ -856,7 +857,9 @@ if(input_trmm){
     trmm_estimator = std::make_shared<Estimator>
         ( "MG", Nsample, Ncycle-Npassive );
     trmm_estimator_scatter = std::make_shared<EstimatorScatter>
-        ( "MG_matrix", Nsample, Ncycle-Npassive );
+        ( "MG_scatter", Nsample, Ncycle-Npassive );
+    trmm_estimator_fission = std::make_shared<EstimatorFission>
+        ( "MG_fission", Nsample, Ncycle-Npassive );
 
     // Score
     trmm_sk = std::make_shared<ScoreKernelTrackLengthVelocity>();
@@ -868,6 +871,8 @@ if(input_trmm){
     trmm_sk = std::make_shared<ScoreKernelTrackLengthVelocity>();
     trmm_score = std::make_shared<ScoreScatter>("InScatter",trmm_sk);
     trmm_estimator_scatter->add_score( trmm_score );
+    trmm_score = std::make_shared<ScoreNuFission>("NuFission",trmm_sk);
+    trmm_estimator_fission->add_score( trmm_score );
 
     // Filters
     for( auto& c : input_trmm.children("cell") ){
@@ -880,10 +885,13 @@ if(input_trmm){
    	}
         c_ptr->attach_estimator_TL( trmm_estimator );
         c_ptr->attach_estimator_TL( trmm_estimator_scatter );
+        c_ptr->attach_estimator_TL( trmm_estimator_fission );
         trmm_grid.push_back(c_ptr->ID());
     }
     trmm_estimator->add_filter( std::make_shared<FilterCell>(trmm_grid) );
     trmm_estimator_scatter->
+        add_filter( std::make_shared<FilterCell>(trmm_grid) );
+    trmm_estimator_fission->
         add_filter( std::make_shared<FilterCell>(trmm_grid) );
     for( auto& f : input_trmm.children("filter") ){
         // Filter grid
@@ -917,6 +925,7 @@ if(input_trmm){
         if( f_name == "energy" ){
             trmm_filter = std::make_shared<FilterEnergyOld> (trmm_grid);
             trmm_estimator_scatter->add_filter(trmm_filter);
+            trmm_estimator_fission->add_filter(trmm_filter);
             trmm_filter = std::make_shared<FilterEnergy> (trmm_grid);
         } else if( f_name == "time" ){
             trmm_filter = std::make_shared<FilterTime> (trmm_grid);
@@ -926,12 +935,15 @@ if(input_trmm){
         }
         trmm_estimator->add_filter(trmm_filter);
         trmm_estimator_scatter->add_filter(trmm_filter);
+        trmm_estimator_fission->add_filter(trmm_filter);
     }
     // Push new estimator
     trmm_estimator->initialize_tallies();
     trmm_estimator_scatter->initialize_tallies();
+    trmm_estimator_fission->initialize_tallies();
     estimator.push_back( trmm_estimator );
     estimator.push_back( trmm_estimator_scatter );
+    estimator.push_back( trmm_estimator_fission );
 }
 
         // Set source bank

@@ -412,28 +412,15 @@ void EstimatorScatter::score( const Particle_t& P, const double l )
 }
 // Fissio simulation estimator
 //   It simulates scattering event before scoring
-/*void EstimatorFission::score( const Particle_t& P, const double l )
+void EstimatorFission::score( const Particle_t& P, const double l )
 {
     Particle_t P_simulated = P;
-
-    // Determine the emitting nuclide 
-    const double r = Urand();
-    double       s = 0.0;
-    for( auto& n : nuclides )
-    {
-        s += n.first->nusigmaF( P.energy() ) / nuSigmaF( P.energy() );
-        if ( r < s )
-        {
-            Fbank.addSource( 
-                            std::make_shared<Delta_Source>
-                            ( P.pos(), isotropic.sample(),
-                              n.first->Chi( P.energy() ), 1.0, 
-                              P.time() ) );
-            break;
-        }
-    }
+    const double energy_final = P.cell()->material()
+                                ->nuclide_nufission( P.energy() )
+                                ->Chi( P.energy() );
+    P_simulated.setEnergy(energy_final);
     Estimator::score( P_simulated, l );
-}*/
+}
 
 
 //=============================================================================

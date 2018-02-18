@@ -1,0 +1,13 @@
+
+==================
+== Simple Slabs ==
+==================
+Number of passive cycles   : 0
+Number of active cycles    : 1
+Number of samples per cycle: 10000000
+
+
+
+Estimator report: leak_rate
+===========================
+0.0149894  +-  3.84249e-05 (0.256347%)
