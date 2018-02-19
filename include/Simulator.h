@@ -29,9 +29,9 @@ class Simulator_t
         unsigned long long Ntrack = 0;
 
         // Mode flags
-        bool ksearch = false; // ksearch mode flag
-        bool tally   = false; // Estimator activation toggle for ksearch
-        bool tdmc    = false; // TDMC mode flag
+        std::string mode = "fixed source";
+        bool ksearch = false; 
+        bool tdmc    = false;
         
         // Cut off
         double Ecut_off = 0.0;
@@ -40,7 +40,6 @@ class Simulator_t
         // Survival rouletting
         double wr = 0.25; // Weight rouletting
         double ws = 1.0;  // Survival weight
-
         
         // Banks
         Source_Bank            Fbank; // Fission bank
@@ -57,10 +56,11 @@ class Simulator_t
         // ksearch specific
         std::shared_ptr<EstimatorK> k_estimator;
         double k = 1.0;
+        bool tally = false; // Estimator activation toggle
 
         // TDMC specific
         std::vector<double> tdmc_time;
-        int                 tdmc_split = 1.0;
+        unsigned long long  tdmc_split = 1.0;
         
         // User-defined distributions
         std::vector<std::shared_ptr<Distribution_t<double>>> Distribution_Double;

@@ -307,7 +307,7 @@ void Estimator::end_history()
         tally.hist     = 0.0;
     }
 }
-void Estimator::end_cycle( const double tracks )
+void Estimator::end_cycle()
 {
     for( auto& tally : e_tally ){
         const double mean          = tally.sum / e_Nsample;
@@ -328,29 +328,17 @@ void Estimator::end_simulation()
         tally.uncer     = std::sqrt( tally.uncer ) / e_Nactive;
     }
 }
-void Estimator::report( std::ostringstream& output, H5::H5File& output_H5  )
+void Estimator::report( H5::H5File& output )
 {
-    output << "\n\n";
-    output << "Estimator report: " + e_name + "\n";
-    for ( int i = 0 ; i < e_name.length()+18 ; i++ ) { output << "="; }
-    output << "\n";
-	
-    for ( auto& tally : e_tally )
-    {
-        output<<tally.mean<<"  +-  "<<tally.uncer<< " " 
-              << "(" << tally.uncer/tally.mean*100<<"%)\n";
-    }
-    
-    // Populate H5 output file
     H5::StrType type_str(0, H5T_VARIABLE);
     H5::DataSpace att_space(H5S_SCALAR);
 
-    H5::Group e_group = output_H5.createGroup("/"+e_name);
+    H5::Group e_group = output.createGroup("/"+e_name);
     int idx = 0;
     std::vector<double> mean(idx_factor[0]);
     std::vector<double> uncer(idx_factor[0]);
     for( auto& score : e_scores ){
-        output_H5.createGroup("/"+e_name+"/"+score->name());
+        output.createGroup("/"+e_name+"/"+score->name());
         for( int i = 0; i < idx_factor[0]; i++ ){
             mean[i] = e_tally[i+idx].mean;
             uncer[i] = e_tally[i+idx].uncer;
@@ -362,11 +350,11 @@ void Estimator::report( std::ostringstream& output, H5::H5File& output_H5  )
         H5::DataSpace data_space_mean(e_filters.size(),dims);
         H5::DataSpace data_space_uncer(e_filters.size(),dims);
         H5::DataSet data_mean = 
-            output_H5.createDataSet("/"+e_name+"/"+score->name()+"/"+"mean",
+            output.createDataSet("/"+e_name+"/"+score->name()+"/"+"mean",
                                     H5::PredType::NATIVE_DOUBLE, 
                                     data_space_mean );
         H5::DataSet data_uncer = 
-            output_H5.createDataSet("/"+e_name+"/"+score->name()+"/"
+            output.createDataSet("/"+e_name+"/"+score->name()+"/"
                                     +"uncertainty", 
                                     H5::PredType::NATIVE_DOUBLE, 
                                     data_space_uncer );
@@ -379,7 +367,7 @@ void Estimator::report( std::ostringstream& output, H5::H5File& output_H5  )
         hsize_t dims[1]; dims[0] = filter->grid().size();
         H5::DataSpace data_space(1,dims);
         H5::DataSet data_set = 
-            output_H5.createDataSet("/"+e_name+"/"+filter->name(), 
+            output.createDataSet("/"+e_name+"/"+filter->name(), 
                                     H5::PredType::NATIVE_DOUBLE, data_space );
 
         data_set.write(filter->grid().data(), H5::PredType::NATIVE_DOUBLE);

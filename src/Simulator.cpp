@@ -25,9 +25,11 @@ Simulator_t::Simulator_t( const std::string input_dir )
                tdmc_time, tdmc_split );
     
     if(ksearch){
+        mode = "k-eigenvalue";
         k_estimator = std::make_shared<EstimatorK>(Ncycle, Ncycle-Npassive, 
                                                    Nsample);
     }
+    if(tdmc) { mode = "time-dependent"; }
 }
 
 
@@ -151,15 +153,15 @@ void Simulator_t::start()
         }
 
         // Estimator cycle closeout
-        if (tally) { for ( auto& E : Estimators ) { E->end_cycle(Ntrack); } }
+        if (tally) { for ( auto& E : Estimators ) { E->end_cycle(); } }
         if (ksearch){ 
             k_estimator->report_cycle(tally);
             k = k_estimator->k;
         }
-        Ntrack = 0.0;
     
     } // All cycles are done, end of simulation loop
     for ( auto& E : Estimators ) { E->end_simulation(); }
+    std::cout<<"Simulation done!\n\n";
 }
 
 
@@ -169,29 +171,53 @@ void Simulator_t::start()
 
 void Simulator_t::report()
 {
-    // Generate outputs
-    std::ostringstream output;                       // Output text
-    std::ofstream file( io_dir + "output.txt" ); // .txt file
-
+    // H5 output
+    std::cout<<"Creating output.h5...\n";
     io_dir += "output.h5";
     H5std_string FILE_NAME(io_dir);
-    H5::H5File output_H5(FILE_NAME, H5F_ACC_TRUNC);
+    H5::H5File output(FILE_NAME, H5F_ACC_TRUNC);
+    H5::DataSet dataset;
+    H5::Group group;
+    hsize_t dims[1]; dims[0] = 1;
+    H5::DataSpace data_space(1,dims);
+    H5::DataType type_ull    = H5::PredType::NATIVE_ULLONG;
+    H5::DataType type_double = H5::PredType::NATIVE_DOUBLE;
+    H5::DataType type_string = H5::StrType(H5::PredType::C_S1, 20);
+
+    // Summary
+    group = output.createGroup("/summary");
+    dataset = group.createDataSet( "Ncycle", type_ull, data_space );
+    dataset.write(&Ncycle, type_ull);
+    dataset = group.createDataSet( "Nsample", type_ull, data_space );
+    dataset.write(&Nsample, type_ull);
+    dataset = group.createDataSet( "Npassive",type_ull, data_space );
+    dataset.write(&Npassive, type_ull);
+    dataset = group.createDataSet( "Ntrack",type_ull, data_space );
+    dataset.write(&Ntrack, type_ull);
+    dataset = group.createDataSet( "mode", type_string, data_space );
+    dataset.write(mode.c_str(), type_string);
+    dataset = group.createDataSet( "cut_off-E", type_double, data_space);
+    dataset.write(&Ecut_off, type_double);
+    dataset = group.createDataSet( "cut_off-t", type_double, data_space);
+    dataset.write(&tcut_off, type_double);
+    group = output.createGroup("/summary/survival_roulette");
+    dataset = group.createDataSet( "wr", type_double, data_space);
+    dataset.write(&wr, type_double);
+    dataset = group.createDataSet( "ws", type_double, data_space);
+    dataset.write(&ws, type_double);
+    if(tdmc){
+        group = output.createGroup("/summary/tdmc");
+        dataset = group.createDataSet( "split", type_ull, data_space);
+        dataset.write(&tdmc_split, type_ull);
+        hsize_t dimsv[1]; dimsv[0] = tdmc_time.size();
+        H5::DataSpace data_spacev(1,dims);
+        dataset = group.createDataSet( "time", type_double, data_spacev);
+        dataset.write(tdmc_time.data(), type_ull);
+    }
+
+
+    // Report estimators
+    for ( auto& E : Estimators ) { E->report( output ); }
 	
-    // Header
-    output << "\n";
-    for ( int i = 0 ; i < simulation_name.length()+6 ; i++ ) { output << "="; }
-    output << "\n";
-    output << "== " + simulation_name + " ==\n";
-    for ( int i = 0 ; i < simulation_name.length()+6 ; i++ ) { output << "="; }
-    output << "\n";
-    output << "Number of passive cycles   : " << Npassive << "\n";
-    output << "Number of active cycles    : " << Ncycle - Npassive << "\n";
-    output << "Number of samples per cycle: " << Nsample << "\n\n";
-    
-    // Report tallies
-    for ( auto& E : Estimators ) { E->report( output, output_H5 ); }
-	
-    // Print on monitor and file
-    std::cout<< output.str();
-    file<< output.str();
+    std::cout<<"Output creation done!\n\n";
 }

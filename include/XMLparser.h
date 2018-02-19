@@ -57,7 +57,7 @@ void XML_input
     std::vector < std::shared_ptr<Distribution_t<double>> >& Distribution_Double,
     std::vector < std::shared_ptr<Distribution_t<Point_t>>>& Distribution_Point,
     std::vector<double>& tdmc_time,
-    int& tdmc_split
+    unsigned long long& tdmc_split
 );
 
 

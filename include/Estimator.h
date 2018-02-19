@@ -351,9 +351,9 @@ class Estimator
 
 	// Loop closeouts
 	void end_history();              
-	void end_cycle( const double tracks );
+	void end_cycle();
         void end_simulation();
-	void report( std::ostringstream& output, H5::H5File& output_H5 );
+	void report( H5::H5File& output );
 
         Tally tally( const int i );
 };
@@ -404,7 +404,7 @@ class EstimatorK
 
         void end_history();
         void report_cycle( const bool tally );
-        //void report();
+        void report();
         void estimate_C( const Particle_t& P );
         void estimate_TL( const Particle_t& P, const double l );
 
