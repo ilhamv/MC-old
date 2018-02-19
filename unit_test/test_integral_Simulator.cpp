@@ -11,7 +11,6 @@ TEST_CASE( "Integral Simulation Tests", "" )
     {
         Simulator_t Sim("examples/sphere_detection");
         Sim.start();
-        Sim.report();
 
         double mean  = Sim.Estimators[0]->tally(1).mean;
         double uncer = Sim.Estimators[0]->tally(1).uncer;
@@ -22,7 +21,6 @@ TEST_CASE( "Integral Simulation Tests", "" )
     {
         Simulator_t Sim("examples/slab_analytic");
         Sim.start();
-        Sim.report();
 
         double mean  = Sim.Estimators[0]->tally(0).mean;
         double uncer = Sim.Estimators[0]->tally(0).uncer;

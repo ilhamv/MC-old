@@ -19,9 +19,11 @@ int main( int argc, char* argv[] )
 
     // Start simulation
     MC_Simulator.start();
+    std::cout<<"Simulation done!\n\nCreating output.h5...\n";
 
     // Report simulation results
     MC_Simulator.report();
+    std::cout<<"output.h5 created.\n";
 
     return 0;
 }

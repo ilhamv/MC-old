@@ -161,7 +161,6 @@ void Simulator_t::start()
     
     } // All cycles are done, end of simulation loop
     for ( auto& E : Estimators ) { E->end_simulation(); }
-    std::cout<<"Simulation done!\n\n";
 }
 
 
@@ -172,52 +171,48 @@ void Simulator_t::start()
 void Simulator_t::report()
 {
     // H5 output
-    std::cout<<"Creating output.h5...\n";
     io_dir += "output.h5";
     H5std_string FILE_NAME(io_dir);
     H5::H5File output(FILE_NAME, H5F_ACC_TRUNC);
     H5::DataSet dataset;
     H5::Group group;
-    hsize_t dims[1]; dims[0] = 1;
-    H5::DataSpace data_space(1,dims);
+    H5::DataSpace space_scalar(H5S_SCALAR);
     H5::DataType type_ull    = H5::PredType::NATIVE_ULLONG;
     H5::DataType type_double = H5::PredType::NATIVE_DOUBLE;
-    H5::DataType type_string = H5::StrType(H5::PredType::C_S1, 20);
+    H5::StrType type_str(0, H5T_VARIABLE);
 
     // Summary
     group = output.createGroup("/summary");
-    dataset = group.createDataSet( "Ncycle", type_ull, data_space );
+    dataset = group.createDataSet( "Ncycle", type_ull, space_scalar );
     dataset.write(&Ncycle, type_ull);
-    dataset = group.createDataSet( "Nsample", type_ull, data_space );
+    dataset = group.createDataSet( "Nsample", type_ull, space_scalar );
     dataset.write(&Nsample, type_ull);
-    dataset = group.createDataSet( "Npassive",type_ull, data_space );
+    dataset = group.createDataSet( "Npassive",type_ull, space_scalar );
     dataset.write(&Npassive, type_ull);
-    dataset = group.createDataSet( "Ntrack",type_ull, data_space );
+    dataset = group.createDataSet( "Ntrack",type_ull, space_scalar );
     dataset.write(&Ntrack, type_ull);
-    dataset = group.createDataSet( "mode", type_string, data_space );
-    dataset.write(mode.c_str(), type_string);
-    dataset = group.createDataSet( "cut_off-E", type_double, data_space);
+    dataset = group.createDataSet( "mode", type_str, space_scalar );
+    dataset.write(mode, type_str);
+    dataset = group.createDataSet( "cut_off-E", type_double, space_scalar);
     dataset.write(&Ecut_off, type_double);
-    dataset = group.createDataSet( "cut_off-t", type_double, data_space);
+    dataset = group.createDataSet( "cut_off-t", type_double, space_scalar);
     dataset.write(&tcut_off, type_double);
     group = output.createGroup("/summary/survival_roulette");
-    dataset = group.createDataSet( "wr", type_double, data_space);
+    dataset = group.createDataSet( "wr", type_double, space_scalar);
     dataset.write(&wr, type_double);
-    dataset = group.createDataSet( "ws", type_double, data_space);
+    dataset = group.createDataSet( "ws", type_double, space_scalar);
     dataset.write(&ws, type_double);
     if(tdmc){
         group = output.createGroup("/summary/tdmc");
-        dataset = group.createDataSet( "split", type_ull, data_space);
+        dataset = group.createDataSet( "split", type_ull, space_scalar);
         dataset.write(&tdmc_split, type_ull);
         hsize_t dimsv[1]; dimsv[0] = tdmc_time.size();
-        H5::DataSpace data_spacev(1,dims);
+        H5::DataSpace data_spacev(1,dimsv);
         dataset = group.createDataSet( "time", type_double, data_spacev);
         dataset.write(tdmc_time.data(), type_ull);
     }
 
-
     // Report estimators
     for ( auto& E : Estimators ) { E->report( output ); }
-	
-    std::cout<<"Output creation done!\n\n";
+    k_estimator->report(output);	
 }

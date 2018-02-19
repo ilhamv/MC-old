@@ -478,3 +478,34 @@ void EstimatorK::report_cycle( const bool tally )
     k_sq_TL  = 0.0;
     icycle++;
 }
+void EstimatorK::report( H5::H5File& output )
+{
+    H5::DataSet dataset;
+    H5::Group group;
+    H5::DataSpace space_scalar(H5S_SCALAR);
+    H5::DataType type_ull    = H5::PredType::NATIVE_ULLONG;
+    H5::DataType type_double = H5::PredType::NATIVE_DOUBLE;
+    H5::StrType type_str(0, H5T_VARIABLE);
+
+    group = output.createGroup("/ksearch");
+    hsize_t dims[1];
+    H5::DataSpace space_vector;
+    
+    dims[0] = k_cycle.size();
+    space_vector = H5::DataSpace(1,dims);
+    dataset = group.createDataSet( "k_cycle", type_double, space_vector);
+    dataset.write(k_cycle.data(), type_double);
+    
+    dataset = group.createDataSet( "mean", type_double, space_scalar);
+    dataset.write(&k_avg.back(), type_double);
+    dataset = group.createDataSet( "uncertainty", type_double, space_scalar);
+    dataset.write(&k_uncer.back(), type_double);
+
+    group = output.createGroup("/ksearch/k_active");
+    dims[0] = k_avg.size();
+    space_vector = H5::DataSpace(1,dims);
+    dataset = group.createDataSet( "mean", type_double, space_vector);
+    dataset.write(k_avg.data(), type_double);
+    dataset = group.createDataSet( "uncertainty", type_double, space_vector);
+    dataset.write(k_uncer.data(), type_double);
+}

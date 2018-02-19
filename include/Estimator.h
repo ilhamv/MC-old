@@ -404,7 +404,7 @@ class EstimatorK
 
         void end_history();
         void report_cycle( const bool tally );
-        void report();
+	void report( H5::H5File& output );
         void estimate_C( const Particle_t& P );
         void estimate_TL( const Particle_t& P, const double l );
 
