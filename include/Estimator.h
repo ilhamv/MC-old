@@ -228,7 +228,7 @@ class Filter
         virtual std::vector<std::pair<int,double>> idx_l( const Particle_t& P,
                                                           const double l ) = 0;
         // Getters
-        virtual int                 size() = 0;
+        virtual int size() { return f_grid.size() - 1; }
         virtual std::vector<double> grid() final { return f_grid; }
         virtual std::string         name() final { return f_name; }
         virtual std::string         unit() final { return f_unit; }
@@ -244,7 +244,7 @@ class FilterSurface : public Filter
         // Get the index and the corresponding track length to be scored
         std::vector<std::pair<int,double>> idx_l( const Particle_t& P,
                                                   const double l );
-        virtual int size() final { return f_grid.size(); }
+        int size();
 };
 // Cell
 class FilterCell : public Filter
@@ -257,7 +257,7 @@ class FilterCell : public Filter
         // Get the index and the corresponding track length to be scored
         std::vector<std::pair<int,double>> idx_l( const Particle_t& P,
                                                   const double l );
-        virtual int size() final { return f_grid.size(); }
+        int size();
 };
 // Energy
 class FilterEnergy : public Filter
@@ -270,7 +270,6 @@ class FilterEnergy : public Filter
         // Get the index and the corresponding track length to be scored
         std::vector<std::pair<int,double>> idx_l( const Particle_t& P,
                                                   const double l );
-        virtual int size() final { return f_grid.size()-1; }
 };
 // Energy - old
 class FilterEnergyOld : public Filter
@@ -283,7 +282,6 @@ class FilterEnergyOld : public Filter
         // Get the index and the corresponding track length to be scored
         std::vector<std::pair<int,double>> idx_l( const Particle_t& P,
                                                   const double l );
-        virtual int size() final { return f_grid.size()-1; }
 };
 // Time bin
 class FilterTime : public Filter
@@ -296,7 +294,6 @@ class FilterTime : public Filter
         // Get the index and the corresponding track length to be scored
         std::vector<std::pair<int,double>> idx_l( const Particle_t& P,
                                                   const double l );
-        virtual int size() final { return f_grid.size()-1; }
 };
 // Time - TDMC
 class FilterTDMC : public Filter
@@ -309,7 +306,7 @@ class FilterTDMC : public Filter
         // Get the index and the corresponding track length to be scored
         std::vector<std::pair<int,double>> idx_l( const Particle_t& P,
                                                   const double l );
-        virtual int size() final { return f_grid.size(); }
+        int size();
 };
 
 

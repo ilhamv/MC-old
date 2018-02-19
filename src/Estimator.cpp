@@ -110,6 +110,7 @@ std::vector<std::pair<int,double>> FilterSurface::idx_l( const Particle_t& P,
     v_i_l.push_back(i_l);
     return v_i_l;
 }
+int FilterSurface::size() { return f_grid.size(); }
 // Cell
 std::vector<std::pair<int,double>> FilterCell::idx_l( const Particle_t& P,
                                                       const double l )
@@ -125,6 +126,7 @@ std::vector<std::pair<int,double>> FilterCell::idx_l( const Particle_t& P,
     v_i_l.push_back(i_l);
     return v_i_l;
 }
+int FilterCell::size() { return f_grid.size(); }
 // Energy
 std::vector<std::pair<int,double>> FilterEnergy::idx_l( const Particle_t& P,
                                                         const double l )
@@ -224,6 +226,7 @@ std::vector<std::pair<int,double>> FilterTDMC::idx_l( const Particle_t& P,
     v_i_l.push_back(i_l);
     return v_i_l;
 }
+int FilterTDMC::size() { return f_grid.size(); }
 
 
 //=============================================================================
@@ -331,58 +334,57 @@ void Estimator::end_simulation()
 void Estimator::report( H5::H5File& output )
 {
     H5::StrType type_str(0, H5T_VARIABLE);
-    H5::DataSpace att_space(H5S_SCALAR);
+    H5::DataSpace space_scalar(H5S_SCALAR);
+    H5::DataType type_double = H5::PredType::NATIVE_DOUBLE;
+    H5::Group group;
+    H5::Attribute attribute;
 
-    H5::Group e_group = output.createGroup("/"+e_name);
-    int idx = 0;
-    std::vector<double> mean(idx_factor[0]);
-    std::vector<double> uncer(idx_factor[0]);
-    for( auto& score : e_scores ){
-        output.createGroup("/"+e_name+"/"+score->name());
-        for( int i = 0; i < idx_factor[0]; i++ ){
-            mean[i] = e_tally[i+idx].mean;
-            uncer[i] = e_tally[i+idx].uncer;
-        }
-        hsize_t dims[e_filters.size()];
-        for( int i = 0; i < e_filters.size(); i++ ){
-            dims[i] = e_filters[i]->grid().size();
-        }
-        H5::DataSpace data_space_mean(e_filters.size(),dims);
-        H5::DataSpace data_space_uncer(e_filters.size(),dims);
-        H5::DataSet data_mean = 
-            output.createDataSet("/"+e_name+"/"+score->name()+"/"+"mean",
-                                    H5::PredType::NATIVE_DOUBLE, 
-                                    data_space_mean );
-        H5::DataSet data_uncer = 
-            output.createDataSet("/"+e_name+"/"+score->name()+"/"
-                                    +"uncertainty", 
-                                    H5::PredType::NATIVE_DOUBLE, 
-                                    data_space_uncer );
-        data_mean.write(mean.data(), H5::PredType::NATIVE_DOUBLE);
-        data_uncer.write(uncer.data(), H5::PredType::NATIVE_DOUBLE);
-        idx += idx_factor[0];
-    }
+    H5::Group group_root = output.createGroup("/"+e_name);
 
-    for( auto& filter : e_filters ){
-        hsize_t dims[1]; dims[0] = filter->grid().size();
-        H5::DataSpace data_space(1,dims);
-        H5::DataSet data_set = 
-            output.createDataSet("/"+e_name+"/"+filter->name(), 
-                                    H5::PredType::NATIVE_DOUBLE, data_space );
-
-        data_set.write(filter->grid().data(), H5::PredType::NATIVE_DOUBLE);
-        H5::Attribute att = data_set.createAttribute( "unit", type_str,
-                                                      att_space );
-        att.write( type_str, filter->unit() );
-    }
-    
-    H5::Attribute att = e_group.createAttribute( "indexing", type_str, 
-                                                 att_space );
+    // Attribute
+    attribute = group_root.createAttribute( "indexing", type_str,space_scalar);
     std::string indexing;
     for( auto& filter : e_filters ){
         indexing += "[" + filter->name() + "]";
     }
-    att.write( type_str, indexing );
+    attribute.write( type_str, indexing );
+    
+    // Filter
+    for( auto& filter : e_filters ){
+        hsize_t dims[1]; dims[0] = filter->grid().size();
+        H5::DataSpace space_filter(1,dims);
+        H5::DataSet data_filter = group_root.createDataSet(filter->name(), 
+                                                type_double, space_filter );
+
+        data_filter.write(filter->grid().data(), type_double);
+        H5::Attribute att = data_filter.createAttribute( "unit", type_str,
+                                                         space_scalar );
+        att.write( type_str, filter->unit() );
+    }
+
+    // Score
+    hsize_t dims[e_filters.size()];
+    for( int i = 0; i < e_filters.size(); i++ ){
+        dims[i] = e_filters[i]->size();
+    }
+    H5::DataSpace space_score(e_filters.size(),dims);
+    int idx = 0;
+    std::vector<double> mean(idx_factor[0]);
+    std::vector<double> uncer(idx_factor[0]);
+    for( auto& score : e_scores ){
+        H5::Group group = group_root.createGroup(score->name());
+        for( int i = 0; i < idx_factor[0]; i++ ){
+            mean[i] = e_tally[i+idx].mean;
+            uncer[i] = e_tally[i+idx].uncer;
+        }
+        H5::DataSet data_mean  = group.createDataSet("mean", type_double,
+                                                    space_score );
+        H5::DataSet data_uncer = group.createDataSet("uncertainty",type_double,
+                                                    space_score );
+        data_mean.write(mean.data(), type_double);
+        data_uncer.write(uncer.data(), type_double);
+        idx += idx_factor[0];
+    }
 }
 
 Tally Estimator::tally( const int i )

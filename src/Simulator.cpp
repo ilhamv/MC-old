@@ -214,5 +214,5 @@ void Simulator_t::report()
 
     // Report estimators
     for ( auto& E : Estimators ) { E->report( output ); }
-    k_estimator->report(output);	
+    if(ksearch){k_estimator->report(output);}
 }

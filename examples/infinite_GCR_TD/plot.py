@@ -8,6 +8,9 @@ flux = f['spectrum/flux/mean'];
 energy = f['spectrum/energy'];
 
 energy = np.array(energy)*1E-6;
+energy = (energy[1:] + energy[:-1])/2;
+
+
 plt.loglog(energy,flux[0][0]);
 plt.loglog(energy,flux[1][0]);
 plt.loglog(energy,flux[2][0]);
