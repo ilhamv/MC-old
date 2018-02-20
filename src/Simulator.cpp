@@ -161,25 +161,13 @@ void Simulator_t::start()
     
     } // All cycles are done, end of simulation loop
     for ( auto& E : Estimators ) { E->end_simulation(); }
-
-    // Set TRM
-    if(trmm) { set_TRM(); }
 }
 
 //=============================================================================
 // Set TRM
 //=============================================================================
 void Simulator_t::set_TRM()
-{
-    // Set TRM size
-    unsigned long long trm_N = trmm_estimator[0]->tally_size()/2;
-    TRM = Eigen::MatrixXd(trm_N,trm_N);
-    std::cout<<"TRM size: "<<trm_N<<"\n";
-
-    for( int i = 0; i < trm_N; i++ ){
-        TRM(i,i) = -trmm_estimator[0]->tally(i).mean /
-            trmm_estimator[0]->tally(i+trmm_estimator[0]->idx_factor[0]).mean;
-    }
+{;
 }
 
 
@@ -228,10 +216,66 @@ void Simulator_t::report()
         hsize_t dimsv[1]; dimsv[0] = tdmc_time.size();
         H5::DataSpace data_spacev(1,dimsv);
         dataset = group.createDataSet( "time", type_double, data_spacev);
-        dataset.write(tdmc_time.data(), type_ull);
+        dataset.write(tdmc_time.data(), type_double);
     }
 
     // Report estimators
     for ( auto& E : Estimators ) { E->report( output ); }
     if(ksearch){k_estimator->report(output);}
+
+    if(!trmm){return;}
+
+    // Set TRM
+    unsigned long long trm_N = trmm_estimator[0]->tally_size()/2;
+    TRM = Eigen::MatrixXd(trm_N,trm_N);
+    for( int f = 0; f < trm_N; f++ ){
+        for( int i = 0; i < trm_N; i++ ){
+            if( i == f ){
+                TRM(i,i) = -trmm_estimator[0]->tally(i).mean /
+                    trmm_estimator[0]->tally(i+trmm_estimator[0]->idx_factor[0]).mean;
+                TRM(i,i) += trmm_estimator[1]->tally(i+i*trm_N).mean /
+                    trmm_estimator[0]->tally(i+trmm_estimator[0]->idx_factor[0]).mean;
+                TRM(i,i) += trmm_estimator[2]->tally(i+i*trm_N).mean /
+                    trmm_estimator[0]->tally(i+trmm_estimator[0]->idx_factor[0]).mean;
+            } else{
+                TRM(i,f) = trmm_estimator[1]->tally(f+i*trm_N).mean /
+                    trmm_estimator[0]->tally(i+trmm_estimator[0]->idx_factor[0]).mean;
+                TRM(i,f) += trmm_estimator[2]->tally(f+i*trm_N).mean /
+                    trmm_estimator[0]->tally(i+trmm_estimator[0]->idx_factor[0]).mean;
+            }
+        }
+    }
+
+    // Solve eigenvalue fo TRM
+    Eigen::EigenSolver<Eigen::MatrixXd> eSolve(TRM);
+    phi_mode = eSolve.eigenvectors();
+    alpha    = eSolve.eigenvalues();
+    
+    // Solve coefficients via initial condition
+    phi0 = Eigen::VectorXcd::Zero(trm_N);
+    phi0(0) = 1.0 * std::sqrt( 14.1E6 * 191312955.067 ) * 100.0;
+    Eigen::ColPivHouseholderQR<Eigen::MatrixXcd> dec(phi_mode);
+    Eigen::VectorXcd A = dec.solve(phi0);
+
+    // Construct solution in time
+    std::vector<double> t = {3E-8, 15E-8, 4E-6, 100E-6};
+    phi.resize(t.size());
+    std::vector<double> flux_real;
+
+    for( int i = 0; i < t.size(); i++){
+        phi[i] = Eigen::VectorXcd::Zero(trm_N);
+        for(int g = 0; g < trm_N; g++){
+            for(int n = 0; n < trm_N; n++){
+                phi[i][g] += A(n) * phi_mode(g,n) * std::exp( alpha[n] * t[i] );
+                flux_real.push_back(phi[i].real()[g]);
+            }
+        }
+    }
+    
+    // TRMM results
+    group = output.createGroup("/TRMM");
+    hsize_t dims[2]; dims[0] = t.size(); dims[1] = trm_N;
+    H5::DataSpace data_spacev(2,dims);
+    dataset = group.createDataSet( "flux", type_double, data_spacev);
+    dataset.write(flux_real.data(), type_double);
 }

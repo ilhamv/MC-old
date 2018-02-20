@@ -807,6 +807,21 @@ for ( auto& e : input_file.child("estimators").children("estimator") ){
 	    }
 	    f_grid.pop_back();
 	    f_grid.push_back(b);
+	} else if( f.attribute("grid_lethargy") ){
+	    const std::string grid_string = f.attribute("grid_lethargy").value();
+	    double a, b, N, step;
+	    std::istringstream  iss( grid_string );
+	    iss >> a >> b >> N;
+            step = std::log(b/a)/N;
+	    f_grid.push_back(0.0);
+	    while( f_grid.size()!=N+1 )
+	    {
+		f_grid.push_back( f_grid.back() + step );
+	    }
+            std::reverse(f_grid.begin(), f_grid.end());
+            for( int i = 0; i < f_grid.size(); i++ ){
+                f_grid[i] = b * std::exp(-f_grid[i]);
+            }
 	} else{
             std::cout<< "[ERROR] Need filter grid for estimator " << e_name 
                      << "\n";
@@ -886,8 +901,8 @@ if(input_trmm){
             std::exit(EXIT_FAILURE);
    	}
         c_ptr->attach_estimator_TL( trmm_estimator_collision );
-        //c_ptr->attach_estimator_TL( trmm_estimator_scatter );
-        //c_ptr->attach_estimator_TL( trmm_estimator_fission );
+        c_ptr->attach_estimator_TL( trmm_estimator_scatter );
+        c_ptr->attach_estimator_TL( trmm_estimator_fission );
         trmm_grid.push_back(c_ptr->ID());
     }
     trmm_estimator_collision->add_filter( std::make_shared<FilterCell>(trmm_grid));
@@ -920,6 +935,21 @@ if(input_trmm){
 	    }
 	    trmm_grid.pop_back();
 	    trmm_grid.push_back(b);
+	} else if( f.attribute("grid_lethargy") ){
+	    const std::string grid_string = f.attribute("grid_lethargy").value();
+	    double a, b, N, step;
+	    std::istringstream  iss( grid_string );
+	    iss >> a >> b >> N;
+            step = std::log(b/a)/N;
+	    trmm_grid.push_back(0.0);
+	    while( trmm_grid.size()!=N+1 )
+	    {
+		trmm_grid.push_back( trmm_grid.back() + step );
+	    }
+            std::reverse(trmm_grid.begin(), trmm_grid.end());
+            for( int i = 0; i < trmm_grid.size(); i++ ){
+                trmm_grid[i] = b * std::exp(-trmm_grid[i]);
+            }
 	} else{
             std::cout<< "[ERROR] Need filter grid for trmm\n";
             std::exit(EXIT_FAILURE);
@@ -950,11 +980,11 @@ if(input_trmm){
     trmm_estimator_scatter->initialize_tallies();
     trmm_estimator_fission->initialize_tallies();
     estimator.push_back( trmm_estimator_collision );
-    //estimator.push_back( trmm_estimator_scatter );
-    //estimator.push_back( trmm_estimator_fission );
+    estimator.push_back( trmm_estimator_scatter );
+    estimator.push_back( trmm_estimator_fission );
     trmm_estimator.push_back( trmm_estimator_collision );
-    //trmm_estimator.push_back( trmm_estimator_scatter );
-    //trmm_estimator.push_back( trmm_estimator_fission );
+    trmm_estimator.push_back( trmm_estimator_scatter );
+    trmm_estimator.push_back( trmm_estimator_fission );
 }
 
         // Set source bank
