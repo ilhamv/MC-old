@@ -14,6 +14,7 @@
 #include "Material.h"
 #include "Reaction.h"
 #include "Estimator.h"
+#include <Eigen/Dense>
 
 
 class Simulator_t
@@ -32,6 +33,7 @@ class Simulator_t
         std::string mode = "fixed source";
         bool ksearch = false; 
         bool tdmc    = false;
+        bool trmm    = false;
         
         // Cut off
         double Ecut_off = 0.0;
@@ -61,10 +63,15 @@ class Simulator_t
         // TDMC specific
         std::vector<double> tdmc_time;
         unsigned long long  tdmc_split = 1.0;
+
+        // TRMM specific
+        Eigen::MatrixXd TRM;
+        std::vector<std::shared_ptr<Estimator>> trmm_estimator;
+        // 0: Collision and flux, 1: InScatter, 2:Fission 
         
         // User-defined distributions
-        std::vector<std::shared_ptr<Distribution_t<double>>> Distribution_Double;
-        std::vector<std::shared_ptr<Distribution_t<Point_t>>> Distribution_Point;
+        std::vector<std::shared_ptr<Distribution_t<double>>>Distribution_Double;
+        std::vector<std::shared_ptr<Distribution_t<Point_t>>>Distribution_Point;
 
         // Constructor: Set up the simulator with XML parser
         Simulator_t( const std::string input_dir );
@@ -78,4 +85,5 @@ class Simulator_t
         void move_particle( Particle_t& P, const double l );
         void cut_off( Particle_t&P );
         void collision( Particle_t& P );
+        void set_TRM();
 };

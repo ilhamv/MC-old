@@ -392,6 +392,11 @@ Tally Estimator::tally( const int i )
     return e_tally[i];
 }
 
+unsigned long long Estimator::tally_size()
+{
+    return e_tally.size();
+}
+
 // Scattering simulation estimator
 //   It simulates scattering event before scoring
 void EstimatorScatter::score( const Particle_t& P, const double l )

@@ -10,3 +10,45 @@ plt.xlabel("cycle#");
 plt.ylabel("k");
 plt.ylim(0)
 plt.show(); 
+
+flux = f['spectrum/flux/mean'];
+energy = f['spectrum/energy'];
+
+energy = np.array(energy)*1E-6;
+energy = (energy[1:] + energy[:-1])/2;
+
+plt.loglog(energy,flux[0]);
+#plt.ylim(1,1E9);
+#plt.xlim(1E-9,2E1);
+plt.xlabel("Energy, MeV");
+plt.ylabel("Scalar flux");
+plt.grid();
+
+flux = f['MG/flux/mean'];
+energy = f['MG/energy'];
+
+energy = np.array(energy)*1E-6;
+energy = (energy[1:] + energy[:-1])/2;
+
+plt.loglog(energy,flux[0]);
+#plt.ylim(1,1E9);
+#plt.xlim(1E-9,2E1);
+plt.xlabel("Energy, MeV");
+plt.ylabel("Scalar flux");
+plt.grid();
+plt.show(); 
+
+
+flux = f['MG/collision/mean'];
+energy = f['MG/energy'];
+
+energy = np.array(energy)*1E-6;
+energy = (energy[1:] + energy[:-1])/2;
+
+plt.loglog(energy,flux[0]);
+#plt.ylim(1,1E9);
+#plt.xlim(1E-9,2E1);
+plt.xlabel("Energy, MeV");
+plt.ylabel("Collision");
+plt.grid();
+plt.show(); 

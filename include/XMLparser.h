@@ -23,6 +23,7 @@
 #include "Reaction.h"
 #include "Estimator.h"
 #include "XSec.h"
+#include "Eigen/Dense"
 
 
 // Function that returns an item from a vector of objects of type T by name provided
@@ -57,7 +58,9 @@ void XML_input
     std::vector < std::shared_ptr<Distribution_t<double>> >& Distribution_Double,
     std::vector < std::shared_ptr<Distribution_t<Point_t>>>& Distribution_Point,
     std::vector<double>& tdmc_time,
-    unsigned long long& tdmc_split
+    unsigned long long& tdmc_split,
+    bool& trmm,
+    std::vector<std::shared_ptr<Estimator>>& trmm_estimator
 );
 
 

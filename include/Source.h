@@ -9,9 +9,11 @@
 #include "Geometry.h"
 
 class Cell;
-//class Particle_t;
 
-// Particle source base class
+//==============================================================================
+// Particle source
+//==============================================================================
+
 class Source_t
 {
     public:

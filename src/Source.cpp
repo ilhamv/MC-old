@@ -125,6 +125,6 @@ Particle_t Source_Bank::getSource( const std::vector<std::shared_ptr<Cell>>& Cel
         }
     }
     //this is added because there is a possibility that this class does not return anything.
-    std::cout<< "[ERROR] Source weights are not normalized to one\n";
+    std::cout<< "[ERROR] There is no sample found\n";
     std::exit(EXIT_FAILURE);
 }

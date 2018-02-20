@@ -87,20 +87,20 @@ file(COPY ${CMAKE_SOURCE_DIR}/examples DESTINATION ${CMAKE_BINARY_DIR})
 #==============================================================================
 
 # Set up directory
-file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/unit_test)    
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/unit_test)
+#file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/unit_test)    
+#set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/unit_test)
 
 # Iterate over tests
-file(GLOB TESTS "${CMAKE_SOURCE_DIR}/unit_test/test_*.cpp")
-foreach(TEST ${TESTS})
+#file(GLOB TESTS "${CMAKE_SOURCE_DIR}/unit_test/test_*.cpp")
+#foreach(TEST ${TESTS})
     # Built tests
-    get_filename_component(TEST_NAME ${TEST} NAME_WE)
-    add_executable(${TEST_NAME}.tst unit_test/${TEST_NAME}.cpp)
-    target_link_libraries(${TEST_NAME}.tst libMC)
-    add_custom_command(
-        TARGET ${TEST_NAME}.tst
-        POST_BUILD
-        COMMAND ${TEST_NAME}.tst
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        COMMENT "Running unit test: ${TEST_NAME}" VERBATIM)
-endforeach()
+#    get_filename_component(TEST_NAME ${TEST} NAME_WE)
+#    add_executable(${TEST_NAME}.tst unit_test/${TEST_NAME}.cpp)
+#    target_link_libraries(${TEST_NAME}.tst libMC)
+#    add_custom_command(
+#        TARGET ${TEST_NAME}.tst
+#        POST_BUILD
+#        COMMAND ${TEST_NAME}.tst
+#        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+#        COMMENT "Running unit test: ${TEST_NAME}" VERBATIM)
+#endforeach()

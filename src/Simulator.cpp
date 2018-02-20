@@ -22,7 +22,7 @@ Simulator_t::Simulator_t( const std::string input_dir )
     XML_input( io_dir, simulation_name, Nsample, ksearch, tdmc, Ncycle, 
                Npassive, Ecut_off, tcut_off, Fbank, Surfaces, Cells, Nuclides, 
                Materials, Estimators, Distribution_Double, Distribution_Point, 
-               tdmc_time, tdmc_split );
+               tdmc_time, tdmc_split, trmm, trmm_estimator );
     
     if(ksearch){
         mode = "k-eigenvalue";
@@ -161,6 +161,25 @@ void Simulator_t::start()
     
     } // All cycles are done, end of simulation loop
     for ( auto& E : Estimators ) { E->end_simulation(); }
+
+    // Set TRM
+    if(trmm) { set_TRM(); }
+}
+
+//=============================================================================
+// Set TRM
+//=============================================================================
+void Simulator_t::set_TRM()
+{
+    // Set TRM size
+    unsigned long long trm_N = trmm_estimator[0]->tally_size()/2;
+    TRM = Eigen::MatrixXd(trm_N,trm_N);
+    std::cout<<"TRM size: "<<trm_N<<"\n";
+
+    for( int i = 0; i < trm_N; i++ ){
+        TRM(i,i) = -trmm_estimator[0]->tally(i).mean /
+            trmm_estimator[0]->tally(i+trmm_estimator[0]->idx_factor[0]).mean;
+    }
 }
 
 

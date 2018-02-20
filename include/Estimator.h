@@ -328,9 +328,6 @@ class Estimator
         // Indexes and track length to be scored on each individual filter
         std::vector<std::vector<std::pair<int,double>>> e_idx_l;
 
-        // Multiplication of filter size with index > i
-        std::vector<double> idx_factor;
-
         const unsigned long long e_Nsample, e_Nactive;
 
     public:
@@ -353,6 +350,9 @@ class Estimator
 	void report( H5::H5File& output );
 
         Tally tally( const int i );
+        unsigned long long tally_size();
+        // Multiplication of filter size with index > i
+        std::vector<double> idx_factor;
 };
 // Scattering simulation estimator
 //   It simulates scattering event before scoring

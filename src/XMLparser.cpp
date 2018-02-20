@@ -118,19 +118,20 @@ void XML_input
     bool&                                                    ksearch,
     bool&                                                    tdmc,
     unsigned long long&                                      Ncycle,          
-    unsigned long long&                                      Npassive,          
+    unsigned long long&                                      Npassive,         
     double&                                                  Ecut_off,
     double&                                                  tcut_off,
     Source_Bank&                                             Sbank,
-    std::vector < std::shared_ptr<Surface_t>   >&            Surface,     
-    std::vector < std::shared_ptr<Cell>      >&              cell,    
-    std::vector < std::shared_ptr<Nuclide_t>   >&            Nuclide,   
-    std::vector < std::shared_ptr<Material_t>  >&            Material, 
-    std::vector < std::shared_ptr<Estimator> >&            estimator,
-    std::vector < std::shared_ptr<Distribution_t<double>> >& Distribution_Double,
-    std::vector < std::shared_ptr<Distribution_t<Point_t>>>& Distribution_Point,
+    std::vector<std::shared_ptr<Surface_t>   >&            Surface,     
+    std::vector<std::shared_ptr<Cell>      >&              cell,    
+    std::vector<std::shared_ptr<Nuclide_t>   >&            Nuclide,   
+    std::vector<std::shared_ptr<Material_t>  >&            Material, 
+    std::vector<std::shared_ptr<Estimator> >&            estimator,
+    std::vector<std::shared_ptr<Distribution_t<double>> >& Distribution_Double,
+    std::vector<std::shared_ptr<Distribution_t<Point_t>>>& Distribution_Point,
     std::vector<double>& tdmc_time,
-    unsigned long long& tdmc_split
+    unsigned long long& tdmc_split,
+    bool& trmm, std::vector<std::shared_ptr<Estimator>>& trmm_estimator
 )
 {
     // XML input file
@@ -841,11 +842,12 @@ for ( auto& e : input_file.child("estimators").children("estimator") ){
 pugi::xml_node input_trmm = input_file.child("trmm");
 
 if(input_trmm){
+    trmm = true;
     if(!ksearch){
         std::cout<< "[ERROR] TRMM should be run in ksearch mode\n" ;
         std::exit(EXIT_FAILURE);
     }
-    std::shared_ptr<Estimator>   trmm_estimator;
+    std::shared_ptr<Estimator>   trmm_estimator_collision;
     std::shared_ptr<Estimator>   trmm_estimator_scatter;
     std::shared_ptr<Estimator>   trmm_estimator_fission;
     std::shared_ptr<ScoreKernel> trmm_sk;
@@ -854,7 +856,7 @@ if(input_trmm){
     std::shared_ptr<Filter>      trmm_filter;
 
     // Estimator
-    trmm_estimator = std::make_shared<Estimator>
+    trmm_estimator_collision = std::make_shared<Estimator>
         ( "MG", Nsample, Ncycle-Npassive );
     trmm_estimator_scatter = std::make_shared<EstimatorScatter>
         ( "MG_scatter", Nsample, Ncycle-Npassive );
@@ -863,11 +865,11 @@ if(input_trmm){
 
     // Score
     trmm_sk = std::make_shared<ScoreKernelTrackLengthVelocity>();
-    trmm_score = std::make_shared<ScoreTotal>("Collision",trmm_sk);
-    trmm_estimator->add_score( trmm_score );
+    trmm_score = std::make_shared<ScoreTotal>("collision",trmm_sk);
+    trmm_estimator_collision->add_score( trmm_score );
     trmm_sk = std::make_shared<ScoreKernelTrackLength>();
-    trmm_score = std::make_shared<ScoreFlux>("Flux",trmm_sk);
-    trmm_estimator->add_score( trmm_score );
+    trmm_score = std::make_shared<ScoreFlux>("flux",trmm_sk);
+    trmm_estimator_collision->add_score( trmm_score );
     trmm_sk = std::make_shared<ScoreKernelTrackLengthVelocity>();
     trmm_score = std::make_shared<ScoreScatter>("InScatter",trmm_sk);
     trmm_estimator_scatter->add_score( trmm_score );
@@ -883,12 +885,12 @@ if(input_trmm){
                       << " in trmm\n";
             std::exit(EXIT_FAILURE);
    	}
-        c_ptr->attach_estimator_TL( trmm_estimator );
-        c_ptr->attach_estimator_TL( trmm_estimator_scatter );
-        c_ptr->attach_estimator_TL( trmm_estimator_fission );
+        c_ptr->attach_estimator_TL( trmm_estimator_collision );
+        //c_ptr->attach_estimator_TL( trmm_estimator_scatter );
+        //c_ptr->attach_estimator_TL( trmm_estimator_fission );
         trmm_grid.push_back(c_ptr->ID());
     }
-    trmm_estimator->add_filter( std::make_shared<FilterCell>(trmm_grid) );
+    trmm_estimator_collision->add_filter( std::make_shared<FilterCell>(trmm_grid));
     trmm_estimator_scatter->
         add_filter( std::make_shared<FilterCell>(trmm_grid) );
     trmm_estimator_fission->
@@ -899,7 +901,13 @@ if(input_trmm){
 	if( f.attribute("grid") ){
 	    const std::string   grid_string = f.attribute("grid").value();
 	    std::istringstream  iss( grid_string );
-	    for( double s; iss >> s; ) { trmm_grid.push_back(s); }
+	    for( double s; iss >> s; ){ 
+                if( s < trmm_grid.back() ){
+                    std::cout << "[ERROR] filter grid value should be ascending\n";
+                    std::exit(EXIT_FAILURE);
+                }
+                trmm_grid.push_back(s); 
+            }
 	} else if( f.attribute("grid_linear") ){
 	    const std::string grid_string = f.attribute("grid_linear").value();
 	    double a, b, step;
@@ -933,17 +941,20 @@ if(input_trmm){
             std::cout<< "[ERROR] Unknown filter type for trmm\n";
             std::exit(EXIT_FAILURE);
         }
-        trmm_estimator->add_filter(trmm_filter);
+        trmm_estimator_collision->add_filter(trmm_filter);
         trmm_estimator_scatter->add_filter(trmm_filter);
         trmm_estimator_fission->add_filter(trmm_filter);
     }
     // Push new estimator
-    trmm_estimator->initialize_tallies();
+    trmm_estimator_collision->initialize_tallies();
     trmm_estimator_scatter->initialize_tallies();
     trmm_estimator_fission->initialize_tallies();
-    estimator.push_back( trmm_estimator );
-    estimator.push_back( trmm_estimator_scatter );
-    estimator.push_back( trmm_estimator_fission );
+    estimator.push_back( trmm_estimator_collision );
+    //estimator.push_back( trmm_estimator_scatter );
+    //estimator.push_back( trmm_estimator_fission );
+    trmm_estimator.push_back( trmm_estimator_collision );
+    //trmm_estimator.push_back( trmm_estimator_scatter );
+    //trmm_estimator.push_back( trmm_estimator_fission );
 }
 
         // Set source bank
