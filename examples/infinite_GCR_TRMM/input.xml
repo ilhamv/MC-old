@@ -1,7 +1,7 @@
 <?xml version = '1.0' encoding = 'UTF-8'?>
 
 <simulation>
-    <description name="Infinite GCR" samples="1e4"/>
+    <description name="Infinite GCR" samples="102400"/>
     <ksearch active_cycles="100" passive_cycles="10"/>
 </simulation>
 

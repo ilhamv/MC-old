@@ -227,7 +227,7 @@ void Simulator_t::report()
 
     // Set TRM
     unsigned long long trm_N = trmm_estimator[0]->tally_size()/2;
-    Eigen::MatrixXd TRM;
+    Eigen::MatrixXd TRM,TRM_real;
     TRM = Eigen::MatrixXd(trm_N,trm_N);
 
     for( int f = 0; f < trm_N; f++ ){
@@ -240,13 +240,14 @@ void Simulator_t::report()
                 TRM(i,i) += trmm_estimator[2]->tally(i+i*trm_N).mean /
                     trmm_estimator[0]->tally(i+trmm_estimator[0]->idx_factor[0]).mean;
             } else{
-                TRM(f,i) = trmm_estimator[1]->tally(i+f*trm_N).mean /
+                TRM(f,i) = trmm_estimator[1]->tally(f+i*trm_N).mean /
                     trmm_estimator[0]->tally(i+trmm_estimator[0]->idx_factor[0]).mean;
-                TRM(f,i) += trmm_estimator[2]->tally(i+f*trm_N).mean /
+                TRM(f,i) += trmm_estimator[2]->tally(f+i*trm_N).mean /
                     trmm_estimator[0]->tally(i+trmm_estimator[0]->idx_factor[0]).mean;
             }
         }
     }
+    TRM_real = TRM.real();
 
     // Solve eigenvalue fo TRM
     Eigen::MatrixXcd phi_mode;
@@ -265,12 +266,12 @@ void Simulator_t::report()
     Eigen::VectorXcd phi0;
     Eigen::VectorXcd A;
     phi0 = Eigen::VectorXcd::Zero(trm_N);
-    phi0(0) = 1.0 * std::sqrt( 14.1E6 * 191312955.067 ) * 100.0;
+    phi0(trm_N-1) = 1.0 * std::sqrt( 14.1E6 * 191312955.067 ) * 100.0;
     Eigen::ColPivHouseholderQR<Eigen::MatrixXcd> dec(phi_mode);
     A = dec.solve(phi0);
 
     // Construct solution in time
-    std::vector<double> t = {3E-8, 15E-8, 4E-6, 100E-6};
+    std::vector<double> t = {0.0, 3E-8, 15E-8, 4E-6, 100E-6};
     Eigen::MatrixXcd phi = Eigen::MatrixXcd::Zero(t.size(),trm_N);
     std::vector<double> phi_real(trm_N*t.size());
 
@@ -287,6 +288,10 @@ void Simulator_t::report()
     
     // TRMM results
     group = output.createGroup("/TRMM");
+    hsize_t dimsM[2]; dimsM[0] = trm_N; dimsM[1] = trm_N;
+    H5::DataSpace data_spaceM(2,dimsM);
+    dataset = group.createDataSet( "TRM", type_double, data_spaceM);
+    dataset.write(TRM_real.data(), type_double);
     hsize_t dims[2]; dims[0] = t.size(); dims[1] = trm_N;
     H5::DataSpace data_spacev(2,dims);
     dataset = group.createDataSet( "flux", type_double, data_spacev);
