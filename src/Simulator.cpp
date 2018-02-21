@@ -240,9 +240,9 @@ void Simulator_t::report()
                 TRM(i,i) += trmm_estimator[2]->tally(i+i*trm_N).mean /
                     trmm_estimator[0]->tally(i+trmm_estimator[0]->idx_factor[0]).mean;
             } else{
-                TRM(i,f) = trmm_estimator[1]->tally(f+i*trm_N).mean /
+                TRM(f,i) = trmm_estimator[1]->tally(i+f*trm_N).mean /
                     trmm_estimator[0]->tally(i+trmm_estimator[0]->idx_factor[0]).mean;
-                TRM(i,f) += trmm_estimator[2]->tally(f+i*trm_N).mean /
+                TRM(f,i) += trmm_estimator[2]->tally(i+f*trm_N).mean /
                     trmm_estimator[0]->tally(i+trmm_estimator[0]->idx_factor[0]).mean;
             }
         }
