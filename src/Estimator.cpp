@@ -137,7 +137,7 @@ std::vector<std::pair<int,double>> FilterEnergy::idx_l( const Particle_t& P,
     // Index location
     i_l.first  = Binary_Search( P.energy(), f_grid );
     // Check if inside the grids
-    if ( i_l.first < 0 && i_l.first >= f_Nbin ) { return v_i_l; }
+    if ( i_l.first < 0 || i_l.first >= f_Nbin ) { return v_i_l; }
     // Track length to score
     i_l.second = l;
 
@@ -154,7 +154,7 @@ std::vector<std::pair<int,double>> FilterEnergyOld::idx_l( const Particle_t& P,
     // Index location
     i_l.first  = Binary_Search( P.energy_old(), f_grid );
     // Check if inside the grids
-    if ( i_l.first < 0 && i_l.first >= f_Nbin ) { return v_i_l; }
+    if ( i_l.first < 0 || i_l.first >= f_Nbin ) { return v_i_l; }
     // Track length to score
     i_l.second = l;
 

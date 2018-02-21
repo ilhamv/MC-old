@@ -227,7 +227,9 @@ void Simulator_t::report()
 
     // Set TRM
     unsigned long long trm_N = trmm_estimator[0]->tally_size()/2;
+    Eigen::MatrixXd TRM;
     TRM = Eigen::MatrixXd(trm_N,trm_N);
+
     for( int f = 0; f < trm_N; f++ ){
         for( int i = 0; i < trm_N; i++ ){
             if( i == f ){
@@ -247,28 +249,39 @@ void Simulator_t::report()
     }
 
     // Solve eigenvalue fo TRM
+    Eigen::MatrixXcd phi_mode;
+    Eigen::VectorXcd alpha;
     Eigen::EigenSolver<Eigen::MatrixXd> eSolve(TRM);
     phi_mode = eSolve.eigenvectors();
     alpha    = eSolve.eigenvalues();
-    
+    std::vector<double> alpha_real(trm_N);
+    std::vector<double> alpha_imag(trm_N);
+    for( int i = 0; i < trm_N; i++ ){
+        alpha_real[i] = alpha[i].real();
+        alpha_imag[i] = alpha[i].imag();
+    }
+
     // Solve coefficients via initial condition
+    Eigen::VectorXcd phi0;
+    Eigen::VectorXcd A;
     phi0 = Eigen::VectorXcd::Zero(trm_N);
     phi0(0) = 1.0 * std::sqrt( 14.1E6 * 191312955.067 ) * 100.0;
     Eigen::ColPivHouseholderQR<Eigen::MatrixXcd> dec(phi_mode);
-    Eigen::VectorXcd A = dec.solve(phi0);
+    A = dec.solve(phi0);
 
     // Construct solution in time
     std::vector<double> t = {3E-8, 15E-8, 4E-6, 100E-6};
-    phi.resize(t.size());
-    std::vector<double> flux_real;
+    Eigen::MatrixXcd phi = Eigen::MatrixXcd::Zero(t.size(),trm_N);
+    std::vector<double> phi_real(trm_N*t.size());
 
+    unsigned long long idx = 0;
     for( int i = 0; i < t.size(); i++){
-        phi[i] = Eigen::VectorXcd::Zero(trm_N);
         for(int g = 0; g < trm_N; g++){
             for(int n = 0; n < trm_N; n++){
-                phi[i][g] += A(n) * phi_mode(g,n) * std::exp( alpha[n] * t[i] );
-                flux_real.push_back(phi[i].real()[g]);
+                phi(i,g) += A(n) * phi_mode(g,n) * std::exp( alpha[n] * t[i] );
             }
+            phi_real[idx] = phi(i,g).real();
+            idx++;
         }
     }
     
@@ -277,5 +290,13 @@ void Simulator_t::report()
     hsize_t dims[2]; dims[0] = t.size(); dims[1] = trm_N;
     H5::DataSpace data_spacev(2,dims);
     dataset = group.createDataSet( "flux", type_double, data_spacev);
-    dataset.write(flux_real.data(), type_double);
+    dataset.write(phi_real.data(), type_double);
+    
+    hsize_t dims_alpha[1]; dims_alpha[0] = trm_N;
+    H5::DataSpace space_alpha(1,dims_alpha);
+    group = group.createGroup("alpha");
+    dataset = group.createDataSet( "real", type_double, space_alpha);
+    dataset.write(alpha_real.data(), type_double);
+    dataset = group.createDataSet( "imag", type_double, space_alpha);
+    dataset.write(alpha_imag.data(), type_double);
 }

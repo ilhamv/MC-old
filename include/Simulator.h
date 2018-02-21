@@ -65,14 +65,8 @@ class Simulator_t
         unsigned long long  tdmc_split = 1.0;
 
         // TRMM specific
-        Eigen::MatrixXd TRM;
         std::vector<std::shared_ptr<Estimator>> trmm_estimator;
         // 0: Collision and flux, 1: InScatter, 2:Fission
-        Eigen::MatrixXcd phi_mode;
-        Eigen::VectorXcd alpha;
-        Eigen::VectorXcd phi0;
-        Eigen::VectorXcd A;
-        std::vector<Eigen::VectorXcd> phi;
         
         // User-defined distributions
         std::vector<std::shared_ptr<Distribution_t<double>>>Distribution_Double;

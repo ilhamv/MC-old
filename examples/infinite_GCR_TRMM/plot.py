@@ -38,6 +38,15 @@ plt.ylabel("Scalar flux");
 plt.grid();
 plt.show(); 
 
+x = f['TRMM/alpha/real'];
+y = f['TRMM/alpha/imag'];
+
+plt.plot(x,y,'o');
+plt.xlabel("Re");
+plt.ylabel("Im");
+plt.grid();
+plt.show(); 
+
 flux = f['TRMM/flux'];
 energy = f['MG/energy'];
 
