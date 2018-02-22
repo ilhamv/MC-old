@@ -271,7 +271,7 @@ void Simulator_t::report()
     A = dec.solve(phi0);
 
     // Construct solution in time
-    std::vector<double> t = {0.0, 3E-8, 15E-8, 4E-6, 100E-6};
+    std::vector<double> t = {0.0, 3E-8, 15E-8, 4E-6, 1E-4};
     Eigen::MatrixXcd phi = Eigen::MatrixXcd::Zero(t.size(),trm_N);
     std::vector<double> phi_real(trm_N*t.size());
 
