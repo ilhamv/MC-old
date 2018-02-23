@@ -43,7 +43,7 @@ void Surface_t::hit( Particle_t& P,
 
 
 // Plane-X
-double PlaneX_Surface::eval( const Point_t& p ) { return p.x - x; }
+double PlaneX_Surface::eval( const Point& p ) { return p.x - x; }
 
 double PlaneX_Surface::distance( const Particle_t& P )
 {
@@ -65,13 +65,13 @@ double PlaneX_Surface::distance( const Particle_t& P )
 
 void PlaneX_Surface::reflect( Particle_t& P )
 {
-	Point_t q( -P.dir().x, P.dir().y, P.dir().z );
+	Point q( -P.dir().x, P.dir().y, P.dir().z );
 	P.setDirection(q);
 }
 
 
 // Plane-Y
-double PlaneY_Surface::eval( const Point_t& p ) { return p.y - y; }
+double PlaneY_Surface::eval( const Point& p ) { return p.y - y; }
 
 double PlaneY_Surface::distance( const Particle_t& P )
 {
@@ -93,13 +93,13 @@ double PlaneY_Surface::distance( const Particle_t& P )
 
 void PlaneY_Surface::reflect( Particle_t& P )
 {
-	Point_t q( P.dir().x, -P.dir().y, P.dir().z );
+	Point q( P.dir().x, -P.dir().y, P.dir().z );
 	P.setDirection(q);
 }
 
 
 // Plane-Z
-double PlaneZ_Surface::eval( const Point_t& p ) { return p.z - z; }
+double PlaneZ_Surface::eval( const Point& p ) { return p.z - z; }
 
 double PlaneZ_Surface::distance( const Particle_t& P )
 {
@@ -121,21 +121,21 @@ double PlaneZ_Surface::distance( const Particle_t& P )
 
 void PlaneZ_Surface::reflect( Particle_t& P )
 {
-	Point_t q( P.dir().x, P.dir().y, -P.dir().z );
+	Point q( P.dir().x, P.dir().y, -P.dir().z );
 	P.setDirection(q);
 }
 
 
 // Generic Plane
-double Plane_Surface::eval( const Point_t& p )
+double Plane_Surface::eval( const Point& p )
 {
 	return a * p.x  +  b * p.y  +  c * p.z  - d;
 }
 
 double Plane_Surface::distance( const Particle_t& P )
 {
-	Point_t pos = P.pos();
-	Point_t dir = P.dir();
+	Point pos = P.pos();
+	Point dir = P.dir();
 
 	const double denom = a * dir.x  +  b * dir.y  +  c * dir.z;
 
@@ -155,7 +155,7 @@ double Plane_Surface::distance( const Particle_t& P )
 void Plane_Surface::reflect( Particle_t& P )
 {
 	const double K = ( a * P.dir().x + b * P.dir().y + c * P.dir().z );
-	Point_t q;
+	Point q;
 	
 	q.x = P.dir().x - modx * K;
 	q.y = P.dir().y - mody * K;
@@ -166,7 +166,7 @@ void Plane_Surface::reflect( Particle_t& P )
 
 
 // Sphere
-double Sphere_Surface::eval( const Point_t& p ) 
+double Sphere_Surface::eval( const Point& p ) 
 {
   	const double x_t = p.x - x0;
   	const double y_t = p.y - y0;
@@ -176,8 +176,8 @@ double Sphere_Surface::eval( const Point_t& p )
 
 double Sphere_Surface::distance( const Particle_t& P ) 
 {
-  	Point_t p = P.pos();
-  	Point_t u = P.dir();
+  	Point p = P.pos();
+  	Point u = P.dir();
 
   	// put into quadratic equation form: a*s^2 + b*s + c = 0, where a = 1
   	double b = 2.0 * ( ( p.x - x0 ) * u.x + ( p.y - y0 ) * u.y + ( p.z - z0 ) * u.z );
@@ -190,7 +190,7 @@ void Sphere_Surface::reflect( Particle_t& P ) { return; }
 
 
 // Cylinder-X
-double CylinderX_Surface::eval( const Point_t& p )
+double CylinderX_Surface::eval( const Point& p )
 {
 	const double y_t = p.y - y0;
 	const double z_t = p.z - z0;
@@ -199,8 +199,8 @@ double CylinderX_Surface::eval( const Point_t& p )
 
 double CylinderX_Surface::distance( const Particle_t& P )
 {
-  	Point_t p = P.pos();
-  	Point_t u = P.dir();
+  	Point p = P.pos();
+  	Point u = P.dir();
 
   	double a = 1.0 - u.x*u.x;
 	double b = 2.0 * ( ( p.y - y0 ) * u.y + ( p.z - z0 ) * u.z );
@@ -213,7 +213,7 @@ void CylinderX_Surface::reflect( Particle_t& P ) { return; }
 
 
 // Cylinder-Y
-double CylinderY_Surface::eval( const Point_t& p )
+double CylinderY_Surface::eval( const Point& p )
 {
 	const double x_t = p.x - x0;
 	const double z_t = p.y - z0;
@@ -222,8 +222,8 @@ double CylinderY_Surface::eval( const Point_t& p )
 
 double CylinderY_Surface::distance( const Particle_t& P )
 {
-  	Point_t p = P.pos();
-  	Point_t u = P.dir();
+  	Point p = P.pos();
+  	Point u = P.dir();
 
   	double a = 1.0 - u.y*u.y;
 	double b = 2.0 * ( ( p.x - x0 ) * u.x + ( p.z - z0 ) * u.z );
@@ -236,7 +236,7 @@ void CylinderY_Surface::reflect( Particle_t& P ) { return; }
 
 
 // Cylinder-Z
-double CylinderZ_Surface::eval( const Point_t& p )
+double CylinderZ_Surface::eval( const Point& p )
 {
 	const double x_t = p.x - x0;
 	const double y_t = p.y - y0;
@@ -245,8 +245,8 @@ double CylinderZ_Surface::eval( const Point_t& p )
 
 double CylinderZ_Surface::distance( const Particle_t& P )
 {
-  	Point_t p = P.pos();
-  	Point_t u = P.dir();
+  	Point p = P.pos();
+  	Point u = P.dir();
 
   	double a = 1.0 - u.z*u.z;
 	double b = 2.0 * ( ( p.x - x0 ) * u.x + ( p.y - y0 ) * u.y );
@@ -259,7 +259,7 @@ void CylinderZ_Surface::reflect( Particle_t& P ) { return; }
 
 
 // Cone-X
-double ConeX_Surface::eval( const Point_t& p )
+double ConeX_Surface::eval( const Point& p )
 {
 	const double x_t = p.x - x0;
 	const double y_t = p.y - y0;
@@ -269,8 +269,8 @@ double ConeX_Surface::eval( const Point_t& p )
 
 double ConeX_Surface::distance( const Particle_t& P )
 {
-  	Point_t p = P.pos();
-  	Point_t u = P.dir();
+  	Point p = P.pos();
+  	Point u = P.dir();
 
   	double a = 1.0 - ( rad_sq + 1.0 ) * u.x*u.x;
   	double b = 2.0 * ( - rad_sq * ( p.x - x0 ) * u.x + ( p.y - y0 ) * u.y + ( p.z - z0 ) * u.z );
@@ -283,7 +283,7 @@ void ConeX_Surface::reflect( Particle_t& P ) { return; }
 
 
 // Cone-Y
-double ConeY_Surface::eval( const Point_t& p )
+double ConeY_Surface::eval( const Point& p )
 {
 	const double x_t = p.x - x0;
 	const double y_t = p.y - y0;
@@ -293,8 +293,8 @@ double ConeY_Surface::eval( const Point_t& p )
 
 double ConeY_Surface::distance( const Particle_t& P )
 {
-  	Point_t p = P.pos();
-  	Point_t u = P.dir();
+  	Point p = P.pos();
+  	Point u = P.dir();
 
   	double a = 1.0 - ( rad_sq + 1.0 ) * u.y*u.y;
   	double b = 2.0 * ( ( p.x - x0 ) * u.x - rad_sq * ( p.y - y0 ) * u.y + ( p.z - z0 ) * u.z );
@@ -307,7 +307,7 @@ void ConeY_Surface::reflect( Particle_t& P ) { return; }
 
 
 // Cone-Z
-double ConeZ_Surface::eval( const Point_t& p )
+double ConeZ_Surface::eval( const Point& p )
 {
 	const double x_t = p.x - x0;
 	const double y_t = p.y - y0;
@@ -317,8 +317,8 @@ double ConeZ_Surface::eval( const Point_t& p )
 
 double ConeZ_Surface::distance( const Particle_t& P )
 {
-  	Point_t p = P.pos();
-  	Point_t u = P.dir();
+  	Point p = P.pos();
+  	Point u = P.dir();
 
   	double a = 1.0 - ( rad_sq + 1.0 ) * u.z*u.z;
   	double b = 2.0 * ( ( p.x - x0 ) * u.x + ( p.y - y0 ) * u.y - rad_sq * ( p.z - z0 ) * u.z );
@@ -359,7 +359,7 @@ void Cell::setMaterial( const std::shared_ptr< Material_t >& M )
 
 
 // Test if point is inside the cell
-bool Cell::testPoint( const Point_t& p )
+bool Cell::testPoint( const Point& p )
 {
   	// Loop over surfaces in cell, if not on correct side return false
   	// if on correct side of all surfaces, particle is in the cell and return true

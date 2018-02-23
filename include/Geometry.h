@@ -73,7 +73,7 @@ class Surface_t : public Geometry_t
 	virtual void hit( Particle_t& P, const std::vector<std::shared_ptr<Cell>>& Cell, const bool tally );
 
 	// Evaluate point location via the "S" equation
-	virtual double eval( const Point_t& p ) = 0;
+	virtual double eval( const Point& p ) = 0;
 
 	// Get moving particle distance to surface
     	virtual double distance( const Particle_t& P ) = 0;
@@ -94,7 +94,7 @@ class PlaneX_Surface : public Surface_t
 			 Surface_t(n,i,bc), x(loc) {};
     		~PlaneX_Surface() {};
 
-		double eval    ( const Point_t& p );
+		double eval    ( const Point& p );
      		double distance( const Particle_t& P );
 };
 
@@ -113,7 +113,7 @@ class PlaneY_Surface : public Surface_t
 			 Surface_t(n,i,bc), y(loc) {};
     		~PlaneY_Surface() {};
 
-		double eval    ( const Point_t& p );
+		double eval    ( const Point& p );
      		double distance( const Particle_t& P );
 };
 
@@ -132,7 +132,7 @@ class PlaneZ_Surface : public Surface_t
 			 Surface_t(n,i,bc), z(loc) {};
     		~PlaneZ_Surface() {};
 
-		double eval    ( const Point_t& p );
+		double eval    ( const Point& p );
      		double distance( const Particle_t& P );
 };
 
@@ -158,7 +158,7 @@ class Plane_Surface : public Surface_t
 		};
     		~Plane_Surface() {};
 
-		double eval    ( const Point_t& p );
+		double eval    ( const Point& p );
      		double distance( const Particle_t& P );
 };
 
@@ -177,7 +177,7 @@ class Sphere_Surface : public Surface_t
        			Surface_t(n,i,b), x0(p1), y0(p2), z0(p3), rad(p4), rad_sq(p4*p4) {};
     		~Sphere_Surface() {};
 
-     		double eval    ( const Point_t& p );
+     		double eval    ( const Point& p );
      		double distance( const Particle_t& P );
 };
 
@@ -196,7 +196,7 @@ class CylinderX_Surface : public Surface_t
 			Surface_t(n,i,b), y0(p1), z0(p2), rad(p3), rad_sq(p3*p3) {};
 		~CylinderX_Surface() {};
 
-		double eval    ( const Point_t& p );
+		double eval    ( const Point& p );
 		double distance( const Particle_t& P );
 };
 
@@ -215,7 +215,7 @@ class CylinderY_Surface : public Surface_t
 			Surface_t(n,i,b), x0(p1), z0(p2), rad(p3), rad_sq(p3*p3) {};
 		~CylinderY_Surface() {};
 
-		double eval    ( const Point_t& p );
+		double eval    ( const Point& p );
 		double distance( const Particle_t& P );
 };
 
@@ -234,7 +234,7 @@ class CylinderZ_Surface : public Surface_t
 			Surface_t(n,i,b), x0(p1), y0(p2), rad(p3), rad_sq(p3*p3) {};
 		~CylinderZ_Surface() {};
 
-		double eval    ( const Point_t& p );
+		double eval    ( const Point& p );
 		double distance( const Particle_t& P );
 };
 
@@ -253,7 +253,7 @@ class ConeX_Surface : public Surface_t
        			Surface_t(n,i,b), x0(p1), y0(p2), z0(p3), rad(p4), rad_sq(p4*p4) {};
 		~ConeX_Surface() {};
 
-		double eval    ( const Point_t& p );
+		double eval    ( const Point& p );
 		double distance( const Particle_t& P );
 };
 
@@ -272,7 +272,7 @@ class ConeY_Surface : public Surface_t
        			Surface_t(n,i,b), x0(p1), y0(p2), z0(p3), rad(p4), rad_sq(p4*p4) {};
 		~ConeY_Surface() {};
 
-		double eval    ( const Point_t& p );
+		double eval    ( const Point& p );
 		double distance( const Particle_t& P );
 };
 
@@ -291,7 +291,7 @@ class ConeZ_Surface : public Surface_t
        			Surface_t(n,i,b), x0(p1), y0(p2), z0(p3), rad(p4), rad_sq(p4*p4) {};
 		~ConeZ_Surface() {};
 
-		double eval    ( const Point_t& p );
+		double eval    ( const Point& p );
 		double distance( const Particle_t& P );
 };
 
@@ -333,7 +333,7 @@ class Cell : public Geometry_t
 	std::vector< std::pair< std::shared_ptr< Surface_t >, int > > listSurfaces () { return surfaces; };
 
 	// Test if particle is in the cell
-	bool testPoint( const Point_t& p );
+	bool testPoint( const Point& p );
 	
 	// Move particle and score any estimators
 	void moveParticle( Particle_t& P, const double dmove, const bool tally );

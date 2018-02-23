@@ -24,7 +24,7 @@ int Binary_Search( const double x, const std::vector<double>& vec );
 
 // Scatter direction
 // return final direction dir_f after scatter initial direction dir_i with scattering polar cosine mu
-Point_t scatter_direction( const Point_t dir_i, const double mu0 );
+Point scatter_direction( const Point dir_i, const double mu0 );
 
 
 // Linear interpolation
@@ -54,7 +54,7 @@ class Shannon_Entropy_Mesh
 	~Shannon_Entropy_Mesh() {};
 
 	void clear();
-	void update( const Point_t& p, const double N );
+	void update( const Point& p, const double N );
 	double entropy();
 };
 

@@ -13,8 +13,8 @@ class Surface_t;
 class Particle_t
 {
     private:
-        Point_t p_pos;         
-        Point_t p_dir;         
+        Point p_pos;         
+        Point p_dir;         
         bool p_alive = true;
         double p_weight;      
         double p_time;        
@@ -28,15 +28,15 @@ class Particle_t
         int    p_tdmc;
 
     public:
-        Particle_t( const Point_t& p1, const Point_t& p2, const double E, 
+        Particle_t( const Point& p1, const Point& p2, const double E, 
                     const double t, const double w, const int td ) :
             p_pos(p1), p_dir(p2), p_time(t), p_weight(w), p_tdmc(td) 
             { setEnergy(E); }
         ~Particle_t() {};
 
         // Getters
-        Point_t pos() const;
-        Point_t dir() const;
+        Point pos() const;
+        Point dir() const;
         bool alive() const;
         double weight() const;
         double time() const;
@@ -50,7 +50,7 @@ class Particle_t
         int tdmc() const;
 
         // Setters
-        void setDirection( const Point_t& p );
+        void setDirection( const Point& p );
         void setWeight( const double w );
         void setCell( const std::shared_ptr<Cell>& C );
         void setTime( const double t );

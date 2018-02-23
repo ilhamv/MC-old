@@ -54,30 +54,30 @@ void Scatter_Reaction::sample( Particle_t& P, std::stack< Particle_t >& Pbank )
     while ( Urand() > std::sqrt( P.speed()*P.speed() + V_tilda*V_tilda - 2.0 * P.speed() * V_tilda * mu_tilda ) / ( P.speed() + V_tilda ) ); // Eq. 41
 
 	
-    Point_t nuclide_dir = scatter_direction( P.dir(), mu_tilda );                            // Nuclide direction, Eq. 42
-    Point_t V_lab ( nuclide_dir.x*V_tilda, nuclide_dir.y*V_tilda, nuclide_dir.z*V_tilda ); // Nuclide velocity - LAB, Eq. 43
+    Point nuclide_dir = scatter_direction( P.dir(), mu_tilda );                            // Nuclide direction, Eq. 42
+    Point V_lab ( nuclide_dir.x*V_tilda, nuclide_dir.y*V_tilda, nuclide_dir.z*V_tilda ); // Nuclide velocity - LAB, Eq. 43
 
     // Sampling nuclide velocity done //
     ////////////////////////////////////
 
 
     // Particle velocity - LAB
-    Point_t v_lab( P.speed() * P.dir().x, P.speed() * P.dir().y, P.speed() * P.dir().z );
+    Point v_lab( P.speed() * P.dir().x, P.speed() * P.dir().y, P.speed() * P.dir().z );
 		
     // COM velocity	
-    const Point_t u ( ( v_lab.x + A*V_lab.x ) / ( 1.0 + A ), ( v_lab.y + A*V_lab.y ) / ( 1.0 + A ), ( v_lab.z + A*V_lab.z ) / ( 1.0 + A ) ); // Eq. 6
+    const Point u ( ( v_lab.x + A*V_lab.x ) / ( 1.0 + A ), ( v_lab.y + A*V_lab.y ) / ( 1.0 + A ), ( v_lab.z + A*V_lab.z ) / ( 1.0 + A ) ); // Eq. 6
 	
     // Particle velocity - COM
-    Point_t v_c( v_lab.x - u.x, v_lab.y - u.y, v_lab.z - u.z );
+    Point v_c( v_lab.x - u.x, v_lab.y - u.y, v_lab.z - u.z );
 	
     // Particle speed - COM
     const double speed_c = std::sqrt( v_c.x*v_c.x+ v_c.y*v_c.y+ v_c.z*v_c.z );
 
     // Particle initial direction - COM
-    const Point_t dir_c( v_c.x / speed_c, v_c.y / speed_c, v_c.z / speed_c );
+    const Point dir_c( v_c.x / speed_c, v_c.y / speed_c, v_c.z / speed_c );
 	
     // Scattering the direction in COM
-    Point_t dir_cNew = scatter_direction( dir_c, mu0 ); // Final direction - COM
+    Point dir_cNew = scatter_direction( dir_c, mu0 ); // Final direction - COM
 
     // Final velocity - COM
     v_c.x = speed_c * dir_cNew.x;
@@ -93,7 +93,7 @@ void Scatter_Reaction::sample( Particle_t& P, std::stack< Particle_t >& Pbank )
     P.setSpeed( std::sqrt( v_lab.x*v_lab.x+ v_lab.y*v_lab.y+ v_lab.z*v_lab.z ) ); // Final energy is computed as well
 
     // Final direction - LAB
-    P.setDirection( Point_t( v_lab.x / P.speed(), v_lab.y / P.speed(), v_lab.z / P.speed() ) );
+    P.setDirection( Point( v_lab.x / P.speed(), v_lab.y / P.speed(), v_lab.z / P.speed() ) );
 }
 
 
@@ -105,22 +105,22 @@ void Scatter_Zero_Reaction::sample( Particle_t& P, std::stack< Particle_t >& Pba
     const double mu0 = scatter_dist->sample();
 
     // Particle velocity - LAB
-    Point_t v_lab( P.speed() * P.dir().x, P.speed() * P.dir().y, P.speed() * P.dir().z );
+    Point v_lab( P.speed() * P.dir().x, P.speed() * P.dir().y, P.speed() * P.dir().z );
 		
     // COM velocity	
-    const Point_t u ( v_lab.x / ( 1.0 + A ), v_lab.y / ( 1.0 + A ), v_lab.z / ( 1.0 + A ) ); // Eq. 6
+    const Point u ( v_lab.x / ( 1.0 + A ), v_lab.y / ( 1.0 + A ), v_lab.z / ( 1.0 + A ) ); // Eq. 6
 	
     // Particle velocity - COM
-    Point_t v_c( v_lab.x - u.x, v_lab.y - u.y, v_lab.z - u.z );
+    Point v_c( v_lab.x - u.x, v_lab.y - u.y, v_lab.z - u.z );
 	
     // Particle speed - COM
     const double speed_c = std::sqrt( v_c.x*v_c.x+ v_c.y*v_c.y+ v_c.z*v_c.z );
 
     // Particle initial direction - COM
-    const Point_t dir_c( v_c.x / speed_c, v_c.y / speed_c, v_c.z / speed_c );
+    const Point dir_c( v_c.x / speed_c, v_c.y / speed_c, v_c.z / speed_c );
 	
     // Scattering the direction in COM
-    Point_t dir_cNew = scatter_direction( dir_c, mu0 ); // Final direction - COM
+    Point dir_cNew = scatter_direction( dir_c, mu0 ); // Final direction - COM
 
     // Final velocity - COM
     v_c.x = speed_c * dir_cNew.x;
@@ -136,7 +136,7 @@ void Scatter_Zero_Reaction::sample( Particle_t& P, std::stack< Particle_t >& Pba
     P.setSpeed( std::sqrt( v_lab.x*v_lab.x+ v_lab.y*v_lab.y+ v_lab.z*v_lab.z ) ); // Final energy is computed as well
 
     // Final direction - LAB
-    P.setDirection( Point_t( v_lab.x / P.speed(), v_lab.y / P.speed(), v_lab.z / P.speed() ) );
+    P.setDirection( Point( v_lab.x / P.speed(), v_lab.y / P.speed(), v_lab.z / P.speed() ) );
 }
 
 

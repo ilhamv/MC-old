@@ -58,7 +58,7 @@ double Watt_Distribution::sample( const double E /*= 0.0*/ )
 }
 
 
-Point_t IsotropicDirection_Distribution::sample( const double param /*= 0.0*/ )
+Point IsotropicDirection_Distribution::sample( const double param /*= 0.0*/ )
 {
     // Sample polar cosine and azimuthal angle uniformly
     const double mu  = 2.0 * Urand() - 1.0;
@@ -67,7 +67,7 @@ Point_t IsotropicDirection_Distribution::sample( const double param /*= 0.0*/ )
 	
     // Convert to Cartesian coordinates
     double c = std::sqrt( 1.0 - mu * mu );
-    Point_t p;
+    Point p;
     p.y = std::cos( azi ) * c;
     p.z = std::sin( azi ) * c;
     p.x = mu;
@@ -75,7 +75,7 @@ Point_t IsotropicDirection_Distribution::sample( const double param /*= 0.0*/ )
     return p;
 }
 
-Point_t IndependentXYZ_Distribution::sample( const double param /*= 0.0*/ ) 
+Point IndependentXYZ_Distribution::sample( const double param /*= 0.0*/ ) 
 {
-    return Point_t( dist_x->sample(), dist_y->sample(), dist_z->sample() );
+    return Point( dist_x->sample(), dist_y->sample(), dist_z->sample() );
 }

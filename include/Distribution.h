@@ -99,18 +99,18 @@ class IsotropicScatter_Distribution : public Distribution_t<double>
 
 
 // Isotropic direction distribution
-class IsotropicDirection_Distribution : public Distribution_t<Point_t>
+class IsotropicDirection_Distribution : public Distribution_t<Point>
 {
     public:
 	 IsotropicDirection_Distribution( const std::string label = "" ) : Distribution_t(label) {};
     	~IsotropicDirection_Distribution() {};
     		
-	Point_t sample( const double param = 0.0 );
+	Point sample( const double param = 0.0 );
 };
 
 
 // Independent 3point distribution
-class IndependentXYZ_Distribution : public Distribution_t<Point_t>
+class IndependentXYZ_Distribution : public Distribution_t<Point>
 {
     private:
         std::shared_ptr<Distribution_t<double>> dist_x, dist_y, dist_z;
@@ -121,7 +121,7 @@ class IndependentXYZ_Distribution : public Distribution_t<Point_t>
                 : Distribution_t(label), dist_x(dx), dist_y(dy), dist_z(dz) {};
         ~IndependentXYZ_Distribution() {};
     
-        Point_t sample( const double param = 0.0 );
+        Point sample( const double param = 0.0 );
 };
 
 

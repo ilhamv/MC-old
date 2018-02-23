@@ -14,6 +14,7 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 option(profile  "Compile with profiling flags"                   OFF)
 option(debug    "Compile with debug flags"                       OFF)
 option(optimize "Turn on all compiler optimization flags"        OFF)
+option(test     "Include all tests"                              OFF)
 
 #==============================================================================
 # Set compile flags
@@ -51,6 +52,7 @@ add_library(pugixml src/pugixml.cpp)
 #==============================================================================
 # HDF5 for binary output
 #==============================================================================
+
 find_package(HDF5 COMPONENTS CXX)
 if(NOT HDF5_FOUND)
     message(FATAL_ERROR "Could not find HDF5")
@@ -83,24 +85,13 @@ file(COPY ${CMAKE_SOURCE_DIR}/xs_library DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY ${CMAKE_SOURCE_DIR}/examples DESTINATION ${CMAKE_BINARY_DIR})
 
 #==============================================================================
-# Catch Testing
+# Gtest
 #==============================================================================
 
-# Set up directory
-#file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/unit_test)    
-#set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/unit_test)
-
-# Iterate over tests
-#file(GLOB TESTS "${CMAKE_SOURCE_DIR}/unit_test/test_*.cpp")
-#foreach(TEST ${TESTS})
-    # Built tests
-#    get_filename_component(TEST_NAME ${TEST} NAME_WE)
-#    add_executable(${TEST_NAME}.tst unit_test/${TEST_NAME}.cpp)
-#    target_link_libraries(${TEST_NAME}.tst libMC)
-#    add_custom_command(
-#        TARGET ${TEST_NAME}.tst
-#        POST_BUILD
-#        COMMAND ${TEST_NAME}.tst
-#        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-#        COMMENT "Running unit test: ${TEST_NAME}" VERBATIM)
-#endforeach()
+if(test)
+    enable_testing()
+    find_package(GTest REQUIRED)
+    add_executable(unit_test.exe ${CMAKE_SOURCE_DIR}/test/unit_test.cpp)
+    target_link_libraries(unit_test.exe GTest::GTest libMC)
+    add_test(NAME UnitTest COMMAND unit_test.exe)
+endif()

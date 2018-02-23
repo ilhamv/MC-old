@@ -70,7 +70,7 @@ class Simulator_t
         
         // User-defined distributions
         std::vector<std::shared_ptr<Distribution_t<double>>>Distribution_Double;
-        std::vector<std::shared_ptr<Distribution_t<Point_t>>>Distribution_Point;
+        std::vector<std::shared_ptr<Distribution_t<Point>>>Distribution_Point;
 
         // Constructor: Set up the simulator with XML parser
         Simulator_t( const std::string input_dir );

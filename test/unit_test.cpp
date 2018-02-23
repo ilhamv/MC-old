@@ -8,7 +8,7 @@
 
 TEST( Point, Creation_Default)
 {
-    Point_t p;
+    Point p;
     bool flag = true ;
     if ( p.x != 0.0 ) { flag = false; }
     if ( p.y != 0.0 ) { flag = false; }
@@ -18,7 +18,7 @@ TEST( Point, Creation_Default)
 
 TEST( Point, Creation_Init)
 { 
-    Point_t p(1.0,-2.0,3.0);
+    Point p(1.0,-2.0,3.0);
     bool flag = true ;
     if ( p.x != 1.0 ) { flag = false; }
     if ( p.y != -2.0 ) { flag = false; }

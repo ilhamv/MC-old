@@ -29,14 +29,14 @@ class Source_t
 class Delta_Source : public Source_t
 {
     private:
-        const Point_t pos;
-        const Point_t dir;
+        const Point pos;
+        const Point dir;
         const double  E;
         const double  w;
         const double  t;
 
     public:
-        Delta_Source( const Point_t p, const Point_t d, const double p_E, const double p_w, const double p_t ): pos(p), dir(d), E(p_E), w(p_w), t(p_t) {};
+        Delta_Source( const Point p, const Point d, const double p_E, const double p_w, const double p_t ): pos(p), dir(d), E(p_E), w(p_w), t(p_t) {};
         ~Delta_Source() {};
 
         Particle_t getSource();
@@ -47,14 +47,14 @@ class Delta_Source : public Source_t
 class Point_Source : public Source_t
 {
 	private:
-		Point_t                         pos;       // Position
+		Point                         pos;       // Position
     		// Direction, energy and time distribution
-    		const std::shared_ptr< Distribution_t<Point_t> > dist_dir;
+    		const std::shared_ptr< Distribution_t<Point> > dist_dir;
     		const std::shared_ptr< Distribution_t<double>  > dist_enrg;
     		const std::shared_ptr< Distribution_t<double>  > dist_time;
 
 	public:
-		Point_Source( const double p1, const double p2, const double p3, const std::shared_ptr< Distribution_t<Point_t> > dir
+		Point_Source( const double p1, const double p2, const double p3, const std::shared_ptr< Distribution_t<Point> > dir
 				,const std::shared_ptr< Distribution_t<double> > enrg, const std::shared_ptr< Distribution_t<double> > time  ) :
 		dist_dir(dir), dist_enrg(enrg), dist_time(time) { pos.x = p1; pos.y = p2; pos.z = p3; }
 		~Point_Source() {};
@@ -71,12 +71,12 @@ class DiskX_Source : public Source_t
 		// Center position radius and direction sense of the source
 		const double x0, y0, z0, r;
     		// Direction, energy and time distribution
-    		const std::shared_ptr< Distribution_t<Point_t> > dist_dir;
+    		const std::shared_ptr< Distribution_t<Point> > dist_dir;
     		const std::shared_ptr< Distribution_t<double>  > dist_enrg;
     		const std::shared_ptr< Distribution_t<double>  > dist_time;
 
 	public:
-		 DiskX_Source( const double p1, const double p2, const double p3, const double p4, const std::shared_ptr< Distribution_t<Point_t> > dir
+		 DiskX_Source( const double p1, const double p2, const double p3, const double p4, const std::shared_ptr< Distribution_t<Point> > dir
 			,const std::shared_ptr< Distribution_t<double> > enrg, const std::shared_ptr< Distribution_t<double> > time  ) :
 			x0(p1), y0(p2), z0(p3), r(p4), dist_dir(dir), dist_enrg(enrg), dist_time(time) {};
 		~DiskX_Source() {};
@@ -95,12 +95,12 @@ class DiskZ_Source : public Source_t
 		// Center position radius and direction sense of the source
 		const double x0, y0, z0, r;
     		// Direction, energy and time distribution
-    		const std::shared_ptr< Distribution_t<Point_t> > dist_dir;
+    		const std::shared_ptr< Distribution_t<Point> > dist_dir;
     		const std::shared_ptr< Distribution_t<double>  > dist_enrg;
     		const std::shared_ptr< Distribution_t<double>  > dist_time;
 
 	public:
-		 DiskZ_Source( const double p1, const double p2, const double p3, const double p4, const std::shared_ptr< Distribution_t<Point_t> > dir
+		 DiskZ_Source( const double p1, const double p2, const double p3, const double p4, const std::shared_ptr< Distribution_t<Point> > dir
 			,const std::shared_ptr< Distribution_t<double> > enrg, const std::shared_ptr< Distribution_t<double> > time  ) :
 			x0(p1), y0(p2), z0(p3), r(p4), dist_dir(dir), dist_enrg(enrg), dist_time(time) {};
 		~DiskZ_Source() {};
@@ -121,12 +121,12 @@ class Sphere_Shell_Source : public Source_t
 		// Inner radius normalized by the outer radius, then squared
 		const double risq;
     		// Direction, energy and time distribution
-    		const std::shared_ptr< Distribution_t<Point_t> > dist_dir;
+    		const std::shared_ptr< Distribution_t<Point> > dist_dir;
     		const std::shared_ptr< Distribution_t<double>  > dist_enrg;
     		const std::shared_ptr< Distribution_t<double>  > dist_time;
 
 	public:
-		 Sphere_Shell_Source( const double p1, const double p2, const double p3, const double p4, const double p5, const std::shared_ptr< Distribution_t<Point_t> > dir
+		 Sphere_Shell_Source( const double p1, const double p2, const double p3, const double p4, const double p5, const std::shared_ptr< Distribution_t<Point> > dir
 			,const std::shared_ptr< Distribution_t<double> > enrg, const std::shared_ptr< Distribution_t<double> > time  ) :
 			x0(p1), y0(p2), z0(p3), risq( p4*p4/p5/p5 ), ro(p5), dist_dir(dir), dist_enrg(enrg), dist_time(time) {};
 		~Sphere_Shell_Source() {};
@@ -143,12 +143,12 @@ class Generic_Source : public Source_t
 {
   	private:
     		// Position, direction, energy and time distribution
-		const std::shared_ptr< Distribution_t<Point_t> > dist_pos;
-    		const std::shared_ptr< Distribution_t<Point_t> > dist_dir;
+		const std::shared_ptr< Distribution_t<Point> > dist_pos;
+    		const std::shared_ptr< Distribution_t<Point> > dist_dir;
     		const std::shared_ptr< Distribution_t<double>  > dist_enrg;
     		const std::shared_ptr< Distribution_t<double>  > dist_time;
   	public:
-     		Generic_Source( const std::shared_ptr< Distribution_t<Point_t> > pos, const std::shared_ptr< Distribution_t<Point_t> > dir
+     		Generic_Source( const std::shared_ptr< Distribution_t<Point> > pos, const std::shared_ptr< Distribution_t<Point> > dir
 				,const std::shared_ptr< Distribution_t<double> > enrg, const std::shared_ptr< Distribution_t<double> > time )
 			: dist_pos(pos), dist_dir(dir), dist_enrg(enrg), dist_time(time) {};
     		~Generic_Source() {};

@@ -128,7 +128,7 @@ void XML_input
     std::vector<std::shared_ptr<Material_t>  >&            Material, 
     std::vector<std::shared_ptr<Estimator> >&            estimator,
     std::vector<std::shared_ptr<Distribution_t<double>> >& Distribution_Double,
-    std::vector<std::shared_ptr<Distribution_t<Point_t>>>& Distribution_Point,
+    std::vector<std::shared_ptr<Distribution_t<Point>>>& Distribution_Point,
     std::vector<double>& tdmc_time,
     unsigned long long& tdmc_split,
     bool& trmm, std::vector<std::shared_ptr<Estimator>>& trmm_estimator
@@ -268,7 +268,7 @@ if( input_tdmc ){
 			{
         			// Skip rest of loop if distribution already done
         			if ( findByName( Distribution_Point, name ) ) { continue; }
-        			std::shared_ptr< Distribution_t< Point_t > > Dist;
+        			std::shared_ptr< Distribution_t< Point > > Dist;
 		        	
 				// Delta-point
 				if ( type == "delta" ) 
@@ -276,7 +276,7 @@ if( input_tdmc ){
 	          			const double x = d.attribute("x").as_double(); 
 	          			const double y = d.attribute("y").as_double(); 
         	  			const double z = d.attribute("z").as_double();         
-	          			Dist = std::make_shared< Delta_Distribution< Point_t > > ( Point_t( x, y, z ), name );
+	          			Dist = std::make_shared< Delta_Distribution< Point > > ( Point( x, y, z ), name );
 	        		}
         			
 				// Isotropic-point
@@ -995,7 +995,7 @@ if(input_trmm){
 		
 		// Default parameters
 		double prob = 1.0;                                                                                            // probability or ratio
-  		std::shared_ptr< Distribution_t<Point_t> > dirDist  = std::make_shared< IsotropicDirection_Distribution > (); // direction distribution
+  		std::shared_ptr< Distribution_t<Point> > dirDist  = std::make_shared< IsotropicDirection_Distribution > (); // direction distribution
   		std::string dir_dist_name;
   		std::shared_ptr< Distribution_t<double> >  enrgDist = std::make_shared< Delta_Distribution<double> > ( 2e6 ); // energy distribution
   		std::string enrg_dist_name;
@@ -1084,7 +1084,7 @@ if(input_trmm){
 		
   			std::string pos_dist_name  = s.attribute("position").value();
 
-  			std::shared_ptr< Distribution_t<Point_t> > posDist  = findByName( Distribution_Point , pos_dist_name );
+  			std::shared_ptr< Distribution_t<Point> > posDist  = findByName( Distribution_Point , pos_dist_name );
 
   			if ( ! posDist )
 			{ 

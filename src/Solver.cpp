@@ -58,14 +58,14 @@ int Binary_Search( const double x, const std::vector<double>& vec )
 
 // Scatter direction
 // Return final direction dir_f after scatter initial direction dir_i with scattering cosine mu
-Point_t scatter_direction( const Point_t dir_i, const double mu0 )
+Point scatter_direction( const Point dir_i, const double mu0 )
 {
     // Sample azimuthal direction
     const double     azi = PI2 * Urand();
     const double cos_azi = std::cos(azi);
     const double sin_azi = std::sin(azi);
     const double      Ac = std::sqrt( 1.0 - mu0 * mu0 );
-    Point_t      dir_f; // Final direction
+    Point      dir_f; // Final direction
 
     if( dir_i.z != 1.0 )
     {
@@ -83,7 +83,7 @@ Point_t scatter_direction( const Point_t dir_i, const double mu0 )
         const double       B = std::sqrt( 1.0 - dir_i.y * dir_i.y );
         const double       C = Ac / B;
 		
-        Point_t            q; // to store new direction point
+        Point            q; // to store new direction point
         
         dir_f.x = dir_i.x * mu0 + ( dir_i.x * dir_i.y * cos_azi - dir_i.z * sin_azi ) * C;
         dir_f.z = dir_i.z * mu0 + ( dir_i.z * dir_i.y * cos_azi + dir_i.x * sin_azi ) * C;
@@ -111,7 +111,7 @@ void Shannon_Entropy_Mesh::clear()
     return;
 }
 
-void Shannon_Entropy_Mesh::update( const Point_t& p, const double N )
+void Shannon_Entropy_Mesh::update( const Point& p, const double N )
 {
     int x_index = floor( ( ( p.x - xmin ) * x_nmesh ) / (xmax - xmin) );
     int y_index = floor( ( ( p.y - ymin ) * y_nmesh ) / (ymax - ymin) );

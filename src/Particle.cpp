@@ -11,8 +11,8 @@
 // Getters
 //=============================================================================
 
-Point_t Particle_t::pos() const { return p_pos; }
-Point_t Particle_t::dir() const { return p_dir; }
+Point Particle_t::pos() const { return p_pos; }
+Point Particle_t::dir() const { return p_dir; }
 bool Particle_t::alive() const { return p_alive; }
 double Particle_t::weight() const { return p_weight; }
 double Particle_t::time() const { return p_time; }  
@@ -32,7 +32,7 @@ int Particle_t::tdmc() const { return p_tdmc; }
 // Setters
 //=============================================================================
 
-void Particle_t::setDirection( const Point_t& p ) { p_dir = p; }
+void Particle_t::setDirection( const Point& p ) { p_dir = p; }
 void Particle_t::setWeight( const double w ) { p_weight = w; }
 void Particle_t::setCell( const std::shared_ptr<Cell>& C )
 { 
