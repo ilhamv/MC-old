@@ -11,7 +11,6 @@
 #include "Point.h"
 #include "XSec.h"
 
-class Particle_t;
 
 //=============================================================================
 // Base
@@ -43,7 +42,7 @@ class Reaction_t
 	virtual double Chi( const double E ) final { return Chi_dist->sample(E); }
 	
 	// Sample the reaction process on the working particle and the particle bank
-	virtual void sample( Particle_t& P, std::stack< Particle_t >& Pbank ) = 0;
+	virtual void sample( Particle& P, std::stack< Particle >& Pbank ) = 0;
 	
 	// Check type
         //   0 -> Capture
@@ -65,7 +64,7 @@ class Capture_Reaction : public Reaction_t
 	~Capture_Reaction() {};
 
 	// Kill the working particle upon reaction sample
-	void  sample( Particle_t& P, std::stack< Particle_t >& Pbank );
+	void  sample( Particle& P, std::stack< Particle >& Pbank );
 };
 
 
@@ -84,7 +83,7 @@ class Scatter_Reaction : public Reaction_t
 	~Scatter_Reaction() {};
 
 	// Scatter the working particle
-	void  sample( Particle_t& P, std::stack< Particle_t >& Pbank );
+	void  sample( Particle& P, std::stack< Particle >& Pbank );
 };
 
 
@@ -101,7 +100,7 @@ class Scatter_Zero_Reaction : public Reaction_t
 	~Scatter_Zero_Reaction() {};
 
 	// Scatter the working particle
-	void  sample( Particle_t& P, std::stack< Particle_t >& Pbank );
+	void  sample( Particle& P, std::stack< Particle >& Pbank );
 };
 
 
@@ -126,7 +125,7 @@ class Fission_Reaction : public Reaction_t
 
 	// Sample fission multiplicity, then appropriately pushing new fission particles to the bank
 	// --> Reaction.cpp
-	void sample( Particle_t& P, std::stack< Particle_t >& Pbank );
+	void sample( Particle& P, std::stack< Particle >& Pbank );
 };
 
 

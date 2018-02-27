@@ -12,7 +12,7 @@
 #include "Material.h"
 
 class Estimator;
-class Source_Bank;
+class SourceBank;
 class Cell;
 
 
@@ -60,23 +60,23 @@ class Surface_t : public Geometry_t
 
     protected:
 	// Crossing the surface --> an epsilon kick to the working particle
-        void cross ( Particle_t& P );
+        void cross ( Particle& P );
 
 	// Reflect and cross the working particle
-	virtual void reflect ( Particle_t& P ) = 0;
+	virtual void reflect ( Particle& P ) = 0;
 		
     public:
      	Surface_t( const std::string n, const int i, const std::string b ) : Geometry_t(n,i), bc(b) {}; // Pass the name
     	~Surface_t() {};
 
 	// Hit implementation
-	virtual void hit( Particle_t& P, const std::vector<std::shared_ptr<Cell>>& Cell, const bool tally );
+	virtual void hit( Particle& P, const std::vector<std::shared_ptr<Cell>>& Cell, const bool tally );
 
 	// Evaluate point location via the "S" equation
 	virtual double eval( const Point& p ) = 0;
 
 	// Get moving particle distance to surface
-    	virtual double distance( const Particle_t& P ) = 0;
+    	virtual double distance( const Particle& P ) = 0;
 };
 
 
@@ -87,7 +87,7 @@ class PlaneX_Surface : public Surface_t
     		const double x; // Parameters for S equation
 
 	protected:
-		void reflect ( Particle_t& P );
+		void reflect ( Particle& P );
 
   	public:
      		 PlaneX_Surface( const std::string n, const int i, const std::string bc, const double loc ) : 
@@ -95,7 +95,7 @@ class PlaneX_Surface : public Surface_t
     		~PlaneX_Surface() {};
 
 		double eval    ( const Point& p );
-     		double distance( const Particle_t& P );
+     		double distance( const Particle& P );
 };
 
 
@@ -106,7 +106,7 @@ class PlaneY_Surface : public Surface_t
     		const double y; // Parameters for S equation
 
 	protected:
-		void reflect ( Particle_t& P );
+		void reflect ( Particle& P );
 
   	public:
      		 PlaneY_Surface( const std::string n, const int i, const std::string bc, const double loc ) : 
@@ -114,7 +114,7 @@ class PlaneY_Surface : public Surface_t
     		~PlaneY_Surface() {};
 
 		double eval    ( const Point& p );
-     		double distance( const Particle_t& P );
+     		double distance( const Particle& P );
 };
 
 
@@ -125,7 +125,7 @@ class PlaneZ_Surface : public Surface_t
     		const double z; // Parameters for S equation
 
 	protected:
-		void reflect ( Particle_t& P );
+		void reflect ( Particle& P );
 
   	public:
      		 PlaneZ_Surface( const std::string n, const int i, const std::string bc, const double loc ) : 
@@ -133,7 +133,7 @@ class PlaneZ_Surface : public Surface_t
     		~PlaneZ_Surface() {};
 
 		double eval    ( const Point& p );
-     		double distance( const Particle_t& P );
+     		double distance( const Particle& P );
 };
 
 
@@ -145,7 +145,7 @@ class Plane_Surface : public Surface_t
 		double modx, mody, modz; // Parameters for reflection
 
 	protected:
-		void reflect ( Particle_t& P );
+		void reflect ( Particle& P );
 
   	public:
      		 Plane_Surface( const std::string n, const int i, const std::string bc, const double pa, const double pb, const double pc, const double pd ) : 
@@ -159,7 +159,7 @@ class Plane_Surface : public Surface_t
     		~Plane_Surface() {};
 
 		double eval    ( const Point& p );
-     		double distance( const Particle_t& P );
+     		double distance( const Particle& P );
 };
 
 
@@ -170,7 +170,7 @@ class Sphere_Surface : public Surface_t
     		const double x0, y0, z0, rad, rad_sq;
   	
 	protected:
-		void reflect ( Particle_t& P );
+		void reflect ( Particle& P );
 
 	public:
      		 Sphere_Surface( const std::string n, const int i, const std::string b, const double p1, const double p2, const double p3, const double p4 ) : 
@@ -178,7 +178,7 @@ class Sphere_Surface : public Surface_t
     		~Sphere_Surface() {};
 
      		double eval    ( const Point& p );
-     		double distance( const Particle_t& P );
+     		double distance( const Particle& P );
 };
 
 
@@ -189,7 +189,7 @@ class CylinderX_Surface : public Surface_t
 		const double y0, z0, rad, rad_sq;
 
 	protected:
-		void reflect ( Particle_t& P );
+		void reflect ( Particle& P );
 
 	public:
 		 CylinderX_Surface( const std::string n, const int i, const std::string b, const double p1, const double p2, const double p3 ) :
@@ -197,7 +197,7 @@ class CylinderX_Surface : public Surface_t
 		~CylinderX_Surface() {};
 
 		double eval    ( const Point& p );
-		double distance( const Particle_t& P );
+		double distance( const Particle& P );
 };
 
 
@@ -208,7 +208,7 @@ class CylinderY_Surface : public Surface_t
 		const double x0, z0, rad, rad_sq;
 
 	protected:
-		void reflect ( Particle_t& P );
+		void reflect ( Particle& P );
 
 	public:
 		 CylinderY_Surface( const std::string n, const int i, const std::string b, const double p1, const double p2, const double p3 ) :
@@ -216,7 +216,7 @@ class CylinderY_Surface : public Surface_t
 		~CylinderY_Surface() {};
 
 		double eval    ( const Point& p );
-		double distance( const Particle_t& P );
+		double distance( const Particle& P );
 };
 
 
@@ -227,7 +227,7 @@ class CylinderZ_Surface : public Surface_t
 		const double x0, y0, rad, rad_sq;
 
 	protected:
-		void reflect ( Particle_t& P );
+		void reflect ( Particle& P );
 
 	public:
 		 CylinderZ_Surface( const std::string n, const int i, const std::string b, const double p1, const double p2, const double p3 ) :
@@ -235,7 +235,7 @@ class CylinderZ_Surface : public Surface_t
 		~CylinderZ_Surface() {};
 
 		double eval    ( const Point& p );
-		double distance( const Particle_t& P );
+		double distance( const Particle& P );
 };
 
 
@@ -246,7 +246,7 @@ class ConeX_Surface : public Surface_t
 		const double x0, y0, z0, rad, rad_sq;
 
 	protected:
-		void reflect ( Particle_t& P );
+		void reflect ( Particle& P );
 
 	public:
 		 ConeX_Surface( const std::string n, const int i, const std::string b, const double p1, const double p2, const double p3, const double p4 ) :
@@ -254,7 +254,7 @@ class ConeX_Surface : public Surface_t
 		~ConeX_Surface() {};
 
 		double eval    ( const Point& p );
-		double distance( const Particle_t& P );
+		double distance( const Particle& P );
 };
 
 
@@ -265,7 +265,7 @@ class ConeY_Surface : public Surface_t
 		const double x0, y0, z0, rad, rad_sq;
 
 	protected:
-		void reflect ( Particle_t& P );
+		void reflect ( Particle& P );
 
 	public:
 		 ConeY_Surface( const std::string n, const int i, const std::string b, const double p1, const double p2, const double p3, const double p4 ) :
@@ -273,7 +273,7 @@ class ConeY_Surface : public Surface_t
 		~ConeY_Surface() {};
 
 		double eval    ( const Point& p );
-		double distance( const Particle_t& P );
+		double distance( const Particle& P );
 };
 
 
@@ -284,7 +284,7 @@ class ConeZ_Surface : public Surface_t
 		const double x0, y0, z0, rad, rad_sq;
 
 	protected:
-		void reflect ( Particle_t& P );
+		void reflect ( Particle& P );
 
 	public:
 		 ConeZ_Surface( const std::string n, const int i, const std::string b, const double p1, const double p2, const double p3, const double p4 ) :
@@ -292,7 +292,7 @@ class ConeZ_Surface : public Surface_t
 		~ConeZ_Surface() {};
 
 		double eval    ( const Point& p );
-		double distance( const Particle_t& P );
+		double distance( const Particle& P );
 };
 
 
@@ -336,19 +336,19 @@ class Cell : public Geometry_t
 	bool testPoint( const Point& p );
 	
 	// Move particle and score any estimators
-	void moveParticle( Particle_t& P, const double dmove, const bool tally );
+	void moveParticle( Particle& P, const double dmove, const bool tally );
 	
 	// Return the closest bounding surface and the corresponding particle hit distance 
-	std::pair< std::shared_ptr< Surface_t >, double > surface_intersect( const Particle_t& P );
+	std::pair< std::shared_ptr< Surface_t >, double > surface_intersect( const Particle& P );
 	
 	// Return particle collision distance
 	double collision_distance( const double E );
 
 	// Let the Material take care of the collision sample and reaction process
-	void collision( Particle_t& P, std::stack< Particle_t >& Pbank, const bool ksearch, Source_Bank& Fbank, const double k );
+	void collision( Particle& P, std::stack< Particle >& Pbank, const bool ksearch, SourceBank& Fbank, const double k );
 
 	// Simulate scattering for scattering matrix MGXS
-	void simulate_scatter( Particle_t& P );	
+	void simulate_scatter( Particle& P );	
 };
 
 

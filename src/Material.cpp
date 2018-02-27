@@ -125,8 +125,8 @@ std::shared_ptr<Nuclide_t> Material_t::nuclide_nufission( const double E )
 // Collision
 //=============================================================================
 
-void Material_t::collision_sample( Particle_t& P,std::stack<Particle_t>& Pbank,
-                                   const bool ksearch, Source_Bank& Fbank, 
+void Material_t::collision_sample( Particle& P,std::stack<Particle>& Pbank,
+                                   const bool ksearch, SourceBank& Fbank, 
                                    const double k )
 {
     // Implicit Fission (k is always 1 in non ksearch modes)
@@ -136,23 +136,23 @@ void Material_t::collision_sample( Particle_t& P,std::stack<Particle_t>& Pbank,
     std::shared_ptr<Nuclide_t> N_fission = nuclide_nufission( P.energy() );
     if (ksearch){ 
         for ( int i = 0 ; i < bank_nu ; i++ ){
-            Fbank.addSource( std::make_shared<Delta_Source>
+            Fbank.add_source( std::make_shared<Delta_Source>
                     ( P.pos(), isotropic.sample(), N_fission->Chi(P.energy()),
                       1.0, P.time() ) );
         }
     } else{
         for ( int i = 0 ; i < bank_nu ; i++ ){
-            Particle_t P_new ( P.pos(), isotropic.sample(),
+            Particle P_new ( P.pos(), isotropic.sample(),
                                     N_fission->Chi( P.energy() ), P.time(), 
                                     1.0, P.tdmc() );
-            P_new.setCell( P.cell() );
+            P_new.set_cell( P.cell() );
             Pbank.push(P_new);
         }
     }
     
     // Implicit Absorption
     const double implicit = SigmaC(P.energy()) + SigmaF(P.energy());
-    P.setWeight( P.weight() * ( SigmaT(P.energy()) - implicit ) 
+    P.set_weight( P.weight() * ( SigmaT(P.energy()) - implicit ) 
                  / SigmaT(P.energy()) );
 
     std::shared_ptr<Nuclide_t> N_scatter = nuclide_scatter( P.energy() );
@@ -164,7 +164,7 @@ void Material_t::collision_sample( Particle_t& P,std::stack<Particle_t>& Pbank,
 		
 
 // Simulate scattering for scattering matrix MGXS
-void Material_t::simulate_scatter( Particle_t& P )
+void Material_t::simulate_scatter( Particle& P )
 {
 	// Sample the scattering nuclide
 	double u = SigmaS( P.energy() ) * Urand();

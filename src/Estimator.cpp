@@ -14,27 +14,27 @@
 //=============================================================================
 
 // Neutron
-double ScoreKernelNeutron::score( const Particle_t& P, const double l )
+double ScoreKernelNeutron::score( const Particle& P, const double l )
 { 
     return P.weight(); 
 }
 // Track Length
-double ScoreKernelTrackLength::score( const Particle_t& P, const double l )
+double ScoreKernelTrackLength::score( const Particle& P, const double l )
 { 
     return P.weight() * l; 
 }
 // Collision
-double ScoreKernelCollision::score( const Particle_t& P, const double l )
+double ScoreKernelCollision::score( const Particle& P, const double l )
 { 
     return P.weight() / P.cell()->SigmaT( P.energy() ); 
 }
 // Velocity
-double ScoreKernelVelocity::score( const Particle_t& P, const double l )
+double ScoreKernelVelocity::score( const Particle& P, const double l )
 { 
     return P.weight() * P.speed(); 
 }
 // Track Length Velocity
-double ScoreKernelTrackLengthVelocity::score( const Particle_t& P, 
+double ScoreKernelTrackLengthVelocity::score( const Particle& P, 
                                               const double l )
 { 
     return P.weight() * l * P.speed(); 
@@ -48,43 +48,43 @@ double ScoreKernelTrackLengthVelocity::score( const Particle_t& P,
 //=============================================================================
 
 // Flux
-double ScoreFlux::score( const Particle_t& P, const double l )
+double ScoreFlux::score( const Particle& P, const double l )
 { 
     return s_kernel->score(P,l); 
 }
 
 // Absorption
-double ScoreAbsorption::score( const Particle_t& P, const double l )
+double ScoreAbsorption::score( const Particle& P, const double l )
 { 
     return P.cell()->SigmaA( P.energy() ) * s_kernel->score(P,l); 
 }
 
 // Scatter
-double ScoreScatter::score( const Particle_t& P, const double l )
+double ScoreScatter::score( const Particle& P, const double l )
 { 
     return P.cell()->SigmaS( P.energy() ) * s_kernel->score(P,l); 
 }
 
 // Capture
-double ScoreCapture::score( const Particle_t& P, const double l )
+double ScoreCapture::score( const Particle& P, const double l )
 { 
     return P.cell()->SigmaC( P.energy() ) * s_kernel->score(P,l); 
 }
 
 // Fission
-double ScoreFission::score( const Particle_t& P, const double l )
+double ScoreFission::score( const Particle& P, const double l )
 { 
     return P.cell()->SigmaF( P.energy() ) * s_kernel->score(P,l); 
 }
 
 // NuFission
-double ScoreNuFission::score( const Particle_t& P, const double l )
+double ScoreNuFission::score( const Particle& P, const double l )
 { 
     return P.cell()->nuSigmaF( P.energy() ) * s_kernel->score(P,l); 
 }
 
 // Total
-double ScoreTotal::score( const Particle_t& P, const double l )
+double ScoreTotal::score( const Particle& P, const double l )
 { 
     return P.cell()->SigmaT( P.energy() ) * s_kernel->score(P,l); 
 }
@@ -96,7 +96,7 @@ double ScoreTotal::score( const Particle_t& P, const double l )
 //=============================================================================
 
 // Surface
-std::vector<std::pair<int,double>> FilterSurface::idx_l( const Particle_t& P,
+std::vector<std::pair<int,double>> FilterSurface::idx_l( const Particle& P,
                                                          const double l )
 {
     std::vector<std::pair<int,double>> v_i_l;
@@ -112,7 +112,7 @@ std::vector<std::pair<int,double>> FilterSurface::idx_l( const Particle_t& P,
 }
 int FilterSurface::size() { return f_grid.size(); }
 // Cell
-std::vector<std::pair<int,double>> FilterCell::idx_l( const Particle_t& P,
+std::vector<std::pair<int,double>> FilterCell::idx_l( const Particle& P,
                                                       const double l )
 {
     std::vector<std::pair<int,double>> v_i_l;
@@ -128,7 +128,7 @@ std::vector<std::pair<int,double>> FilterCell::idx_l( const Particle_t& P,
 }
 int FilterCell::size() { return f_grid.size(); }
 // Energy
-std::vector<std::pair<int,double>> FilterEnergy::idx_l( const Particle_t& P,
+std::vector<std::pair<int,double>> FilterEnergy::idx_l( const Particle& P,
                                                         const double l )
 {
     std::vector<std::pair<int,double>> v_i_l;
@@ -145,7 +145,7 @@ std::vector<std::pair<int,double>> FilterEnergy::idx_l( const Particle_t& P,
     return v_i_l;
 }
 // Energy - old
-std::vector<std::pair<int,double>> FilterEnergyOld::idx_l( const Particle_t& P,
+std::vector<std::pair<int,double>> FilterEnergyOld::idx_l( const Particle& P,
                                                            const double l )
 {
     std::vector<std::pair<int,double>> v_i_l;
@@ -162,7 +162,7 @@ std::vector<std::pair<int,double>> FilterEnergyOld::idx_l( const Particle_t& P,
     return v_i_l;
 }
 // Time bin
-std::vector<std::pair<int,double>> FilterTime::idx_l( const Particle_t& P,
+std::vector<std::pair<int,double>> FilterTime::idx_l( const Particle& P,
                                                       const double l )
 {
     std::vector<std::pair<int,double>> v_i_l;
@@ -211,7 +211,7 @@ std::vector<std::pair<int,double>> FilterTime::idx_l( const Particle_t& P,
     return v_i_l;
 }
 // Time TDMC
-std::vector<std::pair<int,double>> FilterTDMC::idx_l( const Particle_t& P,
+std::vector<std::pair<int,double>> FilterTDMC::idx_l( const Particle& P,
                                                       const double l )
 {
     std::vector<std::pair<int,double>> v_i_l;
@@ -261,7 +261,7 @@ void Estimator::initialize_tallies()
 }
 
 // Score
-void Estimator::score( const Particle_t& P, const double l )
+void Estimator::score( const Particle& P, const double l )
 {
     // Individual filter indexes and l
     for( int i = 0; i < e_filters.size(); i++ ){
@@ -399,21 +399,21 @@ unsigned long long Estimator::tally_size()
 
 // Scattering simulation estimator
 //   It simulates scattering event before scoring
-void EstimatorScatter::score( const Particle_t& P, const double l )
+void EstimatorScatter::score( const Particle& P, const double l )
 {
-    Particle_t P_simulated = P;
+    Particle P_simulated = P;
     P.cell()->simulate_scatter(P_simulated);
     Estimator::score( P_simulated, l );
 }
 // Fissio simulation estimator
 //   It simulates scattering event before scoring
-void EstimatorFission::score( const Particle_t& P, const double l )
+void EstimatorFission::score( const Particle& P, const double l )
 {
-    Particle_t P_simulated = P;
+    Particle P_simulated = P;
     const double energy_final = P.cell()->material()
                                 ->nuclide_nufission( P.energy() )
                                 ->Chi( P.energy() );
-    P_simulated.setEnergy(energy_final);
+    P_simulated.set_energy(energy_final);
     Estimator::score( P_simulated, l );
 }
 
@@ -433,13 +433,13 @@ EstimatorK::EstimatorK( const unsigned long long Ncycle,
     k_uncer.resize(Nactive,0.0);
 }
 
-void EstimatorK::estimate_C( const Particle_t& P )
+void EstimatorK::estimate_C( const Particle& P )
 {
     k_C += P.cell()->nuSigmaF(P.energy()) * P.weight() 
            / P.cell()->SigmaT(P.energy());
 }
 
-void EstimatorK::estimate_TL( const Particle_t& P, const double l )
+void EstimatorK::estimate_TL( const Particle& P, const double l )
 {
     k_TL += P.cell()->nuSigmaF(P.energy()) * P.weight() * l;
 }

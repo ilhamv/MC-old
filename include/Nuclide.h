@@ -59,8 +59,8 @@ class Nuclide_t
 	std::shared_ptr<Reaction_t> reaction_sample( const double E, const bool ksearch );
 	
 	// Simulator
-	void simulate_scatter( Particle_t& P );
-	void simulate_fission( Particle_t& P );
+	void simulate_scatter( Particle& P );
+	void simulate_fission( Particle& P );
         
         // Simulator
 	std::shared_ptr<Reaction_t> scatter = NULL;

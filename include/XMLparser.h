@@ -11,7 +11,6 @@
 #include <fstream>      // file stream
 #include <dirent.h>     // open a folder
 
-#include "VReduction.h" // Split_Roulette
 #include "Const.h"      // MAX
 #include "pugixml.hpp"
 #include "Geometry.h"
@@ -49,7 +48,7 @@ void XML_input
     unsigned long long&                                      nPassive,          
     double&                                                  Ecut_off,
     double&                                                  tcut_off,
-    Source_Bank&                                             Sbank,
+    SourceBank&                                             Sbank,
     std::vector < std::shared_ptr<Surface_t>   >&            Surface,     
     std::vector < std::shared_ptr<Cell>    >&                cell,    
     std::vector < std::shared_ptr<Nuclide_t>   >&            Nuclide,   

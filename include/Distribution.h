@@ -8,7 +8,6 @@
 #include <cassert>
 #include <fstream>
 
-#include "Const.h" // PI
 #include "Random.h" // Urand
 #include "Point.h"
 #include "XSec.h"

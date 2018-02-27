@@ -1,21 +1,19 @@
 #ifndef ESTIMATOR_H
 #define ESTIMATOR_H
 
-#include <cmath>    // sqrt
-#include <iostream> // cout
+#include <cmath>
+#include <iostream>
 #include <iomanip>
-#include <vector>   // vector
-#include <fstream>  // ofstream
-#include <memory>   // shared_ptr
-#include <cstring>  // string
-#include <sstream>  // ostringstream
+#include <vector> 
+#include <fstream>  
+#include <memory>   
+#include <cstring>  
+#include <sstream>  
 
 #include "Particle.h"
 #include "Geometry.h"
 #include "Distribution.h"
 #include "H5Cpp.h"
-
-class Particle_t;
 
 
 //=============================================================================
@@ -29,7 +27,7 @@ class ScoreKernel
          ScoreKernel() {};
         ~ScoreKernel() {};
 
-        virtual double score( const Particle_t& P, const double l ) = 0;
+        virtual double score( const Particle& P, const double l ) = 0;
 };
 // Neutron
 class ScoreKernelNeutron : public ScoreKernel
@@ -38,7 +36,7 @@ class ScoreKernelNeutron : public ScoreKernel
          ScoreKernelNeutron() {};
         ~ScoreKernelNeutron() {};
 
-        double score( const Particle_t& P, const double l );
+        double score( const Particle& P, const double l );
 };
 // Track Length
 class ScoreKernelTrackLength : public ScoreKernel
@@ -47,7 +45,7 @@ class ScoreKernelTrackLength : public ScoreKernel
          ScoreKernelTrackLength() {};
         ~ScoreKernelTrackLength() {};
 
-        double score( const Particle_t& P, const double l );
+        double score( const Particle& P, const double l );
 };
 // Collision
 class ScoreKernelCollision : public ScoreKernel
@@ -56,7 +54,7 @@ class ScoreKernelCollision : public ScoreKernel
          ScoreKernelCollision() {};
         ~ScoreKernelCollision() {};
 
-        double score( const Particle_t& P, const double l );
+        double score( const Particle& P, const double l );
 };
 // Velocity
 class ScoreKernelVelocity : public ScoreKernel
@@ -65,7 +63,7 @@ class ScoreKernelVelocity : public ScoreKernel
          ScoreKernelVelocity() {};
         ~ScoreKernelVelocity() {};
 
-        double score( const Particle_t& P, const double l );
+        double score( const Particle& P, const double l );
 };
 // Track Length Velocity
 class ScoreKernelTrackLengthVelocity : public ScoreKernel
@@ -74,7 +72,7 @@ class ScoreKernelTrackLengthVelocity : public ScoreKernel
          ScoreKernelTrackLengthVelocity() {};
         ~ScoreKernelTrackLengthVelocity() {};
 
-        double score( const Particle_t& P, const double l );
+        double score( const Particle& P, const double l );
 };
 
 
@@ -102,7 +100,7 @@ class Score
         virtual std::string name() final {return s_name;}
 
         // Get score to be added at event
-	virtual double score( const Particle_t& P, const double l ) = 0;
+	virtual double score( const Particle& P, const double l ) = 0;
 };
 
 // Flux
@@ -114,7 +112,7 @@ class ScoreFlux : public Score
             : Score(n,k) {};
 	~ScoreFlux() {};
 
-	double score( const Particle_t& P, const double l );
+	double score( const Particle& P, const double l );
 };
 // Absorption
 class ScoreAbsorption : public Score
@@ -125,7 +123,7 @@ class ScoreAbsorption : public Score
             : Score(n,k) {};
 	~ScoreAbsorption() {};
 
-	double score( const Particle_t& P, const double l );
+	double score( const Particle& P, const double l );
 };
 // Scatter
 class ScoreScatter : public Score
@@ -136,7 +134,7 @@ class ScoreScatter : public Score
             : Score(n,k) {};
 	~ScoreScatter() {};
 
-	double score( const Particle_t& P, const double l );
+	double score( const Particle& P, const double l );
 };
 // Capture
 class ScoreCapture : public Score
@@ -147,7 +145,7 @@ class ScoreCapture : public Score
             : Score(n,k) {};
 	~ScoreCapture() {};
 
-	double score( const Particle_t& P, const double l );
+	double score( const Particle& P, const double l );
 };
 // Fission
 class ScoreFission : public Score
@@ -158,7 +156,7 @@ class ScoreFission : public Score
             : Score(n,k) {};
 	~ScoreFission() {};
 
-	double score( const Particle_t& P, const double l );
+	double score( const Particle& P, const double l );
 };
 // NuFission
 class ScoreNuFission : public Score
@@ -169,7 +167,7 @@ class ScoreNuFission : public Score
             : Score(n,k) {};
 	~ScoreNuFission() {};
 
-	double score( const Particle_t& P, const double l );
+	double score( const Particle& P, const double l );
 };
 // Total
 class ScoreTotal : public Score
@@ -180,7 +178,7 @@ class ScoreTotal : public Score
             : Score(n,k) {};
 	~ScoreTotal() {};
 
-	double score( const Particle_t& P, const double l );
+	double score( const Particle& P, const double l );
 };
 
 
@@ -225,7 +223,7 @@ class Filter
         ~Filter() {};
 
         // Get the index and the corresponding track length to be scored
-        virtual std::vector<std::pair<int,double>> idx_l( const Particle_t& P,
+        virtual std::vector<std::pair<int,double>> idx_l( const Particle& P,
                                                           const double l ) = 0;
         // Getters
         virtual int size() { return f_grid.size() - 1; }
@@ -242,7 +240,7 @@ class FilterSurface : public Filter
         ~FilterSurface() {};
 
         // Get the index and the corresponding track length to be scored
-        std::vector<std::pair<int,double>> idx_l( const Particle_t& P,
+        std::vector<std::pair<int,double>> idx_l( const Particle& P,
                                                   const double l );
         int size();
 };
@@ -255,7 +253,7 @@ class FilterCell : public Filter
         ~FilterCell() {};
 
         // Get the index and the corresponding track length to be scored
-        std::vector<std::pair<int,double>> idx_l( const Particle_t& P,
+        std::vector<std::pair<int,double>> idx_l( const Particle& P,
                                                   const double l );
         int size();
 };
@@ -268,7 +266,7 @@ class FilterEnergy : public Filter
         ~FilterEnergy() {};
 
         // Get the index and the corresponding track length to be scored
-        std::vector<std::pair<int,double>> idx_l( const Particle_t& P,
+        std::vector<std::pair<int,double>> idx_l( const Particle& P,
                                                   const double l );
 };
 // Energy - old
@@ -280,7 +278,7 @@ class FilterEnergyOld : public Filter
         ~FilterEnergyOld() {};
 
         // Get the index and the corresponding track length to be scored
-        std::vector<std::pair<int,double>> idx_l( const Particle_t& P,
+        std::vector<std::pair<int,double>> idx_l( const Particle& P,
                                                   const double l );
 };
 // Time bin
@@ -292,7 +290,7 @@ class FilterTime : public Filter
         ~FilterTime() {};
 
         // Get the index and the corresponding track length to be scored
-        std::vector<std::pair<int,double>> idx_l( const Particle_t& P,
+        std::vector<std::pair<int,double>> idx_l( const Particle& P,
                                                   const double l );
 };
 // Time - TDMC
@@ -304,7 +302,7 @@ class FilterTDMC : public Filter
         ~FilterTDMC() {};
 
         // Get the index and the corresponding track length to be scored
-        std::vector<std::pair<int,double>> idx_l( const Particle_t& P,
+        std::vector<std::pair<int,double>> idx_l( const Particle& P,
                                                   const double l );
         int size();
 };
@@ -341,7 +339,7 @@ class Estimator
 	void add_filter( const std::shared_ptr<Filter>& F );
         void initialize_tallies();
         
-        virtual void score( const Particle_t& P, const double l );
+        virtual void score( const Particle& P, const double l );
 
 	// Loop closeouts
 	void end_history();              
@@ -362,7 +360,7 @@ class EstimatorScatter : public Estimator
 	 EstimatorScatter( const std::string n, const unsigned long long Ns,
                            const unsigned long long Na ) :Estimator(n,Ns,Na){};
 	~EstimatorScatter() {};
-        void score( const Particle_t& P, const double l );
+        void score( const Particle& P, const double l );
 };
 // Fission simulation estimator
 class EstimatorFission : public Estimator
@@ -371,7 +369,7 @@ class EstimatorFission : public Estimator
 	 EstimatorFission( const std::string n, const unsigned long long Ns,
                            const unsigned long long Na ) :Estimator(n,Ns,Na){};
 	~EstimatorFission() {};
-        void score( const Particle_t& P, const double l );
+        void score( const Particle& P, const double l );
 };
 
 // k-eigenvalue
@@ -402,8 +400,8 @@ class EstimatorK
         void end_history();
         void report_cycle( const bool tally );
 	void report( H5::H5File& output );
-        void estimate_C( const Particle_t& P );
-        void estimate_TL( const Particle_t& P, const double l );
+        void estimate_C( const Particle& P );
+        void estimate_TL( const Particle& P, const double l );
 
         double k;
 };

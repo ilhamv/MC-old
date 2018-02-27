@@ -1,20 +1,20 @@
-#include <vector>  // vector
-#include <cstring> // string, strcmp
-#include <memory>  // shared_ptr, make_shared
-#include <stack>   // stack
+#include <vector>  
+#include <cstring> 
+#include <memory>  
+#include <stack>   
 
-#include "VReduction.h"         // Split_Roulette
-#include "Const.h"              // MAX
+#include "Const.h"              
 #include "pugixml.hpp"
-#include "Geometry.h"
-#include "Particle.h"
+#include <Eigen/Dense>
 #include "Distribution.h"
+#include "Particle.h"
+
+#include "Geometry.h"
 #include "Source.h"
 #include "Nuclide.h"
 #include "Material.h"
 #include "Reaction.h"
 #include "Estimator.h"
-#include <Eigen/Dense>
 
 
 class Simulator_t
@@ -44,9 +44,9 @@ class Simulator_t
         double ws = 1.0;  // Survival weight
         
         // Banks
-        Source_Bank            Fbank; // Fission bank
-        Source_Bank            Sbank; // Sample bank
-        std::stack<Particle_t> Pbank; // Particle bank
+        SourceBank           Fbank; // Fission bank
+        SourceBank           Sbank; // Sample bank
+        std::stack<Particle> Pbank; // Particle bank
 
         // THE OBJECTS
         std::vector<std::shared_ptr<Surface_t>>  Surfaces;
@@ -81,8 +81,9 @@ class Simulator_t
         // Report results
         void report();
 
-        void move_particle( Particle_t& P, const double l );
-        void cut_off( Particle_t&P );
-        void collision( Particle_t& P );
+        void move_particle( Particle& P, const double l );
+        void cut_off( Particle&P );
+        void collision( Particle& P );
         void set_TRM();
+        void Split_Roulette( Particle& P, std::stack<Particle>& p_bank );
 };

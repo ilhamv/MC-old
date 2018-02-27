@@ -1,19 +1,21 @@
 #include <stack> // stack
 
+#include "Const.h"
+#include "Solver.h"
 #include "Reaction.h"
 #include "Particle.h"
 #include "Distribution.h"
 
 
 // Capture kills the working particle
-void Capture_Reaction::sample( Particle_t& P, std::stack< Particle_t >& Pbank )
+void Capture_Reaction::sample( Particle& P, std::stack< Particle >& Pbank )
 { P.kill(); }
 
 
 // Scatter the particle with sampled scattering angle mu0, with nucleus having mass A
 // Scattering is trated in Center of mass (COM) frame
 // Current model: Free gas scattering with constant cross section
-void Scatter_Reaction::sample( Particle_t& P, std::stack< Particle_t >& Pbank )
+void Scatter_Reaction::sample( Particle& P, std::stack< Particle >& Pbank )
 {
     const double mu0 = scatter_dist->sample();
 	
@@ -90,17 +92,17 @@ void Scatter_Reaction::sample( Particle_t& P, std::stack< Particle_t >& Pbank )
     v_lab.z = v_c.z + u.z;
 
     // Final speed - LAB
-    P.setSpeed( std::sqrt( v_lab.x*v_lab.x+ v_lab.y*v_lab.y+ v_lab.z*v_lab.z ) ); // Final energy is computed as well
+    P.set_speed( std::sqrt( v_lab.x*v_lab.x+ v_lab.y*v_lab.y+ v_lab.z*v_lab.z ) ); // Final energy is computed as well
 
     // Final direction - LAB
-    P.setDirection( Point( v_lab.x / P.speed(), v_lab.y / P.speed(), v_lab.z / P.speed() ) );
+    P.set_direction( Point( v_lab.x / P.speed(), v_lab.y / P.speed(), v_lab.z / P.speed() ) );
 }
 
 
 // Scatter the particle with sampled scattering angle mu0, with nucleus having mass A
 // Scattering is trated in Center of mass (COM) frame
 // Current model: Free gas scattering with constant cross section
-void Scatter_Zero_Reaction::sample( Particle_t& P, std::stack< Particle_t >& Pbank )
+void Scatter_Zero_Reaction::sample( Particle& P, std::stack< Particle >& Pbank )
 {
     const double mu0 = scatter_dist->sample();
 
@@ -133,15 +135,15 @@ void Scatter_Zero_Reaction::sample( Particle_t& P, std::stack< Particle_t >& Pba
     v_lab.z = v_c.z + u.z;
 
     // Final speed - LAB
-    P.setSpeed( std::sqrt( v_lab.x*v_lab.x+ v_lab.y*v_lab.y+ v_lab.z*v_lab.z ) ); // Final energy is computed as well
+    P.set_speed( std::sqrt( v_lab.x*v_lab.x+ v_lab.y*v_lab.y+ v_lab.z*v_lab.z ) ); // Final energy is computed as well
 
     // Final direction - LAB
-    P.setDirection( Point( v_lab.x / P.speed(), v_lab.y / P.speed(), v_lab.z / P.speed() ) );
+    P.set_direction( Point( v_lab.x / P.speed(), v_lab.y / P.speed(), v_lab.z / P.speed() ) );
 }
 
 
 // Fission reaction sample
-void Fission_Reaction::sample( Particle_t& P, std::stack< Particle_t >& Pbank )
+void Fission_Reaction::sample( Particle& P, std::stack< Particle >& Pbank )
 {
 	// create random number of secondaries from multiplicity distributon nu_dist and
 	// push all but one of them into the Particle bank, and reset the top particle 
@@ -154,14 +156,14 @@ void Fission_Reaction::sample( Particle_t& P, std::stack< Particle_t >& Pbank )
         	// bank all but last particle (skips if n = 1)
 	        for ( int i = 0 ; i < n - 1 ; i++ )
         	{
-	            	Particle_t p( P.pos(), isotropic.sample(), Chi_dist->sample( P.energy() ), P.time(), P.weight(), P.tdmc() );
-        	    	p.setCell( P.cell() );
+	            	Particle p( P.pos(), isotropic.sample(), Chi_dist->sample( P.energy() ), P.time(), P.weight(), P.tdmc(), P.cell() );
+        	    	p.set_cell( P.cell() );
             		Pbank.push( p );
         	}
 
 		// reset the top particle
-		P.setDirection( isotropic.sample() );
-		P.setEnergy( Chi_dist->sample( P.energy() ) );
+		P.set_direction( isotropic.sample() );
+		P.set_energy( Chi_dist->sample( P.energy() ) );
 	}
 	else
 	{ P.kill(); }

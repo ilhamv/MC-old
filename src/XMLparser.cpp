@@ -121,7 +121,7 @@ void XML_input
     unsigned long long&                                      Npassive,         
     double&                                                  Ecut_off,
     double&                                                  tcut_off,
-    Source_Bank&                                             Sbank,
+    SourceBank&                                             Sbank,
     std::vector<std::shared_ptr<Surface_t>   >&            Surface,     
     std::vector<std::shared_ptr<Cell>      >&              cell,    
     std::vector<std::shared_ptr<Nuclide_t>   >&            Nuclide,   
@@ -851,7 +851,7 @@ for ( auto& e : input_file.child("estimators").children("estimator") ){
 }
 
 //==========================================================================
-// TRMM
+// TRMM Estimator
 //==========================================================================
 
 pugi::xml_node input_trmm = input_file.child("trmm");
@@ -987,125 +987,56 @@ if(input_trmm){
     trmm_estimator.push_back( trmm_estimator_fission );
 }
 
-        // Set source bank
-  	pugi::xml_node input_sources = input_file.child("sources");
-  	for ( const auto& s : input_sources )
-	{
-		std::shared_ptr<Source_t> Src;
+
+//==========================================================================
+// Source Bank
+//==========================================================================
+
+pugi::xml_node input_sources = input_file.child("sources");
+for( const auto& s : input_sources.children("source") ){
+    std::shared_ptr<Source> S;
+
+    // defaults
+    double prob = 1.0;
+    std::shared_ptr<Distribution_t<Point> > s_dir = 
+        std::make_shared<IsotropicDirection_Distribution> ();
+    std::shared_ptr<Distribution_t<double>> s_energy = 
+        std::make_shared<Delta_Distribution<double>>(2e6);
+
+    // supplied distributions
+    std::string s_dir_name;
+    std::string s_energy_name;
+    if ( s.attribute("probability") ){
+        prob = s.attribute("probability").as_double();
+    }
+    if ( s.attribute("direction") ){
+  	s_dir_name = s.attribute("direction").value();
+  	s_dir = findByName( Distribution_Point, dir_dist_name );
+    }
+    if ( s.attribute("energy") ){
+  	s_energy_name = s.attribute("energy").value();
+  	s_energy      = findByName( Distribution_Double, enrg_dist_name );
+    }
+    if ( !s_ds_ir || !s_enrg ){
+    	std::cout<< "[ERROR] unknown direction distribution in source.\n";
+        std::exit(EXIT_FAILURE);
+    }
+ 
+    if ( s.name() == "point" ){
+	const double x = s.attribute("x").as_double();
+	const double y = s.attribute("y").as_double();
+	const double z = s.attribute("z").as_double();
+        Point p(x,y,z);
+	S = std::make_shared<Point_Source>( p, search_cell(p, cell), s_dir, 
+                                            s_energy );
+    }
+    else{
+        std::cout << "unknown source type.\n";
+        std::exit(EXIT_FAILURE);
+    }
 		
-		// Default parameters
-		double prob = 1.0;                                                                                            // probability or ratio
-  		std::shared_ptr< Distribution_t<Point> > dirDist  = std::make_shared< IsotropicDirection_Distribution > (); // direction distribution
-  		std::string dir_dist_name;
-  		std::shared_ptr< Distribution_t<double> >  enrgDist = std::make_shared< Delta_Distribution<double> > ( 2e6 ); // energy distribution
-  		std::string enrg_dist_name;
-  		std::shared_ptr< Distribution_t<double> >  timeDist = std::make_shared< Delta_Distribution<double> > ( 0.0 ); // time distribution
-  		std::string time_dist_name;
-    		
-		// Input provided probability
-    		if ( s.attribute("probability") )
-    		{
-	    		prob = s.attribute("probability").as_double();
-    		}
-
-		// Input provided direction distribution
-    		if ( s.attribute("direction") )
-    		{
-  			dir_dist_name = s.attribute("direction").value();
-  			dirDist       = findByName( Distribution_Point, dir_dist_name );
-    		}
-    		
-		// Input provided energy distribution
-		if ( s.attribute("energy") )
-    		{
-  			enrg_dist_name = s.attribute("energy").value();
-  			enrgDist       = findByName( Distribution_Double, enrg_dist_name );
-    		}
-
-		// Input provided time distribution
-    		if ( s.attribute("time") )
-    		{
-  			time_dist_name = s.attribute("time").value();
-  			timeDist       = findByName( Distribution_Double, time_dist_name );
-    		}
-		
-		// Check distribution availability
-            	if ( ! dirDist || ! enrgDist || ! timeDist ) 
-		{
-    			if ( ! dirDist )  { std::cout << " unknown direction distribution " << dir_dist_name  << " in source " << std::endl; }
-    			if ( ! enrgDist ) { std::cout << " unknown energy distribution "    << enrg_dist_name << " in source " << std::endl; }
-    			if ( ! timeDist ) { std::cout << " unknown time distribution "      << time_dist_name << " in source " << std::endl; }
-    			throw;
- 		}
-
-		// Point source
-		if ( (std::string) s.name() == "point" )
-		{
-			const double x = s.attribute("x").as_double();
-			const double y = s.attribute("y").as_double();
-			const double z = s.attribute("z").as_double();
-			Src = std::make_shared<Point_Source> ( x, y, z, dirDist, enrgDist, timeDist );
-    		}
-		
-		// Spherical shell source
-		else if ( (std::string) s.name() == "sphere_shell" )
-		{
-			const double x  = s.attribute("x").as_double();
-			const double y  = s.attribute("y").as_double();
-			const double z  = s.attribute("z").as_double();
-			const double ri = s.attribute("ri").as_double();
-			const double ro = s.attribute("ro").as_double();
-			Src = std::make_shared<Sphere_Shell_Source> ( x, y, z, ri, ro, dirDist, enrgDist, timeDist );
-    		}
-
-		// Disk-x
-		else if ( (std::string) s.name() == "disk_x" )
-		{
-			const double x     = s.attribute("x").as_double();
-			const double y     = s.attribute("y").as_double();
-			const double z     = s.attribute("z").as_double();
-			const double r     = s.attribute("r").as_double();
-			Src = std::make_shared<DiskX_Source> ( x, y, z, r, dirDist, enrgDist, timeDist );
-    		}
-
-		// Disk-z
-		else if ( (std::string) s.name() == "disk_z" )
-		{
-			const double x     = s.attribute("x").as_double();
-			const double y     = s.attribute("y").as_double();
-			const double z     = s.attribute("z").as_double();
-			const double r     = s.attribute("r").as_double();
-			Src = std::make_shared<DiskZ_Source> ( x, y, z, r, dirDist, enrgDist, timeDist );
-    		}
-		
-		// Generic source
-		else if ( (std::string) s.name() == "source" )
-		{
-		
-  			std::string pos_dist_name  = s.attribute("position").value();
-
-  			std::shared_ptr< Distribution_t<Point> > posDist  = findByName( Distribution_Point , pos_dist_name );
-
-  			if ( ! posDist )
-			{ 
-				std::cout << " unknown position distribution "  << pos_dist_name  << " in source " << std::endl;
-    				throw;
-  			}
-			
-			Src = std::make_shared<Generic_Source> ( posDist, dirDist, enrgDist, timeDist );
-		}
-
-		// Unknown source type
-		else 
-		{
-            		std::cout << "unknown source type " << (std::string) s.name() << std::endl;
-			throw;
-          	}
-
-		// Push new source
-		Sbank.addSource( Src, prob );
-  	}
-    
+    Sbank.add_source( S, prob );
+}    
 }
 
 

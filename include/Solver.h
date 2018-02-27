@@ -6,7 +6,9 @@
 #include "Const.h" // MAX
 #include "Random.h"
 #include "Point.h"
+#include "Geometry.h"
 
+class Cell;
 
 // Quad solver for geometry-point evaluation
 // return smallest positive real root if it exists; if it does not, return very big number
@@ -58,5 +60,8 @@ class Shannon_Entropy_Mesh
 	double entropy();
 };
 
+
+// get cell
+std::shared_ptr<Cell> search_cell( const Point& p, const std::vector<std::shared_ptr<Cell>>& Cell );
 
 #endif

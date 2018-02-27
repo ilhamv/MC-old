@@ -15,7 +15,7 @@
 
 // Forward declaration
 class Nuclide_t;
-class Source_Bank;
+class SourceBank;
 class Fission_Source;
 
 // Material base class
@@ -58,10 +58,10 @@ class Material_t
 	// Handle collision event
 	// Sample entire collision (nuclide, then nuclide reaction)
 	// Then, process the reaction on the Particle
-	void collision_sample( Particle_t& P, std::stack< Particle_t >& Pbank, const bool ksearch, Source_Bank& Fbank, const double k );
+	void collision_sample( Particle& P, std::stack< Particle >& Pbank, const bool ksearch, SourceBank& Fbank, const double k );
 	
 	// Simulate scattering for scattering matrix MGXS
-	void simulate_scatter( Particle_t& P );
+	void simulate_scatter( Particle& P );
 };
 
 

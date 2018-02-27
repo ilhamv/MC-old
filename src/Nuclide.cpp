@@ -5,6 +5,7 @@
 
 #include "Random.h"
 #include "Nuclide.h"
+#include "Solver.h"
 
 //==============================================================================
 // Getters
@@ -137,13 +138,13 @@ std::shared_ptr< Reaction_t > Nuclide_t::reaction_sample( const double E,
 
 
 // Simulate scattering for scattering matrix MGXS
-void Nuclide_t::simulate_scatter( Particle_t& P )
+void Nuclide_t::simulate_scatter( Particle& P )
 {
-    std::stack<Particle_t> null;
+    std::stack<Particle> null;
     scatter->sample(P,null);
 }
-void Nuclide_t::simulate_fission( Particle_t& P )
+void Nuclide_t::simulate_fission( Particle& P )
 {
-    std::stack<Particle_t> null;
+    std::stack<Particle> null;
     fission->sample(P,null);
 }

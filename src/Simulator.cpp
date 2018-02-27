@@ -37,7 +37,7 @@ Simulator_t::Simulator_t( const std::string input_dir )
 // Move particle
 //=============================================================================
 
-void Simulator_t::move_particle( Particle_t& P, const double l )
+void Simulator_t::move_particle( Particle& P, const double l )
 {
     P.move( l );
     if(ksearch) { k_estimator->estimate_TL(P,l); }
@@ -51,7 +51,7 @@ void Simulator_t::move_particle( Particle_t& P, const double l )
 //=============================================================================
 // Collision
 //=============================================================================
-void Simulator_t::collision( Particle_t& P )
+void Simulator_t::collision( Particle& P )
 {
     if (ksearch) { k_estimator->estimate_C(P); }
     if(tally){ 
@@ -66,7 +66,7 @@ void Simulator_t::collision( Particle_t& P )
 // Cut-off and weight rouletting
 //=============================================================================
 
-void Simulator_t::cut_off( Particle_t& P )
+void Simulator_t::cut_off( Particle& P )
 {
     if ( P.energy() <= Ecut_off || P.time() >= tcut_off || P.weight() == 0.0 ){
         P.kill();
@@ -74,7 +74,7 @@ void Simulator_t::cut_off( Particle_t& P )
     else{
         // Weight rouletting
         if( P.weight() < wr ){
-            if( Urand() < P.weight() / ws ) { P.setWeight(ws); }
+            if( Urand() < P.weight() / ws ) { P.set_weight(ws); }
             else { P.kill(); }
         }
     }
@@ -93,11 +93,11 @@ void Simulator_t::start()
 
         // Cycle loop
         for ( isample = 0 ; isample < Nsample ; isample++ ){
-            Pbank.push( Sbank.getSource( Cells ) );
+            Pbank.push( Sbank.get_source() );
                     
             // History loop
             while ( !Pbank.empty() ){
-                Particle_t P = Pbank.top(); // Working particle
+                Particle P = Pbank.top(); // Working particle
                 Pbank.pop();
 
                 // Particle loop
@@ -117,11 +117,11 @@ void Simulator_t::start()
                                         * P.speed();
                         if( std::min(SnD.second,dcol) > dbound ){
                             move_particle( P, dbound );
-                            P.set_tdmc(P.tdmc()+1);
+                            P.increment_tdmc();
                             cut_off( P );
                             // Time splitting
                             if(P.alive()){
-                                P.setWeight(P.weight()/tdmc_split);
+                                P.set_weight(P.weight()/tdmc_split);
                                 for( int i = 0; i < tdmc_split - 1; i++ ){
                                     Pbank.push(P);
                                 }
@@ -304,4 +304,35 @@ void Simulator_t::report()
     dataset.write(alpha_real.data(), type_double);
     dataset = group.createDataSet( "imag", type_double, space_alpha);
     dataset.write(alpha_imag.data(), type_double);
+}
+void Split_Roulette( Particle& P, std::stack<Particle>& p_bank )
+{
+    // Importances
+    const double Iold = P.cell_old()->importance();
+    const double Inew = P.cell()->importance();
+
+    // Same importance, do nothing
+    if ( Inew == Iold ) { return; }
+	
+    const double rat = Inew / Iold; // Ratio of importances
+	
+    // Less important, Russian Roulette
+    if ( rat < 1.0 )
+    {
+	if ( Urand() < rat ) { P.set_weight( P.weight() / rat ); }
+	else                 { P.kill(); }
+    }
+
+    // More important, Splitting
+    else
+    {
+	// Sample # of splitting
+	const int n = std::floor( rat + Urand() );
+		
+	// Update working particle weight
+	P.set_weight( P.weight() / double(n) );
+
+	// Push n-1 identical particles into particle bank
+	for ( int i = 0 ; i < n-1 ; i++ ){ p_bank.push( P ); }
+    }
 }

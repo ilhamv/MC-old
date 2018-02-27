@@ -5,7 +5,6 @@
 #include <cmath> // sqrt
 #include <vector>
 #include <memory>
-#include "Solver.h"
 
 
 class XSec_t

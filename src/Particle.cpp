@@ -11,98 +11,72 @@
 // Getters
 //=============================================================================
 
-Point Particle_t::pos() const { return p_pos; }
-Point Particle_t::dir() const { return p_dir; }
-bool Particle_t::alive() const { return p_alive; }
-double Particle_t::weight() const { return p_weight; }
-double Particle_t::time() const { return p_time; }  
-double Particle_t::energy() const { return p_energy; }
-double Particle_t::energy_old() const { return p_energy_old; }
-double Particle_t::speed() const { return p_speed; } 
-std::shared_ptr<Cell> Particle_t::cell() const { return p_cell; }
-double Particle_t::time_old() const { return p_time_old; }   
-std::shared_ptr<Cell> Particle_t::cell_old() const { return p_cell_old; }  
-std::shared_ptr<Surface_t> Particle_t::surface_old() const 
+Point Particle::pos() const { return p_pos; }
+Point Particle::dir() const { return p_dir; }
+bool Particle::alive() const { return p_alive; }
+double Particle::weight() const { return p_weight; }
+double Particle::time() const { return p_time; }  
+double Particle::time_old() const { return p_time_old; }   
+double Particle::energy() const { return p_energy; }
+double Particle::energy_old() const { return p_energy_old; }
+double Particle::speed() const { return p_speed; } 
+std::shared_ptr<Cell> Particle::cell() const { return p_cell; }
+std::shared_ptr<Cell> Particle::cell_old() const { return p_cell_old; }  
+std::shared_ptr<Surface_t> Particle::surface_old() const 
 { 
     return p_surface_old; 
 }
-int Particle_t::tdmc() const { return p_tdmc; }
+int Particle::tdmc() const { return p_tdmc; }
 
 //=============================================================================
 // Setters
 //=============================================================================
 
-void Particle_t::setDirection( const Point& p ) { p_dir = p; }
-void Particle_t::setWeight( const double w ) { p_weight = w; }
-void Particle_t::setCell( const std::shared_ptr<Cell>& C )
+void Particle::set_direction( const Point& p ) { p_dir = p; }
+void Particle::set_weight( const double w ) { p_weight = w; }
+void Particle::set_cell( const std::shared_ptr<Cell> C )
 { 
     p_cell_old = p_cell;
     p_cell     = C;
 }
-void Particle_t::setTime( const double t ) 
-{
-    p_time_old = p_time;
-    p_time     = t; 
-}
-void Particle_t::setEnergy( const double E )
+void Particle::set_energy( const double E )
 { 
     p_energy_old = p_energy;
-    p_energy     = E; // eV
-    p_speed  = std::sqrt( p_energy * 191312955.067 ) * 100.0; // cm/s
-    // note, the constant above is 
-    //   2.0 * ( 1.60217662e-19 J/eV ) / ( 1.674927471e-27 kg )
+    p_energy     = E;
+    p_speed  = std::sqrt( p_energy * 191312955.067 ) * 100.0;
+    // constant: 2.0 * ( 1.60217662e-19 J/eV ) / ( 1.674927471e-27 kg )
 }
-void Particle_t::setSpeed( const double v )
+void Particle::set_speed( const double v )
 { 
-    p_speed  = v; // cm/s
+    p_speed  = v;
     p_energy_old = p_energy;
-    p_energy = 5.2270376e-13 * v * v; // eV
-    // note, the constant above is 
-    //   0.5 / ( 1.60217662e-19 J/eV ) * ( 1.674927471e-27 kg ) 
-    //       / ( 10000 cm^2/m^2 )
+    p_energy = 5.2270376e-13 * v * v;
+    // constant: 0.5 / ( 1.60217662e-19 J/eV ) * ( 1.674927471e-27 kg ) 
+    //           / ( 10000 cm^2/m^2 )
 }
-void Particle_t::set_surface_old( const std::shared_ptr<Surface_t>& S )
+void Particle::set_surface_old( const std::shared_ptr<Surface_t> S )
 {
     p_surface_old = S;
 }
-void Particle_t::set_tdmc( const int t ) { p_tdmc = t; }
                                
 //=============================================================================
 // Modifiers
 //=============================================================================
 
-// Move particle a distance dmove along its current trajectory
-void Particle_t::move( const double dmove ) 
+void Particle::move( const double dmove ) 
 {
+    // Move particle a distance dmove
     p_pos.x += p_dir.x * dmove;
     p_pos.y += p_dir.y * dmove;
     p_pos.z += p_dir.z * dmove;
 	
     // Advance particle time
-    setTime( p_time + dmove / p_speed );
+    p_time_old = p_time;
+    p_time += dmove / p_speed;
 }
-
-// Kill particle
-void Particle_t::kill()
+void Particle::kill()
 { 
     p_alive  = false; 
     p_weight = 0.0;
 }
-
-// Search and set particle cell
-void Particle_t::searchCell( const std::vector<std::shared_ptr<Cell>>& Cell )
-{
-    for( const auto& C : Cell )
-	{
-		// check if particle is in the current cell C
-		if ( C->testPoint( p_pos ) )
-		{
-                        p_cell_old = p_cell;
-			p_cell = C;
-			return;
-		}
-	}
-	std::cout<< "[WARNING] A particle is lost:\n( x, y, z )  (" << p_pos.x << ", " << p_pos.y << ", " << p_pos.z << " )\n";
-        std::exit(EXIT_FAILURE);
-        // Might want to just kill the particle instead of the whole process
-}
+void Particle::increment_tdmc() { p_tdmc++; }

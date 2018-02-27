@@ -989,7 +989,7 @@ namespace Catch {
         bool hasExpandedExpression() const;
         std::string getExpandedExpression() const;
         std::string getMessage() const;
-        SourceLineInfo getSourceInfo() const;
+        SourceLineInfo get_sourceInfo() const;
         std::string getTestMacroName() const;
         void discardDecomposedExpression() const;
         void expandDecomposedExpression() const;
@@ -5537,7 +5537,7 @@ namespace Catch
             if( assertionResult.hasMessage() ) {
                 // Copy message into messages list.
                 // !TBD This should have been done earlier, somewhere
-                MessageBuilder builder( assertionResult.getTestMacroName(), assertionResult.getSourceInfo(), assertionResult.getResultType() );
+                MessageBuilder builder( assertionResult.getTestMacroName(), assertionResult.get_sourceInfo(), assertionResult.getResultType() );
                 builder << assertionResult.getMessage();
                 builder.m_info.message = builder.m_stream.str();
 
@@ -7934,7 +7934,7 @@ namespace Catch {
     std::string AssertionResult::getMessage() const {
         return m_resultData.message;
     }
-    SourceLineInfo AssertionResult::getSourceInfo() const {
+    SourceLineInfo AssertionResult::get_sourceInfo() const {
         return m_info.lineInfo;
     }
 
@@ -10017,7 +10017,7 @@ namespace Catch {
                     .writeAttribute( "success", result.succeeded() )
                     .writeAttribute( "type", result.getTestMacroName() );
 
-                writeSourceInfo( result.getSourceInfo() );
+                writeSourceInfo( result.get_sourceInfo() );
 
                 m_xml.scopedElement( "Original" )
                     .writeText( result.getExpression() );
@@ -10029,13 +10029,13 @@ namespace Catch {
             switch( result.getResultType() ) {
                 case ResultWas::ThrewException:
                     m_xml.startElement( "Exception" );
-                    writeSourceInfo( result.getSourceInfo() );
+                    writeSourceInfo( result.get_sourceInfo() );
                     m_xml.writeText( result.getMessage() );
                     m_xml.endElement();
                     break;
                 case ResultWas::FatalErrorCondition:
                     m_xml.startElement( "FatalErrorCondition" );
-                    writeSourceInfo( result.getSourceInfo() );
+                    writeSourceInfo( result.get_sourceInfo() );
                     m_xml.writeText( result.getMessage() );
                     m_xml.endElement();
                     break;
@@ -10048,7 +10048,7 @@ namespace Catch {
                     break;
                 case ResultWas::ExplicitFailure:
                     m_xml.startElement( "Failure" );
-                    writeSourceInfo( result.getSourceInfo() );
+                    writeSourceInfo( result.get_sourceInfo() );
                     m_xml.writeText( result.getMessage() );
                     m_xml.endElement();
                     break;
@@ -10344,7 +10344,7 @@ namespace Catch {
                     if( it->type == ResultWas::Info )
                         oss << it->message << '\n';
 
-                oss << "at " << result.getSourceInfo();
+                oss << "at " << result.get_sourceInfo();
                 xml.writeText( oss.str(), false );
             }
         }
@@ -10573,7 +10573,7 @@ namespace Catch {
             }
             void printSourceInfo() const {
                 Colour colourGuard( Colour::FileName );
-                stream << result.getSourceInfo() << ": ";
+                stream << result.get_sourceInfo() << ": ";
             }
 
             std::ostream& stream;
@@ -10945,7 +10945,7 @@ namespace Catch {
 
             void printSourceInfo() const {
                 Colour colourGuard( Colour::FileName );
-                stream << result.getSourceInfo() << ':';
+                stream << result.get_sourceInfo() << ':';
             }
 
             void printResultType( Colour::Code colour, std::string const& passOrFail ) const {

@@ -1,191 +1,79 @@
-#ifndef _SOURCE_HEADER_
-#define _SOURCE_HEADER_
+#ifndef SOURCE_H
+#define SOURCE_H
 
-#include <vector>     // vector
-#include <memory>     // shared_ptr
+#include <vector>     
+#include <memory>     
 
 #include "Particle.h"
-#include "Const.h"    // EPSILON
+#include "Const.h"    
 #include "Geometry.h"
+#include "Point.h"
 
 class Cell;
 
-//==============================================================================
-// Particle source
-//==============================================================================
 
-class Source_t
+//=============================================================================
+// Particle Source
+//=============================================================================
+
+class Source
 {
     public:
- 	 Source_t() {};
-	~Source_t() {};
+ 	 Source() {};
+	~Source() {};
 
-	// Get the particle source
-	virtual Particle_t getSource() = 0;
+	virtual Particle get_source() = 0;
 };
 
-
-// Delta Source
-class Delta_Source : public Source_t
+class SourceDelta : public Source
 {
     private:
-        const Point pos;
-        const Point dir;
-        const double  E;
-        const double  w;
-        const double  t;
+        const Particle s_P;// = Particle(Point(),Point(),0.0,0.0,1.0,0,NULL);
 
     public:
-        Delta_Source( const Point p, const Point d, const double p_E, const double p_w, const double p_t ): pos(p), dir(d), E(p_E), w(p_w), t(p_t) {};
-        ~Delta_Source() {};
+        SourceDelta( const Particle& P ): s_P(P) {};
+        ~SourceDelta() {};
 
-        Particle_t getSource();
+        Particle get_source();
 };
 
-
-// Point Source
-class Point_Source : public Source_t
+class SourcePoint : public Source
 {
-	private:
-		Point                         pos;       // Position
-    		// Direction, energy and time distribution
-    		const std::shared_ptr< Distribution_t<Point> > dist_dir;
-    		const std::shared_ptr< Distribution_t<double>  > dist_enrg;
-    		const std::shared_ptr< Distribution_t<double>  > dist_time;
+    private:
+	const Point s_pos;
+        const std::shared_ptr<Cell> s_cell;
+    	const std::shared_ptr<Distribution_t<Point>>  s_dir;
+    	const std::shared_ptr<Distribution_t<double>> s_energy;
 
-	public:
-		Point_Source( const double p1, const double p2, const double p3, const std::shared_ptr< Distribution_t<Point> > dir
-				,const std::shared_ptr< Distribution_t<double> > enrg, const std::shared_ptr< Distribution_t<double> > time  ) :
-		dist_dir(dir), dist_enrg(enrg), dist_time(time) { pos.x = p1; pos.y = p2; pos.z = p3; }
-		~Point_Source() {};
+    public:
+	SourcePoint( const Point p, const std::shared_ptr<Cell> cell,
+                     const std::shared_ptr< Distribution_t<Point>> dir,
+		     const std::shared_ptr< Distribution_t<double>> enrg ) :
+            s_pos(p), s_cell(cell), s_dir(dir), s_energy(enrg) {};
+	~SourcePoint() {};
 
-		// Get the particle source
-		Particle_t getSource();
+	Particle get_source();
 };
 
 
-// DiskX Source
-class DiskX_Source : public Source_t
-{
-	private:
-		// Center position radius and direction sense of the source
-		const double x0, y0, z0, r;
-    		// Direction, energy and time distribution
-    		const std::shared_ptr< Distribution_t<Point> > dist_dir;
-    		const std::shared_ptr< Distribution_t<double>  > dist_enrg;
-    		const std::shared_ptr< Distribution_t<double>  > dist_time;
-
-	public:
-		 DiskX_Source( const double p1, const double p2, const double p3, const double p4, const std::shared_ptr< Distribution_t<Point> > dir
-			,const std::shared_ptr< Distribution_t<double> > enrg, const std::shared_ptr< Distribution_t<double> > time  ) :
-			x0(p1), y0(p2), z0(p3), r(p4), dist_dir(dir), dist_enrg(enrg), dist_time(time) {};
-		~DiskX_Source() {};
-
-		// Get the particle source with rejection sampling
-		// Direct methods are way too costly (cos, sin, sqrt)
-		// Acceptance probability is pretty good ~3.14/4
-		Particle_t getSource();
-};
-
-
-// DiskZ Source
-class DiskZ_Source : public Source_t
-{
-	private:
-		// Center position radius and direction sense of the source
-		const double x0, y0, z0, r;
-    		// Direction, energy and time distribution
-    		const std::shared_ptr< Distribution_t<Point> > dist_dir;
-    		const std::shared_ptr< Distribution_t<double>  > dist_enrg;
-    		const std::shared_ptr< Distribution_t<double>  > dist_time;
-
-	public:
-		 DiskZ_Source( const double p1, const double p2, const double p3, const double p4, const std::shared_ptr< Distribution_t<Point> > dir
-			,const std::shared_ptr< Distribution_t<double> > enrg, const std::shared_ptr< Distribution_t<double> > time  ) :
-			x0(p1), y0(p2), z0(p3), r(p4), dist_dir(dir), dist_enrg(enrg), dist_time(time) {};
-		~DiskZ_Source() {};
-
-		// Get the particle source with rejection sampling
-		// Direct methods are way too costly (cos, sin, sqrt)
-		// Acceptance probability is pretty good ~3.14/4
-		Particle_t getSource();
-};
-
-
-// Spherical Shell Source
-class Sphere_Shell_Source : public Source_t
-{
-	private:
-		// Center position and outer radius
-		const double x0, y0, z0, ro;
-		// Inner radius normalized by the outer radius, then squared
-		const double risq;
-    		// Direction, energy and time distribution
-    		const std::shared_ptr< Distribution_t<Point> > dist_dir;
-    		const std::shared_ptr< Distribution_t<double>  > dist_enrg;
-    		const std::shared_ptr< Distribution_t<double>  > dist_time;
-
-	public:
-		 Sphere_Shell_Source( const double p1, const double p2, const double p3, const double p4, const double p5, const std::shared_ptr< Distribution_t<Point> > dir
-			,const std::shared_ptr< Distribution_t<double> > enrg, const std::shared_ptr< Distribution_t<double> > time  ) :
-			x0(p1), y0(p2), z0(p3), risq( p4*p4/p5/p5 ), ro(p5), dist_dir(dir), dist_enrg(enrg), dist_time(time) {};
-		~Sphere_Shell_Source() {};
-
-		// Get the particle source with rejection sampling
-		// Direct methods are way too costly (acos, sin, sqrt)
-		// Acceptance probability is almost half, ~3.14/6, yet it is still faster
-		Particle_t getSource();
-};
-
-
-// Generic source
-class Generic_Source : public Source_t
-{
-  	private:
-    		// Position, direction, energy and time distribution
-		const std::shared_ptr< Distribution_t<Point> > dist_pos;
-    		const std::shared_ptr< Distribution_t<Point> > dist_dir;
-    		const std::shared_ptr< Distribution_t<double>  > dist_enrg;
-    		const std::shared_ptr< Distribution_t<double>  > dist_time;
-  	public:
-     		Generic_Source( const std::shared_ptr< Distribution_t<Point> > pos, const std::shared_ptr< Distribution_t<Point> > dir
-				,const std::shared_ptr< Distribution_t<double> > enrg, const std::shared_ptr< Distribution_t<double> > time )
-			: dist_pos(pos), dist_dir(dir), dist_enrg(enrg), dist_time(time) {};
-    		~Generic_Source() {};
-    		Particle_t getSource();
-};
-
-
+//=============================================================================
 // Source Bank
-// A collection of sources and its probability (or ratio) 
-// An interface for every individual sources to the simulation
-class Source_Bank
+//=============================================================================
+
+class SourceBank
 {
     private:
-        std::vector< std::pair< std::shared_ptr<Source_t>, double > >  sources;
-        double                                                         total = 0.0; // total probability (or ratio)
+        std::vector<std::pair<std::shared_ptr<Source>,double>> sources;
+        double total = 0.0;
 	
     public:
-        Source_Bank() {};
-        ~Source_Bank() {};
+        SourceBank() {};
+        ~SourceBank() {};
 		
-        void addSource( const std::shared_ptr<Source_t>& S, const double prob = 1.0 )
-        { 
-            sources.push_back( std::make_pair( S, prob ) );
-            total += prob;
-        }
-		
-        void reset()
-        {
-            sources.clear();
-            total = 0.0;
-        }
-		
-        // Get source
-        // sources are sampled wrt to their probability
-        // then, particle cell is searched and set
-        Particle_t getSource( const std::vector<std::shared_ptr<Cell>>& Cell );
+        void add_source( const std::shared_ptr<Source> S, const double prob );
+        void reset();
+        Particle get_source();
 };
 
 
-#endif
+#endif // SOURCE_H

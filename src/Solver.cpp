@@ -135,3 +135,11 @@ double Shannon_Entropy_Mesh::entropy()
     }
     return e;
 }
+std::shared_ptr<Cell> search_cell( const Point& p, const std::vector<std::shared_ptr<Cell>>& Cell )
+{
+    for( const auto& C : Cell ){
+        if ( C->testPoint( p ) ){ return C; }
+    }
+    std::cout<< "[WARNING] A particle is lost:\n( x, y, z )  (" << p.x << ", " << p.y << ", " << p.z << " )\n";
+    std::exit(EXIT_FAILURE);
+}

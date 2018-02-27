@@ -1,38 +1,38 @@
-#ifndef _PARTICLE_HEADER_
-#define _PARTICLE_HEADER_
+#ifndef PARTICLE_H
+#define PARTICLE_H
 
 #include <memory> // shared_ptr
 #include <vector> // vector
 
 #include "Point.h"
-#include "Geometry.h"
 
 class Cell;
 class Surface_t;
 
-class Particle_t
+class Particle
 {
     private:
-        Point p_pos;         
-        Point p_dir;         
-        bool p_alive = true;
-        double p_weight;      
-        double p_time;        
+        Point p_pos; // cm
+        Point p_dir;
+        bool p_alive;
+        double p_energy; // eV
+        double p_energy_old;
+        double p_speed; // cm/s
+        double p_weight;
+        double p_time; //s
         double p_time_old;
-        std::shared_ptr<Cell> p_cell;        
+        int    p_tdmc;
+        std::shared_ptr<Cell> p_cell;
         std::shared_ptr<Cell> p_cell_old;
         std::shared_ptr<Surface_t> p_surface_old;
-        double p_energy;      
-        double p_energy_old;      
-        double p_speed;       
-        int    p_tdmc;
 
     public:
-        Particle_t( const Point& p1, const Point& p2, const double E, 
-                    const double t, const double w, const int td ) :
-            p_pos(p1), p_dir(p2), p_time(t), p_weight(w), p_tdmc(td) 
-            { setEnergy(E); }
-        ~Particle_t() {};
+        Particle( const Point& p1, const Point& p2, const double E, 
+                  const double t, const double w, const int td, 
+                  const std::shared_ptr<Cell> c ) :
+            p_alive(true), p_pos(p1), p_dir(p2), p_time(t), p_weight(w), 
+            p_tdmc(td), p_cell(c) { set_energy(E); }
+        ~Particle() {};
 
         // Getters
         Point pos() const;
@@ -50,20 +50,18 @@ class Particle_t
         int tdmc() const;
 
         // Setters
-        void setDirection( const Point& p );
-        void setWeight( const double w );
-        void setCell( const std::shared_ptr<Cell>& C );
-        void setTime( const double t );
-        void setEnergy( const double E );
-        void setSpeed( const double v );
-        void set_surface_old( const std::shared_ptr<Surface_t>& S );
-        void set_tdmc( const int t );
+        void set_direction( const Point& p );
+        void set_weight( const double w );
+        void set_cell( const std::shared_ptr<Cell> C );
+        void set_energy( const double E );
+        void set_speed( const double v );
+        void set_surface_old( const std::shared_ptr<Surface_t> S );
 
         // Modifiers
         void kill();		                                               
         void move( const double dmove );                                      
-        void searchCell( const std::vector<std::shared_ptr<Cell>>& Cell ); 
+        void increment_tdmc();
 };
 
 
-#endif
+#endif // PARTICLE_H

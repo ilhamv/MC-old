@@ -10,10 +10,10 @@
 //==============================================================================
 
 // Eepsilon kick at crossing
-void Surface_t::cross ( Particle_t& P ) { P.move( EPSILON ); }
+void Surface_t::cross ( Particle& P ) { P.move( EPSILON ); }
 
 // Hit implementation
-void Surface_t::hit( Particle_t& P,
+void Surface_t::hit( Particle& P,
                      const std::vector<std::shared_ptr<Cell>>& Cell, 
                      const bool tally )
 {
@@ -23,9 +23,9 @@ void Surface_t::hit( Particle_t& P,
 	// Cross the surface (Epsilon kick)
 	cross( P );
 	// Search and set new cell
-	P.searchCell( Cell );
+	search_cell( P.pos(), Cell );
     } else{
-        P.setCell( P.cell() );
+        P.set_cell( P.cell() );
         // Reflect angle
 	reflect( P );
 	// Cross the surface (Epsilon kick)
@@ -33,7 +33,6 @@ void Surface_t::hit( Particle_t& P,
     }
 	
     // Score estimators 
-    P.setTime( P.time() );
     if (tally){
 	for ( auto& e : estimators_C ){ 
             e->score( P, 0.0 ); 
@@ -45,7 +44,7 @@ void Surface_t::hit( Particle_t& P,
 // Plane-X
 double PlaneX_Surface::eval( const Point& p ) { return p.x - x; }
 
-double PlaneX_Surface::distance( const Particle_t& P )
+double PlaneX_Surface::distance( const Particle& P )
 {
 	const double pos = P.pos().x;
 	const double dir = P.dir().x;
@@ -63,17 +62,17 @@ double PlaneX_Surface::distance( const Particle_t& P )
 	{ return MAX; }
 }
 
-void PlaneX_Surface::reflect( Particle_t& P )
+void PlaneX_Surface::reflect( Particle& P )
 {
 	Point q( -P.dir().x, P.dir().y, P.dir().z );
-	P.setDirection(q);
+	P.set_direction(q);
 }
 
 
 // Plane-Y
 double PlaneY_Surface::eval( const Point& p ) { return p.y - y; }
 
-double PlaneY_Surface::distance( const Particle_t& P )
+double PlaneY_Surface::distance( const Particle& P )
 {
 	const double pos = P.pos().y;
 	const double dir = P.dir().y;
@@ -91,17 +90,17 @@ double PlaneY_Surface::distance( const Particle_t& P )
 	{ return MAX; }
 }
 
-void PlaneY_Surface::reflect( Particle_t& P )
+void PlaneY_Surface::reflect( Particle& P )
 {
 	Point q( P.dir().x, -P.dir().y, P.dir().z );
-	P.setDirection(q);
+	P.set_direction(q);
 }
 
 
 // Plane-Z
 double PlaneZ_Surface::eval( const Point& p ) { return p.z - z; }
 
-double PlaneZ_Surface::distance( const Particle_t& P )
+double PlaneZ_Surface::distance( const Particle& P )
 {
 	const double pos = P.pos().z;
 	const double dir = P.dir().z;
@@ -119,10 +118,10 @@ double PlaneZ_Surface::distance( const Particle_t& P )
 	{ return MAX; }
 }
 
-void PlaneZ_Surface::reflect( Particle_t& P )
+void PlaneZ_Surface::reflect( Particle& P )
 {
 	Point q( P.dir().x, P.dir().y, -P.dir().z );
-	P.setDirection(q);
+	P.set_direction(q);
 }
 
 
@@ -132,7 +131,7 @@ double Plane_Surface::eval( const Point& p )
 	return a * p.x  +  b * p.y  +  c * p.z  - d;
 }
 
-double Plane_Surface::distance( const Particle_t& P )
+double Plane_Surface::distance( const Particle& P )
 {
 	Point pos = P.pos();
 	Point dir = P.dir();
@@ -152,7 +151,7 @@ double Plane_Surface::distance( const Particle_t& P )
 	{ return MAX; }
 }
 
-void Plane_Surface::reflect( Particle_t& P )
+void Plane_Surface::reflect( Particle& P )
 {
 	const double K = ( a * P.dir().x + b * P.dir().y + c * P.dir().z );
 	Point q;
@@ -161,7 +160,7 @@ void Plane_Surface::reflect( Particle_t& P )
 	q.y = P.dir().y - mody * K;
 	q.z = P.dir().z - modz * K;
 
-	P.setDirection(q);
+	P.set_direction(q);
 }
 
 
@@ -174,7 +173,7 @@ double Sphere_Surface::eval( const Point& p )
 	return x_t*x_t + y_t*y_t + z_t*z_t - rad_sq;
 }
 
-double Sphere_Surface::distance( const Particle_t& P ) 
+double Sphere_Surface::distance( const Particle& P ) 
 {
   	Point p = P.pos();
   	Point u = P.dir();
@@ -186,7 +185,7 @@ double Sphere_Surface::distance( const Particle_t& P )
   	return solve_quad( 1.0, b, c );
 }
 
-void Sphere_Surface::reflect( Particle_t& P ) { return; }
+void Sphere_Surface::reflect( Particle& P ) { return; }
 
 
 // Cylinder-X
@@ -197,7 +196,7 @@ double CylinderX_Surface::eval( const Point& p )
 	return y_t*y_t + z_t*z_t - rad_sq;
 }
 
-double CylinderX_Surface::distance( const Particle_t& P )
+double CylinderX_Surface::distance( const Particle& P )
 {
   	Point p = P.pos();
   	Point u = P.dir();
@@ -209,7 +208,7 @@ double CylinderX_Surface::distance( const Particle_t& P )
   	return solve_quad( a, b, c );
 }
 
-void CylinderX_Surface::reflect( Particle_t& P ) { return; }
+void CylinderX_Surface::reflect( Particle& P ) { return; }
 
 
 // Cylinder-Y
@@ -220,7 +219,7 @@ double CylinderY_Surface::eval( const Point& p )
 	return x_t*x_t + z_t*z_t - rad_sq;
 }
 
-double CylinderY_Surface::distance( const Particle_t& P )
+double CylinderY_Surface::distance( const Particle& P )
 {
   	Point p = P.pos();
   	Point u = P.dir();
@@ -232,7 +231,7 @@ double CylinderY_Surface::distance( const Particle_t& P )
   	return solve_quad( a, b, c );
 }
 
-void CylinderY_Surface::reflect( Particle_t& P ) { return; }
+void CylinderY_Surface::reflect( Particle& P ) { return; }
 
 
 // Cylinder-Z
@@ -243,7 +242,7 @@ double CylinderZ_Surface::eval( const Point& p )
 	return x_t*x_t + y_t*y_t - rad_sq;
 }
 
-double CylinderZ_Surface::distance( const Particle_t& P )
+double CylinderZ_Surface::distance( const Particle& P )
 {
   	Point p = P.pos();
   	Point u = P.dir();
@@ -255,7 +254,7 @@ double CylinderZ_Surface::distance( const Particle_t& P )
   	return solve_quad( a, b, c );
 }
 
-void CylinderZ_Surface::reflect( Particle_t& P ) { return; }
+void CylinderZ_Surface::reflect( Particle& P ) { return; }
 
 
 // Cone-X
@@ -267,7 +266,7 @@ double ConeX_Surface::eval( const Point& p )
 	return - rad_sq * x_t*x_t + y_t*y_t + z_t*z_t;
 }
 
-double ConeX_Surface::distance( const Particle_t& P )
+double ConeX_Surface::distance( const Particle& P )
 {
   	Point p = P.pos();
   	Point u = P.dir();
@@ -279,7 +278,7 @@ double ConeX_Surface::distance( const Particle_t& P )
   	return solve_quad( a, b, c );
 }
 
-void ConeX_Surface::reflect( Particle_t& P ) { return; }
+void ConeX_Surface::reflect( Particle& P ) { return; }
 
 
 // Cone-Y
@@ -291,7 +290,7 @@ double ConeY_Surface::eval( const Point& p )
 	return x_t*x_t - rad_sq * y_t*y_t + z_t*z_t;
 }
 
-double ConeY_Surface::distance( const Particle_t& P )
+double ConeY_Surface::distance( const Particle& P )
 {
   	Point p = P.pos();
   	Point u = P.dir();
@@ -303,7 +302,7 @@ double ConeY_Surface::distance( const Particle_t& P )
   	return solve_quad( a, b, c );
 }
 
-void ConeY_Surface::reflect( Particle_t& P ) { return; }
+void ConeY_Surface::reflect( Particle& P ) { return; }
 
 
 // Cone-Z
@@ -315,7 +314,7 @@ double ConeZ_Surface::eval( const Point& p )
 	return x_t*x_t + y_t*y_t - rad_sq * z_t*z_t;
 }
 
-double ConeZ_Surface::distance( const Particle_t& P )
+double ConeZ_Surface::distance( const Particle& P )
 {
   	Point p = P.pos();
   	Point u = P.dir();
@@ -327,7 +326,7 @@ double ConeZ_Surface::distance( const Particle_t& P )
   	return solve_quad( a, b, c );
 }
 
-void ConeZ_Surface::reflect( Particle_t& P ) { return; }
+void ConeZ_Surface::reflect( Particle& P ) { return; }
 
 
 
@@ -373,7 +372,7 @@ bool Cell::testPoint( const Point& p )
 
 
 // Find the closest surface and travel distance for particle p to reach
-std::pair< std::shared_ptr< Surface_t >, double > Cell::surface_intersect( const Particle_t& P ) 
+std::pair< std::shared_ptr< Surface_t >, double > Cell::surface_intersect( const Particle& P ) 
 {
   	double dist = MAX;
 	std::shared_ptr< Surface_t > S = nullptr;
@@ -403,7 +402,7 @@ double Cell::collision_distance( const double E )
 
 // Collision
 // Let the Material take care of the collision sample and reaction process
-void Cell::collision( Particle_t& P, std::stack< Particle_t >& Pbank, const bool ksearch, Source_Bank& Fbank, const double k )
+void Cell::collision( Particle& P, std::stack< Particle >& Pbank, const bool ksearch, SourceBank& Fbank, const double k )
 { 
 	if ( c_material ) 
 	{ c_material->collision_sample( P, Pbank, ksearch, Fbank, k ); }
@@ -413,5 +412,5 @@ void Cell::collision( Particle_t& P, std::stack< Particle_t >& Pbank, const bool
 
 
 // Simulate scattering for scattering matrix MGXS
-void Cell::simulate_scatter( Particle_t& P )
+void Cell::simulate_scatter( Particle& P )
 { c_material->simulate_scatter( P ); }

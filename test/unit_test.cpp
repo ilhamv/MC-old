@@ -1,5 +1,7 @@
 #include "gtest/gtest.h"
 #include "Point.h"
+#include "Particle.h"
+#include "Geometry.h"
 
 
 //=============================================================================
@@ -30,7 +32,19 @@ TEST( Point, Creation_Init)
 // Point
 //=============================================================================
 
-//TEST( Particle
+TEST( Particle, Creation_Getters )
+{
+    Particle P( Point(1.0,2.0,3.0), Point(1.0,0.0,0.0), 1E6, 0.0, 1.0, 0, 
+                NULL );
+    ASSERT_TRUE( P.pos() == Point(1.0,2.0,3.0) );
+    ASSERT_TRUE( P.dir() == Point(1.0,0.0,0.0) );
+    ASSERT_EQ( P.energy(), 1E6 );
+    ASSERT_EQ( P.time(), 0.0 );
+    ASSERT_EQ( P.alive(), true );
+    ASSERT_EQ( P.weight(), 1.0 );    
+    ASSERT_EQ( P.speed(), std::sqrt( 1E6 * 191312955.067 ) * 100.0 );
+    ASSERT_EQ( P.tdmc(), 0 );
+}
 
 //=============================================================================
 // Main

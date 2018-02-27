@@ -1,8 +1,8 @@
 #ifndef _CONST_HEADER_
 #define _CONST_HEADER_
 
-#include <cmath>  // acos, sqrt
-#include <limits> // epsilon(), max()
+#include <cmath>  
+#include <limits> 
 
 
 const double PI       = std::acos( -1.0 );
