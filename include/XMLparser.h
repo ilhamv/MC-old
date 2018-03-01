@@ -49,7 +49,7 @@ void XML_input
     double&                                                  Ecut_off,
     double&                                                  tcut_off,
     SourceBank&                                             Sbank,
-    std::vector < std::shared_ptr<Surface_t>   >&            Surface,     
+    std::vector < std::shared_ptr<Surface>   >&            Surfaces,     
     std::vector < std::shared_ptr<Cell>    >&                cell,    
     std::vector < std::shared_ptr<Nuclide_t>   >&            Nuclide,   
     std::vector < std::shared_ptr<Material_t>  >&            Material, 

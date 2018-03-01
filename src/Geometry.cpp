@@ -8,243 +8,174 @@
 
 
 //=============================================================================
-// Surfaces
+// Surface: Constructors
 //=============================================================================
 
-// Eepsilon kick at crossing
-void Surface_t::cross ( Particle& P ) { P.move( EPSILON_float ); }
-
-// Hit implementation
-void Surface_t::hit( Particle& P,
-                     const std::vector<std::shared_ptr<Cell>>& Cell, 
-                     const bool tally )
+SurfacePlane::SurfacePlane( const std::string n, const int i, const int bc, 
+                              const double pa, const double pb, const double pc, 
+                              const double pd ):		 
+    Surface(n,i,bc), a(pa), b(pb), c(pc), d(pd)
 {
-    // Note: new particle cell search is only performed in transmission
-    // Transmission or reflective
-    if ( bc == "transmission" ){
-	// Cross the surface (Epsilon kick)
-	cross( P );
-	// Search and set new cell
-	search_cell( P.pos(), Cell );
-    } else{
-        P.set_cell( P.cell() );
-        // Reflect angle
-	reflect( P );
-	// Cross the surface (Epsilon kick)
-	cross ( P );
-    }
-	
-    // Score estimators 
-    if (tally){
-	for ( auto& e : estimators_C ){ 
-            e->score( P, 0.0 ); 
-        }
-    }
+    const double L = 2.0 / ( a*a + b*b + c*c );
+    modx = L * a;
+    mody = L * b;
+    modz = L * c;
+}
+
+//=============================================================================
+// Surface: Evaluation
+//=============================================================================
+
+double SurfacePlaneX::eval( const Point& p ) 
+{ 
+    return p.x - x; 
+}
+double SurfacePlaneY::eval( const Point& p ) 
+{ 
+    return p.y - y; 
+}
+double SurfacePlaneZ::eval( const Point& p ) 
+{ 
+    return p.z - z; 
+}
+double SurfacePlane::eval( const Point& p )
+{
+    return a * p.x + b * p.y + c * p.z - d;
+}
+double SurfaceSphere::eval( const Point& p ) 
+{
+    const double x_t = p.x - x0;
+    const double y_t = p.y - y0;
+    const double z_t = p.z - z0;
+    return x_t*x_t + y_t*y_t + z_t*z_t - rad_sq;
+}
+double SurfaceCylinderX::eval( const Point& p )
+{
+    const double y_t = p.y - y0;
+    const double z_t = p.z - z0;
+    return y_t*y_t + z_t*z_t - rad_sq;
+}
+double SurfaceCylinderY::eval( const Point& p )
+{
+    const double x_t = p.x - x0;
+    const double z_t = p.y - z0;
+    return x_t*x_t + z_t*z_t - rad_sq;
+}
+double SurfaceCylinderZ::eval( const Point& p )
+{
+    const double x_t = p.x - x0;
+    const double y_t = p.y - y0;
+    return x_t*x_t + y_t*y_t - rad_sq;
 }
 
 
-// Plane-X
-double PlaneX_Surface::eval( const Point& p ) { return p.x - x; }
+//=============================================================================
+// Surface: Distance to Hit
+//=============================================================================
 
-double PlaneX_Surface::distance( const Particle& P )
+double SurfacePlaneX::distance( const Particle& P )
 {
-	const double pos = P.pos().x;
-	const double dir = P.dir().x;
+    const double pos = P.pos().x;
+    const double dir = P.dir().x;
 
-	// Check if particle moves in a direction that is (or very close to) parallel to the surface
-  	if ( std::fabs( dir ) > EPSILON_float ) 
-	{
-    		const double dist = ( x - pos ) / dir;
-    		// Check if particle moves away from the surface
-		if ( dist > 0.0 ) { return dist; }
-    		else { return MAX_float; }
-  	}    	
-	// It does! (Parallel)
-  	else 
-	{ return MAX_float; }
+    // Check if particle moves in a direction that is (or very close to) 
+    //   parallel to the surface
+    if ( std::fabs( dir ) > EPSILON_float ) {
+    	const double dist = ( x - pos ) / dir;
+    	// Check if particle moves away from the surface
+	if ( dist > 0.0 ) { return dist; }
+    	else { return MAX_float; }
+    }    	
+    // It does! (Parallel)
+    else 
+    { return MAX_float; }
 }
-
-void PlaneX_Surface::reflect( Particle& P )
+double SurfacePlaneY::distance( const Particle& P )
 {
-	Point q( -P.dir().x, P.dir().y, P.dir().z );
-	P.set_direction(q);
+    const double pos = P.pos().y;
+    const double dir = P.dir().y;
+
+    // Check if particle moves in a direction that is (or very close to) 
+    //   parallel to the surface
+    if ( std::fabs( dir ) > EPSILON_float ) {
+    	const double dist = ( y - pos ) / dir;
+    	// Check if particle moves away from the surface
+	if ( dist > 0.0 ) { return dist; }
+    	else { return MAX_float; }
+    }    	
+    // It does! (Parallel)
+    else 
+    { return MAX_float; }
 }
-
-
-// Plane-Y
-double PlaneY_Surface::eval( const Point& p ) { return p.y - y; }
-
-double PlaneY_Surface::distance( const Particle& P )
+double SurfacePlaneZ::distance( const Particle& P )
 {
-	const double pos = P.pos().y;
-	const double dir = P.dir().y;
+    const double pos = P.pos().z;
+    const double dir = P.dir().z;
 
-	// Check if particle moves in a direction that is (or very close to) parallel to the surface
-  	if ( std::fabs( dir ) > EPSILON_float ) 
-	{
-    		const double dist = ( y - pos ) / dir;
-    		// Check if particle moves away from the surface
-		if ( dist > 0.0 ) { return dist; }
-    		else { return MAX_float; }
-  	}    	
-	// It does! (Parallel)
-  	else 
-	{ return MAX_float; }
+    // Check if particle moves in a direction that is (or very close to)
+    //   parallel to the surface
+    if ( std::fabs( dir ) > EPSILON_float ) {
+    	const double dist = ( z - pos ) / dir;
+    	// Check if particle moves away from the surface
+	if ( dist > 0.0 ) { return dist; }
+    	else { return MAX_float; }
+    }    	
+    // It does! (Parallel)
+    else 
+    { return MAX_float; }
 }
-
-void PlaneY_Surface::reflect( Particle& P )
+double SurfacePlane::distance( const Particle& P )
 {
-	Point q( P.dir().x, -P.dir().y, P.dir().z );
-	P.set_direction(q);
+    Point pos = P.pos();
+    Point dir = P.dir();
+    const double denom = a * dir.x  +  b * dir.y  +  c * dir.z;
+
+    // Check if particle moves in a direction that is (or very close to)
+    //   parallel to the surface
+    if ( std::fabs( denom ) > EPSILON_float ){
+    	const double dist = ( d - a * pos.x - b * pos.y - c * pos.z ) / denom;
+    	// Check if particle moves away from the surface
+	if ( dist > 0.0 ) { return dist; }
+    	else { return MAX_float; }
+    }    	
+    // It does! (Parallel)
+    else 
+    { return MAX_float; }
 }
-
-
-// Plane-Z
-double PlaneZ_Surface::eval( const Point& p ) { return p.z - z; }
-
-double PlaneZ_Surface::distance( const Particle& P )
+double SurfaceSphere::distance( const Particle& P ) 
 {
-	const double pos = P.pos().z;
-	const double dir = P.dir().z;
+    Point p = P.pos();
+    Point u = P.dir();
 
-	// Check if particle moves in a direction that is (or very close to) parallel to the surface
-  	if ( std::fabs( dir ) > EPSILON_float ) 
-	{
-    		const double dist = ( z - pos ) / dir;
-    		// Check if particle moves away from the surface
-		if ( dist > 0.0 ) { return dist; }
-    		else { return MAX_float; }
-  	}    	
-	// It does! (Parallel)
-  	else 
-	{ return MAX_float; }
+    // put into quadratic equation form: a*s^2 + b*s + c = 0, where a = 1
+    double b = 2.0 * ( ( p.x - x0 ) * u.x + ( p.y - y0 ) * u.y + ( p.z - z0 ) * u.z );
+    double c = eval( p );
+
+    return geometry_quad( 1.0, b, c );
 }
-
-void PlaneZ_Surface::reflect( Particle& P )
+double SurfaceCylinderX::distance( const Particle& P )
 {
-	Point q( P.dir().x, P.dir().y, -P.dir().z );
-	P.set_direction(q);
+    Point p = P.pos();
+    Point u = P.dir();
+
+    double a = 1.0 - u.x*u.x;
+    double b = 2.0 * ( ( p.y - y0 ) * u.y + ( p.z - z0 ) * u.z );
+    double c = eval( p );
+
+    return geometry_quad( a, b, c );
 }
-
-
-// Generic Plane
-double Plane_Surface::eval( const Point& p )
+double SurfaceCylinderY::distance( const Particle& P )
 {
-	return a * p.x  +  b * p.y  +  c * p.z  - d;
+    Point p = P.pos();
+    Point u = P.dir();
+
+    double a = 1.0 - u.y*u.y;
+    double b = 2.0 * ( ( p.x - x0 ) * u.x + ( p.z - z0 ) * u.z );
+    double c = eval( p );
+
+    return geometry_quad( a, b, c );
 }
-
-double Plane_Surface::distance( const Particle& P )
-{
-	Point pos = P.pos();
-	Point dir = P.dir();
-
-	const double denom = a * dir.x  +  b * dir.y  +  c * dir.z;
-
-	// Check if particle moves in a direction that is (or very close to) parallel to the surface
-  	if ( std::fabs( denom ) > EPSILON_float ) 
-	{
-    		const double dist = ( d - a * pos.x - b * pos.y - c * pos.z ) / denom;
-    		// Check if particle moves away from the surface
-		if ( dist > 0.0 ) { return dist; }
-    		else { return MAX_float; }
-  	}    	
-	// It does! (Parallel)
-  	else 
-	{ return MAX_float; }
-}
-
-void Plane_Surface::reflect( Particle& P )
-{
-	const double K = ( a * P.dir().x + b * P.dir().y + c * P.dir().z );
-	Point q;
-	
-	q.x = P.dir().x - modx * K;
-	q.y = P.dir().y - mody * K;
-	q.z = P.dir().z - modz * K;
-
-	P.set_direction(q);
-}
-
-
-// Sphere
-double Sphere_Surface::eval( const Point& p ) 
-{
-  	const double x_t = p.x - x0;
-  	const double y_t = p.y - y0;
-  	const double z_t = p.z - z0;
-	return x_t*x_t + y_t*y_t + z_t*z_t - rad_sq;
-}
-
-double Sphere_Surface::distance( const Particle& P ) 
-{
-  	Point p = P.pos();
-  	Point u = P.dir();
-
-  	// put into quadratic equation form: a*s^2 + b*s + c = 0, where a = 1
-  	double b = 2.0 * ( ( p.x - x0 ) * u.x + ( p.y - y0 ) * u.y + ( p.z - z0 ) * u.z );
-  	double c = eval( p );
-
-  	return geometry_quad( 1.0, b, c );
-}
-
-void Sphere_Surface::reflect( Particle& P ) { return; }
-
-
-// Cylinder-X
-double CylinderX_Surface::eval( const Point& p )
-{
-	const double y_t = p.y - y0;
-	const double z_t = p.z - z0;
-	return y_t*y_t + z_t*z_t - rad_sq;
-}
-
-double CylinderX_Surface::distance( const Particle& P )
-{
-  	Point p = P.pos();
-  	Point u = P.dir();
-
-  	double a = 1.0 - u.x*u.x;
-	double b = 2.0 * ( ( p.y - y0 ) * u.y + ( p.z - z0 ) * u.z );
-  	double c = eval( p );
-
-  	return geometry_quad( a, b, c );
-}
-
-void CylinderX_Surface::reflect( Particle& P ) { return; }
-
-
-// Cylinder-Y
-double CylinderY_Surface::eval( const Point& p )
-{
-	const double x_t = p.x - x0;
-	const double z_t = p.y - z0;
-	return x_t*x_t + z_t*z_t - rad_sq;
-}
-
-double CylinderY_Surface::distance( const Particle& P )
-{
-  	Point p = P.pos();
-  	Point u = P.dir();
-
-  	double a = 1.0 - u.y*u.y;
-	double b = 2.0 * ( ( p.x - x0 ) * u.x + ( p.z - z0 ) * u.z );
-  	double c = eval( p );
-
-  	return geometry_quad( a, b, c );
-}
-
-void CylinderY_Surface::reflect( Particle& P ) { return; }
-
-
-// Cylinder-Z
-double CylinderZ_Surface::eval( const Point& p )
-{
-	const double x_t = p.x - x0;
-	const double y_t = p.y - y0;
-	return x_t*x_t + y_t*y_t - rad_sq;
-}
-
-double CylinderZ_Surface::distance( const Particle& P )
+double SurfaceCylinderZ::distance( const Particle& P )
 {
   	Point p = P.pos();
   	Point u = P.dir();
@@ -256,85 +187,44 @@ double CylinderZ_Surface::distance( const Particle& P )
   	return geometry_quad( a, b, c );
 }
 
-void CylinderZ_Surface::reflect( Particle& P ) { return; }
 
+//=============================================================================
+// Surface: Reflect
+//=============================================================================
 
-// Cone-X
-double ConeX_Surface::eval( const Point& p )
+void SurfacePlaneX::reflect( Particle& P )
 {
-	const double x_t = p.x - x0;
-	const double y_t = p.y - y0;
-	const double z_t = p.z - z0;
-	return - rad_sq * x_t*x_t + y_t*y_t + z_t*z_t;
+    Point q( -P.dir().x, P.dir().y, P.dir().z );
+    P.set_direction(q);
 }
-
-double ConeX_Surface::distance( const Particle& P )
+void SurfacePlaneY::reflect( Particle& P )
 {
-  	Point p = P.pos();
-  	Point u = P.dir();
-
-  	double a = 1.0 - ( rad_sq + 1.0 ) * u.x*u.x;
-  	double b = 2.0 * ( - rad_sq * ( p.x - x0 ) * u.x + ( p.y - y0 ) * u.y + ( p.z - z0 ) * u.z );
-  	double c = eval( p );
-
-  	return geometry_quad( a, b, c );
+    Point q( P.dir().x, -P.dir().y, P.dir().z );
+    P.set_direction(q);
 }
-
-void ConeX_Surface::reflect( Particle& P ) { return; }
-
-
-// Cone-Y
-double ConeY_Surface::eval( const Point& p )
+void SurfacePlaneZ::reflect( Particle& P )
 {
-	const double x_t = p.x - x0;
-	const double y_t = p.y - y0;
-	const double z_t = p.z - z0;
-	return x_t*x_t - rad_sq * y_t*y_t + z_t*z_t;
+    Point q( P.dir().x, P.dir().y, -P.dir().z );
+    P.set_direction(q);
 }
-
-double ConeY_Surface::distance( const Particle& P )
+void SurfacePlane::reflect( Particle& P )
 {
-  	Point p = P.pos();
-  	Point u = P.dir();
-
-  	double a = 1.0 - ( rad_sq + 1.0 ) * u.y*u.y;
-  	double b = 2.0 * ( ( p.x - x0 ) * u.x - rad_sq * ( p.y - y0 ) * u.y + ( p.z - z0 ) * u.z );
-  	double c = eval( p );
-
-  	return geometry_quad( a, b, c );
+    const double K = ( a * P.dir().x + b * P.dir().y + c * P.dir().z );
+    Point q;
+    q.x = P.dir().x - modx * K;
+    q.y = P.dir().y - mody * K;
+    q.z = P.dir().z - modz * K;
+    P.set_direction(q);
 }
-
-void ConeY_Surface::reflect( Particle& P ) { return; }
-
-
-// Cone-Z
-double ConeZ_Surface::eval( const Point& p )
-{
-	const double x_t = p.x - x0;
-	const double y_t = p.y - y0;
-	const double z_t = p.z - z0;
-	return x_t*x_t + y_t*y_t - rad_sq * z_t*z_t;
-}
-
-double ConeZ_Surface::distance( const Particle& P )
-{
-  	Point p = P.pos();
-  	Point u = P.dir();
-
-  	double a = 1.0 - ( rad_sq + 1.0 ) * u.z*u.z;
-  	double b = 2.0 * ( ( p.x - x0 ) * u.x + ( p.y - y0 ) * u.y - rad_sq * ( p.z - z0 ) * u.z );
-  	double c = eval( p );
-
-  	return geometry_quad( a, b, c );
-}
-
-void ConeZ_Surface::reflect( Particle& P ) { return; }
+void SurfaceSphere::reflect( Particle& P ) { return; }
+void SurfaceCylinderX::reflect( Particle& P ) { return; }
+void SurfaceCylinderY::reflect( Particle& P ) { return; }
+void SurfaceCylinderZ::reflect( Particle& P ) { return; }
 
 
-
-//////////////
-/// Cell ///
-//////////////
+//=============================================================================
+// Cell
+//=============================================================================
 
 // Getters
 double Cell::importance() { return r_importance; } // importance
@@ -350,7 +240,7 @@ std::shared_ptr<Material_t> Cell::material() { return c_material; }
 
 // Take in a pair of surface pointer and integer describing sense
 // and append to vector of surfaces
-void Cell::addSurface( const std::shared_ptr< Surface_t >& S, const int sense )
+void Cell::addSurface( const std::shared_ptr< Surface >& S, const int sense )
 { surfaces.push_back( std::make_pair( S, sense ) ); }
 
 
@@ -374,10 +264,10 @@ bool Cell::testPoint( const Point& p )
 
 
 // Find the closest surface and travel distance for particle p to reach
-std::pair< std::shared_ptr< Surface_t >, double > Cell::surface_intersect( const Particle& P ) 
+std::pair< std::shared_ptr< Surface >, double > Cell::surface_intersect( const Particle& P ) 
 {
   	double dist = MAX_float;
-	std::shared_ptr< Surface_t > S = nullptr;
+	std::shared_ptr< Surface > S = nullptr;
   	for ( const auto& s : surfaces ) 
 	{
     		double d = s.first->distance( P );

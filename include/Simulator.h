@@ -13,12 +13,17 @@
 #include "Geometry.h"
 #include "Nuclide.h"
 #include "Material.h"
-#include "Reaction.h"
 #include "Estimator.h"
 
 
 class Simulator
 {
+    private:
+        void move_particle( Particle& P, const double l );
+        void collision( Particle& P );
+        void surface_hit( Particle& P, const std::shared_ptr<Surface>& S );
+        void cut_off( Particle&P );
+
     public:
         std::string simulation_name;
         std::string io_dir;
@@ -49,7 +54,7 @@ class Simulator
         std::stack<Particle> Pbank; // Particle bank
 
         // THE OBJECTS
-        std::vector<std::shared_ptr<Surface_t>>  Surfaces;
+        std::vector<std::shared_ptr<Surface>>  Surfaces;
         std::vector<std::shared_ptr<Cell>>       Cells;
         std::vector<std::shared_ptr<Nuclide_t>>  Nuclides;
         std::vector<std::shared_ptr<Material_t>> Materials;
@@ -78,12 +83,5 @@ class Simulator
 
         // Start simulation
         void start();
-        // Report results
         void report();
-
-        void move_particle( Particle& P, const double l );
-        void cut_off( Particle&P );
-        void collision( Particle& P );
-        void set_TRM();
-        void Split_Roulette( Particle& P, std::stack<Particle>& p_bank );
 };

@@ -22,7 +22,7 @@ double Particle::energy_old() const { return p_energy_old; }
 double Particle::speed() const { return p_speed; } 
 std::shared_ptr<Cell> Particle::cell() const { return p_cell; }
 std::shared_ptr<Cell> Particle::cell_old() const { return p_cell_old; }  
-std::shared_ptr<Surface_t> Particle::surface_old() const 
+std::shared_ptr<Surface> Particle::surface_old() const 
 { 
     return p_surface_old; 
 }
@@ -54,7 +54,7 @@ void Particle::set_speed( const double v )
     // constant: 0.5 / ( 1.60217662e-19 J/eV ) * ( 1.674927471e-27 kg ) 
     //           / ( 10000 cm^2/m^2 )
 }
-void Particle::set_surface_old( const std::shared_ptr<Surface_t> S )
+void Particle::set_surface_old( const std::shared_ptr<Surface> S )
 {
     p_surface_old = S;
 }

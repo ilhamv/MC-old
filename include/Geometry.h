@@ -9,10 +9,10 @@
 #include "Constants.h"
 #include "Particle.h"
 #include "Point.h"
+#include "Estimator.h"
 
 class Estimator;
 class SourceBank;
-class Cell;
 class Material_t;
 
 
@@ -20,297 +20,188 @@ class Material_t;
 // Geometry
 //=============================================================================
 
-class Geometry_t
+class Geometry
 {
     private:
 	const std::string g_name;
         const int         g_ID;
         
     public:
-     	Geometry_t( const std::string n, const int i ) : g_name(n), g_ID(i) {};
-    	~Geometry_t() {};
+     	Geometry( const std::string n, const int i ) : g_name(n), g_ID(i) {};
+    	~Geometry() {};
 
 	// Getters
 	virtual std::string name() final { return g_name; }
-	virtual int ID() final { return g_ID; }
-	
-        // Attaching estimators
-	virtual void attach_estimator_C( const std::shared_ptr<Estimator>& E )
-            final { estimators_C.push_back( E ); }
-	virtual void attach_estimator_TL( const std::shared_ptr<Estimator>& E )
-            final { estimators_TL.push_back( E ); }
-
-        // Attached estimators
-        std::vector<std::shared_ptr<Estimator>> estimators_C;
-        std::vector<std::shared_ptr<Estimator>> estimators_TL;
+	virtual int ID() final { return g_ID; }	
 };
 
 
 //=============================================================================
-// Surfaces
+// Surface
 //=============================================================================
 
-// Surface base class
-class Surface_t : public Geometry_t
+class Surface : public Geometry
 {
     private:
-	const std::string bc; // Boundary condition
-		              //   "transmission"
-			      //   "reflective"
-
-    protected:
-	// Crossing the surface --> an epsilon kick to the working particle
-        void cross ( Particle& P );
-
-	// Reflect and cross the working particle
-	virtual void reflect ( Particle& P ) = 0;
+	const int s_bc; // 0:"transmission"
+		        // 1:"reflective"
 		
     public:
-     	Surface_t( const std::string n, const int i, const std::string b ) : Geometry_t(n,i), bc(b) {}; // Pass the name
-    	~Surface_t() {};
+     	Surface( const std::string n, const int i, const int b ): 
+            Geometry(n,i), s_bc(b) {}; // Pass the name
+    	~Surface() {};
 
-	// Hit implementation
-	virtual void hit( Particle& P, const std::vector<std::shared_ptr<Cell>>& Cell, const bool tally );
+        virtual int bc() final { return s_bc; }
+        
+        std::vector<std::shared_ptr<Estimator>> estimators;
+	virtual void attach_estimator( const std::shared_ptr<Estimator>& E ) 
+            final{ estimators.push_back( E ); }
 
-	// Evaluate point location via the "S" equation
+	// Type specific
 	virtual double eval( const Point& p ) = 0;
-
-	// Get moving particle distance to surface
     	virtual double distance( const Particle& P ) = 0;
+        virtual void reflect( Particle& P ) = 0;
 };
-
 
 // Plane-X
-class PlaneX_Surface : public Surface_t
+class SurfacePlaneX : public Surface
 {
-  	private:
-    		const double x; // Parameters for S equation
-
-	protected:
-		void reflect ( Particle& P );
-
-  	public:
-     		 PlaneX_Surface( const std::string n, const int i, const std::string bc, const double loc ) : 
-			 Surface_t(n,i,bc), x(loc) {};
-    		~PlaneX_Surface() {};
-
-		double eval    ( const Point& p );
-     		double distance( const Particle& P );
+    private:
+    	const double x;
+    public:
+     	SurfacePlaneX( const std::string n, const int i, const int bc, 
+                        const double loc ) : 
+            Surface(n,i,bc), x(loc) {};
+    	~SurfacePlaneX() {};	
+        double eval( const Point& p );
+     	double distance( const Particle& P );
+	void reflect ( Particle& P );
 };
-
 
 // Plane-Y
-class PlaneY_Surface : public Surface_t
+class SurfacePlaneY : public Surface
 {
-  	private:
-    		const double y; // Parameters for S equation
-
-	protected:
-		void reflect ( Particle& P );
-
-  	public:
-     		 PlaneY_Surface( const std::string n, const int i, const std::string bc, const double loc ) : 
-			 Surface_t(n,i,bc), y(loc) {};
-    		~PlaneY_Surface() {};
-
-		double eval    ( const Point& p );
-     		double distance( const Particle& P );
+    private:
+    	const double y;
+    public:
+     	SurfacePlaneY( const std::string n, const int i, const int bc,
+                        const double loc ): 
+            Surface(n,i,bc), y(loc) {};
+    	~SurfacePlaneY() {};
+	double eval( const Point& p );
+     	double distance( const Particle& P );
+        void reflect ( Particle& P );
 };
-
 
 // Plane-Z
-class PlaneZ_Surface : public Surface_t
+class SurfacePlaneZ : public Surface
 {
-  	private:
-    		const double z; // Parameters for S equation
-
-	protected:
-		void reflect ( Particle& P );
-
-  	public:
-     		 PlaneZ_Surface( const std::string n, const int i, const std::string bc, const double loc ) : 
-			 Surface_t(n,i,bc), z(loc) {};
-    		~PlaneZ_Surface() {};
-
-		double eval    ( const Point& p );
-     		double distance( const Particle& P );
+    private:
+    	const double z;
+    public:
+     	SurfacePlaneZ( const std::string n, const int i, const int bc, 
+                        const double loc ) : 
+            Surface(n,i,bc), z(loc) {};
+    	~SurfacePlaneZ() {};
+	double eval( const Point& p );
+     	double distance( const Particle& P );
+	void reflect( Particle& P );
 };
-
 
 // Generic Plane
-class Plane_Surface : public Surface_t
+class SurfacePlane : public Surface
 {
-  	private:
-    		const double a, b, c, d; // Parameters for S equation
-		double modx, mody, modz; // Parameters for reflection
-
-	protected:
-		void reflect ( Particle& P );
-
-  	public:
-     		 Plane_Surface( const std::string n, const int i, const std::string bc, const double pa, const double pb, const double pc, const double pd ) : 
-			 Surface_t(n,i,bc), a(pa), b(pb), c(pc), d(pd)
-		{
-			const double L = 2.0 / ( a*a + b*b + c*c );
-			modx = L * a;
-			mody = L * b;
-			modz = L * c;
-		};
-    		~Plane_Surface() {};
-
-		double eval    ( const Point& p );
-     		double distance( const Particle& P );
+    private:
+    	const double a, b, c, d; 
+	double modx, mody, modz; 
+    public:
+     	SurfacePlane( const std::string n, const int i, const int bc, 
+                       const double pa, const double pb, const double pc, 
+                       const double pd );
+    	~SurfacePlane() {};
+	double eval( const Point& p );
+     	double distance( const Particle& P );
+	void reflect( Particle& P );
 };
-
 
 // Sphere
-class Sphere_Surface : public Surface_t 
+class SurfaceSphere : public Surface 
 {
-	private:
-    		const double x0, y0, z0, rad, rad_sq;
-  	
-	protected:
-		void reflect ( Particle& P );
+    private:
+    	const double x0, y0, z0, rad, rad_sq;
 
-	public:
-     		 Sphere_Surface( const std::string n, const int i, const std::string b, const double p1, const double p2, const double p3, const double p4 ) : 
-       			Surface_t(n,i,b), x0(p1), y0(p2), z0(p3), rad(p4), rad_sq(p4*p4) {};
-    		~Sphere_Surface() {};
+    public:
+     	SurfaceSphere( const std::string n, const int i, const int b, 
+                        const double p1, const double p2, const double p3, 
+                        const double p4 ): 
+       			Surface(n,i,b), x0(p1), y0(p2), z0(p3), rad(p4), rad_sq(p4*p4) {};
+    	~SurfaceSphere() {};
 
-     		double eval    ( const Point& p );
-     		double distance( const Particle& P );
+     	double eval( const Point& p );
+     	double distance( const Particle& P );
+	void reflect( Particle& P );
 };
-
 
 // Infinite Cylinder-X
-class CylinderX_Surface : public Surface_t
+class SurfaceCylinderX : public Surface
 {
-	private:
-		const double y0, z0, rad, rad_sq;
-
-	protected:
-		void reflect ( Particle& P );
-
-	public:
-		 CylinderX_Surface( const std::string n, const int i, const std::string b, const double p1, const double p2, const double p3 ) :
-			Surface_t(n,i,b), y0(p1), z0(p2), rad(p3), rad_sq(p3*p3) {};
-		~CylinderX_Surface() {};
-
-		double eval    ( const Point& p );
-		double distance( const Particle& P );
+    private:
+	const double y0, z0, rad, rad_sq;
+    public:
+	SurfaceCylinderX( const std::string n, const int i, const int b, 
+                           const double p1, const double p2, const double p3 ):
+            Surface(n,i,b), y0(p1), z0(p2), rad(p3), rad_sq(p3*p3) {};
+	~SurfaceCylinderX() {};
+	double eval( const Point& p );
+	double distance( const Particle& P );
+	void reflect( Particle& P );
 };
-
 
 // Infinite Cylinder-Y
-class CylinderY_Surface : public Surface_t
+class SurfaceCylinderY : public Surface
 {
-	private:
-		const double x0, z0, rad, rad_sq;
-
-	protected:
-		void reflect ( Particle& P );
-
-	public:
-		 CylinderY_Surface( const std::string n, const int i, const std::string b, const double p1, const double p2, const double p3 ) :
-			Surface_t(n,i,b), x0(p1), z0(p2), rad(p3), rad_sq(p3*p3) {};
-		~CylinderY_Surface() {};
-
-		double eval    ( const Point& p );
-		double distance( const Particle& P );
+    private:
+        const double x0, z0, rad, rad_sq;
+    public:
+	SurfaceCylinderY( const std::string n, const int i, const int b, 
+                           const double p1, const double p2, const double p3 ):
+            Surface(n,i,b), x0(p1), z0(p2), rad(p3), rad_sq(p3*p3) {};
+	~SurfaceCylinderY() {};
+	double eval( const Point& p );
+	double distance( const Particle& P );
+	void reflect( Particle& P );
 };
-
 
 // Infinite Cylinder-Z
-class CylinderZ_Surface : public Surface_t
+class SurfaceCylinderZ : public Surface
 {
-	private:
-		const double x0, y0, rad, rad_sq;
-
-	protected:
-		void reflect ( Particle& P );
-
-	public:
-		 CylinderZ_Surface( const std::string n, const int i, const std::string b, const double p1, const double p2, const double p3 ) :
-			Surface_t(n,i,b), x0(p1), y0(p2), rad(p3), rad_sq(p3*p3) {};
-		~CylinderZ_Surface() {};
-
-		double eval    ( const Point& p );
-		double distance( const Particle& P );
+    private:
+	const double x0, y0, rad, rad_sq;
+    public:
+	SurfaceCylinderZ( const std::string n, const int i, const int b, 
+                           const double p1, const double p2, const double p3 ):
+            Surface(n,i,b), x0(p1), y0(p2), rad(p3), rad_sq(p3*p3) {};
+	~SurfaceCylinderZ() {};
+	double eval( const Point& p );
+	double distance( const Particle& P );
+	void reflect( Particle& P );
 };
 
 
-// Infinite Cone-X 
-class ConeX_Surface : public Surface_t
-{
-	private:
-		const double x0, y0, z0, rad, rad_sq;
-
-	protected:
-		void reflect ( Particle& P );
-
-	public:
-		 ConeX_Surface( const std::string n, const int i, const std::string b, const double p1, const double p2, const double p3, const double p4 ) :
-       			Surface_t(n,i,b), x0(p1), y0(p2), z0(p3), rad(p4), rad_sq(p4*p4) {};
-		~ConeX_Surface() {};
-
-		double eval    ( const Point& p );
-		double distance( const Particle& P );
-};
-
-
-// Infinite Cone-Y
-class ConeY_Surface : public Surface_t
-{
-	private:
-		const double x0, y0, z0, rad, rad_sq;
-
-	protected:
-		void reflect ( Particle& P );
-
-	public:
-		 ConeY_Surface( const std::string n, const int i, const std::string b, const double p1, const double p2, const double p3, const double p4 ) :
-       			Surface_t(n,i,b), x0(p1), y0(p2), z0(p3), rad(p4), rad_sq(p4*p4) {};
-		~ConeY_Surface() {};
-
-		double eval    ( const Point& p );
-		double distance( const Particle& P );
-};
-
-
-// Infinite Cone-Z
-class ConeZ_Surface : public Surface_t
-{
-	private:
-		const double x0, y0, z0, rad, rad_sq;
-
-	protected:
-		void reflect ( Particle& P );
-
-	public:
-		 ConeZ_Surface( const std::string n, const int i, const std::string b, const double p1, const double p2, const double p3, const double p4 ) :
-       			Surface_t(n,i,b), x0(p1), y0(p2), z0(p3), rad(p4), rad_sq(p4*p4) {};
-		~ConeZ_Surface() {};
-
-		double eval    ( const Point& p );
-		double distance( const Particle& P );
-};
-
-
-
-//==============================================================================
+//=============================================================================
 // Cell
-//==============================================================================
+//=============================================================================
 
-class Cell : public Geometry_t
+class Cell : public Geometry
 {
     private:
 	const double r_importance;
-	std::vector<std::pair<std::shared_ptr<Surface_t>, int>> surfaces;
+	std::vector<std::pair<std::shared_ptr<Surface>, int>> surfaces;
         std::shared_ptr<Material_t> c_material = NULL;
 
     public:
      	Cell( const std::string n, const int i, const double imp ) : // Pass name and importance
-            Geometry_t(n,i), r_importance(imp) {};
+            Geometry(n,i), r_importance(imp) {};
     	~Cell() {};
 
 	// Getters
@@ -327,10 +218,10 @@ class Cell : public Geometry_t
 	void setMaterial( const std::shared_ptr< Material_t >& M );
 	
 	// Add a bounding surface
-	void addSurface ( const std::shared_ptr< Surface_t  >& S, const int sense );
+	void addSurface ( const std::shared_ptr< Surface  >& S, const int sense );
 
 	// Return pointers to surfaces that belong to certain cell
-	std::vector< std::pair< std::shared_ptr< Surface_t >, int > > listSurfaces () { return surfaces; };
+	std::vector< std::pair< std::shared_ptr< Surface >, int > > listSurfaces () { return surfaces; };
 
 	// Test if particle is in the cell
 	bool testPoint( const Point& p );
@@ -339,7 +230,7 @@ class Cell : public Geometry_t
 	void moveParticle( Particle& P, const double dmove, const bool tally );
 	
 	// Return the closest bounding surface and the corresponding particle hit distance 
-	std::pair< std::shared_ptr< Surface_t >, double > surface_intersect( const Particle& P );
+	std::pair< std::shared_ptr< Surface >, double > surface_intersect( const Particle& P );
 	
 	// Return particle collision distance
 	double collision_distance( const double E );
@@ -349,6 +240,13 @@ class Cell : public Geometry_t
 
 	// Simulate scattering for scattering matrix MGXS
 	void simulate_scatter( Particle& P );	
+        
+        // Attached estimators
+        std::vector<std::shared_ptr<Estimator>> estimators_C;
+        std::vector<std::shared_ptr<Estimator>> estimators_TL;
+        // Attaching estimators
+	void attach_estimator_C( const std::shared_ptr<Estimator>& E ){ estimators_C.push_back( E ); }
+	void attach_estimator_TL( const std::shared_ptr<Estimator>& E ){ estimators_TL.push_back( E ); }
 };
 
 

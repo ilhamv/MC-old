@@ -7,6 +7,7 @@
 #include <sstream> // ostringstream
 #include <fstream> // ifstream
 
+#include "Algorithm.h"
 #include "Simulator.h"
 #include "XMLparser.h"
 #include "H5Cpp.h"
@@ -51,14 +52,37 @@ void Simulator::move_particle( Particle& P, const double l )
 //=============================================================================
 // Collision
 //=============================================================================
+
 void Simulator::collision( Particle& P )
 {
     if (ksearch) { k_estimator->estimate_C(P); }
     if(tally){ 
         for( auto& e : P.cell()->estimators_C ) { e->score( P, 0 ); }
     }
-    
     P.cell()->collision( P, Pbank, ksearch, Fbank, k );			
+}
+
+
+//=============================================================================
+// Surface Hit
+//=============================================================================
+        
+void Simulator::surface_hit( Particle& P, const std::shared_ptr<Surface>& S )
+{
+    P.set_surface_old(S);
+    if ( S->bc() == 0 ){
+	P.move( EPSILON_float );
+	search_cell( P.pos(), Cells );
+    } else{
+	S->reflect( P );
+        P.set_cell( P.cell() );
+	P.move( EPSILON_float );
+    }
+    if (tally){
+	for ( auto& e : S->estimators ){ 
+            e->score( P, 0.0 ); 
+        }
+    }
 }
 
 
@@ -103,7 +127,7 @@ void Simulator::start()
                 // Particle loop
                 while ( P.alive() ){
                      // To hold nearest surface and its distance
-                    std::pair< std::shared_ptr< Surface_t >, double > SnD;
+                    std::pair< std::shared_ptr< Surface >, double > SnD;
                                     
                     // Determine nearest surface and its distance
                     SnD = P.cell()->surface_intersect( P );
@@ -132,10 +156,9 @@ void Simulator::start()
                                     
                     // Hit surface?
                     if ( dcol > SnD.second ){	
-                        P.set_surface_old(SnD.first);
                         move_particle( P, SnD.second );
-                        SnD.first->hit( P, Cells, tally );
-                        Split_Roulette( P, Pbank );
+                        surface_hit( P, SnD.first );
+                        split_roulette( P, Pbank );
                     }
                     // Collide!!
                     else{
@@ -161,13 +184,6 @@ void Simulator::start()
     
     } // All cycles are done, end of simulation loop
     for ( auto& E : Estimators ) { E->end_simulation(); }
-}
-
-//=============================================================================
-// Set TRM
-//=============================================================================
-void Simulator::set_TRM()
-{;
 }
 
 
@@ -304,35 +320,4 @@ void Simulator::report()
     dataset.write(alpha_real.data(), type_double);
     dataset = group.createDataSet( "imag", type_double, space_alpha);
     dataset.write(alpha_imag.data(), type_double);
-}
-void Simulator::Split_Roulette( Particle& P, std::stack<Particle>& p_bank )
-{
-    // Importances
-    const double Iold = P.cell_old()->importance();
-    const double Inew = P.cell()->importance();
-
-    // Same importance, do nothing
-    if ( Inew == Iold ) { return; }
-	
-    const double rat = Inew / Iold; // Ratio of importances
-	
-    // Less important, Russian Roulette
-    if ( rat < 1.0 )
-    {
-	if ( Urand() < rat ) { P.set_weight( P.weight() / rat ); }
-	else                 { P.kill(); }
-    }
-
-    // More important, Splitting
-    else
-    {
-	// Sample # of splitting
-	const int n = std::floor( rat + Urand() );
-		
-	// Update working particle weight
-	P.set_weight( P.weight() / double(n) );
-
-	// Push n-1 identical particles into particle bank
-	for ( int i = 0 ; i < n-1 ; i++ ){ p_bank.push( P ); }
-    }
 }

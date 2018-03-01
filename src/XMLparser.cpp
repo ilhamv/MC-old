@@ -122,7 +122,7 @@ void XML_input
     double&                                                  Ecut_off,
     double&                                                  tcut_off,
     SourceBank&                                             Sbank,
-    std::vector<std::shared_ptr<Surface_t>   >&            Surface,     
+    std::vector<std::shared_ptr<Surface>   >&            Surfaces,     
     std::vector<std::shared_ptr<Cell>      >&              cell,    
     std::vector<std::shared_ptr<Nuclide_t>   >&            Nuclide,   
     std::vector<std::shared_ptr<Material_t>  >&            Material, 
@@ -496,7 +496,7 @@ if( input_tdmc ){
   	pugi::xml_node input_surfaces = input_file.child("surfaces");
   	for ( const auto& s : input_surfaces )
 	{
-    		std::shared_ptr< Surface_t > S;
+    		std::shared_ptr<Surface> S;
     		const std::string type = s.name();
       		const std::string name = s.attribute("name").value();
 		std::string bc   = "transmission"; // Default boundary condition
@@ -517,26 +517,30 @@ if( input_tdmc ){
 				throw;
 			}
 		}
+
+                int bc_type;
+                if( bc == "transmission" ) { bc_type = 0; }
+                if( bc == "reflective" ) { bc_type = 1; }
     		
 		// Plane-x
 		if ( type == "plane_x" ) 
 		{
       			const double x = s.attribute("x").as_double();
-			S = std::make_shared< PlaneX_Surface > ( name, Surface.size(), bc, x );
+			S = std::make_shared< SurfacePlaneX > ( name, Surfaces.size(), bc_type, x );
     		}
 
 		// Plane-y
 		else if ( type == "plane_y" ) 
 		{
       			const double y = s.attribute("y").as_double();
-			S = std::make_shared< PlaneY_Surface > ( name, Surface.size(), bc, y );
+			S = std::make_shared< SurfacePlaneY > ( name, Surfaces.size(), bc_type, y );
     		}
 		
 		// Plane-z
 		else if ( type == "plane_z" ) 
 		{
       			const double z = s.attribute("z").as_double();
-			S = std::make_shared< PlaneZ_Surface > ( name, Surface.size(), bc, z );
+			S = std::make_shared< SurfacePlaneZ > ( name, Surfaces.size(), bc_type, z );
     		}
 
 		// Generic plane
@@ -546,7 +550,7 @@ if( input_tdmc ){
       			const double b = s.attribute("b").as_double();
       			const double c = s.attribute("c").as_double();
       			const double d = s.attribute("d").as_double();
-			S = std::make_shared< Plane_Surface > ( name, Surface.size(), bc, a, b, c, d );
+			S = std::make_shared< SurfacePlane > ( name, Surfaces.size(), bc_type, a, b, c, d );
     		}
     		
 		// Sphere
@@ -556,7 +560,7 @@ if( input_tdmc ){
       			const double y = s.attribute("y").as_double();
       			const double z = s.attribute("z").as_double();
       			const double r = s.attribute("r").as_double();
-      			S = std::make_shared< Sphere_Surface > ( name, Surface.size(), bc, x, y, z, r );
+      			S = std::make_shared< SurfaceSphere > ( name, Surfaces.size(), bc_type, x, y, z, r );
 		}
 		
 		// Cylinder-x
@@ -565,7 +569,7 @@ if( input_tdmc ){
       			const double y = s.attribute("y").as_double();
       			const double z = s.attribute("z").as_double();
       			const double r = s.attribute("r").as_double();
-      			S = std::make_shared< CylinderX_Surface > ( name, Surface.size(), bc, y, z, r );
+      			S = std::make_shared< SurfaceCylinderX > ( name, Surfaces.size(), bc_type, y, z, r );
 		}
 		
 		// Cylinder-z
@@ -574,39 +578,9 @@ if( input_tdmc ){
       			const double x = s.attribute("x").as_double();
       			const double y = s.attribute("y").as_double();
       			const double r = s.attribute("r").as_double();
-      			S = std::make_shared< CylinderZ_Surface > ( name, Surface.size(), bc, x, y, r );
+      			S = std::make_shared< SurfaceCylinderZ > ( name, Surfaces.size(), bc_type, x, y, r );
 		}
 
-		// Cone-X
-		else if ( type == "cone_x" )
-		{
-      			const double x = s.attribute("x").as_double();
-      			const double y = s.attribute("y").as_double();
-      			const double z = s.attribute("z").as_double();
-      			const double r = s.attribute("r").as_double();
-      			S = std::make_shared< ConeX_Surface > ( name, Surface.size(), bc, x, y, z, r );
-		}
-		
-		// Cone-Y
-		else if ( type == "cone_y" )
-		{
-      			const double x = s.attribute("x").as_double();
-      			const double y = s.attribute("y").as_double();
-      			const double z = s.attribute("z").as_double();
-      			const double r = s.attribute("r").as_double();
-      			S = std::make_shared< ConeX_Surface > ( name, Surface.size(), bc, x, y, z, r );
-		}
-
-		// Cone-Z
-		else if ( type == "cone_z" )
-		{
-      			const double x = s.attribute("x").as_double();
-      			const double y = s.attribute("y").as_double();
-      			const double z = s.attribute("z").as_double();
-      			const double r = s.attribute("r").as_double();
-      			S = std::make_shared< ConeX_Surface > ( name, Surface.size(), bc, x, y, z, r );
-		}
-		
 		// Unknown surface type
 		else 
 		{
@@ -615,7 +589,7 @@ if( input_tdmc ){
     		}
     	
 		// Push new surface
-		Surface.push_back( S );
+		Surfaces.push_back( S );
   	}
   
 	// Set cells
@@ -656,11 +630,11 @@ if( input_tdmc ){
         			std::string name  = s.attribute("name").value();
         			const int   sense = s.attribute("sense").as_int();
 
-        			std::shared_ptr<Surface_t> SurfPtr = findByName( Surface, name );
+        			std::shared_ptr<Surface> SurfPtr = findByName( Surfaces, name );
         			
 				if ( SurfPtr ) 
 				{
-          				Reg->addSurface( findByName( Surface, name ), sense );
+          				Reg->addSurface( findByName( Surfaces, name ), sense );
         			}
 				else 
 				{
@@ -759,13 +733,13 @@ for ( auto& e : input_file.child("estimators").children("estimator") ){
     f_grid.clear();
     for( auto& surface : e.children("surface") ){
         const std::string s_name = surface.attribute("name").value();
-        const std::shared_ptr<Surface_t> s_ptr = findByName( Surface, s_name );
+        const std::shared_ptr<Surface> s_ptr = findByName( Surfaces, s_name );
         if ( !s_ptr ){
     	std::cout << "[ERROR] Unknown surface label " << s_name 
                       << " in estimator " << e_name << "\n";
             std::exit(EXIT_FAILURE);
    	}
-   	s_ptr->attach_estimator_C( set_estimator );
+   	s_ptr->attach_estimator( set_estimator );
         f_grid.push_back(s_ptr->ID());
     }
     for( auto& c : e.children("cell") ){

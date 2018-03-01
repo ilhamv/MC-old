@@ -7,7 +7,7 @@
 #include "Point.h"
 
 class Cell;
-class Surface_t;
+class Surface;
 
 class Particle
 {
@@ -24,7 +24,7 @@ class Particle
         int    p_tdmc;
         std::shared_ptr<Cell> p_cell;
         std::shared_ptr<Cell> p_cell_old;
-        std::shared_ptr<Surface_t> p_surface_old;
+        std::shared_ptr<Surface> p_surface_old;
 
     public:
         Particle( const Point& p1, const Point& p2, const double E, 
@@ -46,7 +46,7 @@ class Particle
         double speed() const;
         std::shared_ptr<Cell> cell() const;
         std::shared_ptr<Cell> cell_old() const;
-        std::shared_ptr<Surface_t> surface_old() const;
+        std::shared_ptr<Surface> surface_old() const;
         int tdmc() const;
 
         // Setters
@@ -55,7 +55,7 @@ class Particle
         void set_cell( const std::shared_ptr<Cell> C );
         void set_energy( const double E );
         void set_speed( const double v );
-        void set_surface_old( const std::shared_ptr<Surface_t> S );
+        void set_surface_old( const std::shared_ptr<Surface> S );
 
         // Modifiers
         void kill();		                                               
