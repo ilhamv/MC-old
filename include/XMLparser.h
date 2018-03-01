@@ -11,7 +11,7 @@
 #include <fstream>      // file stream
 #include <dirent.h>     // open a folder
 
-#include "Const.h"      // MAX
+#include "Constants.h"      // MAX
 #include "pugixml.hpp"
 #include "Geometry.h"
 #include "Particle.h"

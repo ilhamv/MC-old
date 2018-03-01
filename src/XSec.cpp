@@ -1,5 +1,5 @@
 #include "XSec.h"
-#include "Solver.h" // Linterpolate
+#include "Algorithm.h" // Linterpolate
 #include <iostream>
 
 double Table_XSec:: xs( const double E, const unsigned long long bin /*= 0*/ )

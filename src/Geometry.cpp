@@ -1,18 +1,18 @@
 #include "Geometry.h"
 #include "Particle.h"
 #include "Point.h"
-#include "Const.h"  // MAX, EPSILON
-#include "Solver.h" // solve_quad
+#include "Constants.h"  // MAX, EPSILON
+#include "Algorithm.h" // solve_quad
 #include "Estimator.h"
 #include "Material.h"
 
 
-//==============================================================================
+//=============================================================================
 // Surfaces
-//==============================================================================
+//=============================================================================
 
 // Eepsilon kick at crossing
-void Surface_t::cross ( Particle& P ) { P.move( EPSILON ); }
+void Surface_t::cross ( Particle& P ) { P.move( EPSILON_float ); }
 
 // Hit implementation
 void Surface_t::hit( Particle& P,
@@ -52,16 +52,16 @@ double PlaneX_Surface::distance( const Particle& P )
 	const double dir = P.dir().x;
 
 	// Check if particle moves in a direction that is (or very close to) parallel to the surface
-  	if ( std::fabs( dir ) > EPSILON ) 
+  	if ( std::fabs( dir ) > EPSILON_float ) 
 	{
     		const double dist = ( x - pos ) / dir;
     		// Check if particle moves away from the surface
 		if ( dist > 0.0 ) { return dist; }
-    		else { return MAX; }
+    		else { return MAX_float; }
   	}    	
 	// It does! (Parallel)
   	else 
-	{ return MAX; }
+	{ return MAX_float; }
 }
 
 void PlaneX_Surface::reflect( Particle& P )
@@ -80,16 +80,16 @@ double PlaneY_Surface::distance( const Particle& P )
 	const double dir = P.dir().y;
 
 	// Check if particle moves in a direction that is (or very close to) parallel to the surface
-  	if ( std::fabs( dir ) > EPSILON ) 
+  	if ( std::fabs( dir ) > EPSILON_float ) 
 	{
     		const double dist = ( y - pos ) / dir;
     		// Check if particle moves away from the surface
 		if ( dist > 0.0 ) { return dist; }
-    		else { return MAX; }
+    		else { return MAX_float; }
   	}    	
 	// It does! (Parallel)
   	else 
-	{ return MAX; }
+	{ return MAX_float; }
 }
 
 void PlaneY_Surface::reflect( Particle& P )
@@ -108,16 +108,16 @@ double PlaneZ_Surface::distance( const Particle& P )
 	const double dir = P.dir().z;
 
 	// Check if particle moves in a direction that is (or very close to) parallel to the surface
-  	if ( std::fabs( dir ) > EPSILON ) 
+  	if ( std::fabs( dir ) > EPSILON_float ) 
 	{
     		const double dist = ( z - pos ) / dir;
     		// Check if particle moves away from the surface
 		if ( dist > 0.0 ) { return dist; }
-    		else { return MAX; }
+    		else { return MAX_float; }
   	}    	
 	// It does! (Parallel)
   	else 
-	{ return MAX; }
+	{ return MAX_float; }
 }
 
 void PlaneZ_Surface::reflect( Particle& P )
@@ -141,16 +141,16 @@ double Plane_Surface::distance( const Particle& P )
 	const double denom = a * dir.x  +  b * dir.y  +  c * dir.z;
 
 	// Check if particle moves in a direction that is (or very close to) parallel to the surface
-  	if ( std::fabs( denom ) > EPSILON ) 
+  	if ( std::fabs( denom ) > EPSILON_float ) 
 	{
     		const double dist = ( d - a * pos.x - b * pos.y - c * pos.z ) / denom;
     		// Check if particle moves away from the surface
 		if ( dist > 0.0 ) { return dist; }
-    		else { return MAX; }
+    		else { return MAX_float; }
   	}    	
 	// It does! (Parallel)
   	else 
-	{ return MAX; }
+	{ return MAX_float; }
 }
 
 void Plane_Surface::reflect( Particle& P )
@@ -376,7 +376,7 @@ bool Cell::testPoint( const Point& p )
 // Find the closest surface and travel distance for particle p to reach
 std::pair< std::shared_ptr< Surface_t >, double > Cell::surface_intersect( const Particle& P ) 
 {
-  	double dist = MAX;
+  	double dist = MAX_float;
 	std::shared_ptr< Surface_t > S = nullptr;
   	for ( const auto& s : surfaces ) 
 	{
@@ -398,7 +398,7 @@ double Cell::collision_distance( const double E )
 	{ return c_material->collision_distance_sample( E ); }
 	// Vacuum --> return sligthly less than very large number for collision distance
 	// to ensure collision if no surface intersection
-	else { return MAX_less; } // MAX_less = 0.9 MAX
+	else { return MAX_float_less; } // MAX_float_less = 0.9 MAX_float
 }
 
 

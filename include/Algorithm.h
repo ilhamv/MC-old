@@ -1,9 +1,9 @@
-#ifndef _SOLVER_HEADER_
-#define _SOLVER_HEADER_
+#ifndef _ALGORITHM_H
+#define _ALGORITHM_H
 
 #include <vector>
 
-#include "Const.h" // MAX
+#include "Constants.h"
 #include "Random.h"
 #include "Point.h"
 #include "Geometry.h"
@@ -64,4 +64,4 @@ class Shannon_Entropy_Mesh
 // get cell
 std::shared_ptr<Cell> search_cell( const Point& p, const std::vector<std::shared_ptr<Cell>>& Cell );
 
-#endif
+#endif // ALGORITHM_H

@@ -1,7 +1,7 @@
 #include <stack> // stack
 
-#include "Const.h"
-#include "Solver.h"
+#include "Constants.h"
+#include "Algorithm.h"
 #include "Reaction.h"
 #include "Particle.h"
 #include "Distribution.h"

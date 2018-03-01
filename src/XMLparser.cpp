@@ -8,7 +8,7 @@
 #include <fstream>      // file stream
 #include <dirent.h>     // open a folder
 
-#include "Const.h"      // MAX
+#include "Constants.h"      // MAX
 #include "pugixml.hpp"
 #include "Geometry.h"
 #include "Particle.h"
@@ -20,7 +20,7 @@
 #include "Estimator.h"
 #include "XSec.h"
 #include "XMLparser.h"
-#include "Solver.h"
+#include "Algorithm.h"
 
 
 // Function that returns an item from a vector of objects of type T by name provided

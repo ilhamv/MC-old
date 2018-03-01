@@ -1,8 +1,8 @@
 #include <vector>
 #include <iostream>
 
-#include "Const.h" // MAX
-#include "Solver.h"
+#include "Constants.h" // MAX
+#include "Algorithm.h"
 #include "Point.h"
 
 // Quad solver for geometry-point evaluation
@@ -14,7 +14,7 @@ double solve_quad( const double a, const double b, const double c )
     	
     // roots are complex, no intersection, return huge number
     // or identical roots, tangent, return huge number
-    if ( D <= 0.0 ) { return MAX; }
+    if ( D <= 0.0 ) { return MAX_float; }
   	
     else 
     {
@@ -26,8 +26,8 @@ double solve_quad( const double a, const double b, const double c )
         double r2 = ai * ( -1.0 * b + sqrtD );
 
         // Negative roots return huge number (moving away from surface)
-        if ( r1 < 0 ) { r1 = MAX; }
-        if ( r2 < 0 ) { r2 = MAX; }
+        if ( r1 < 0 ) { r1 = MAX_float; }
+        if ( r2 < 0 ) { r2 = MAX_float; }
 
         return std::fmin( r1, r2 );
     }
@@ -62,7 +62,7 @@ int Binary_Search( const double x, const std::vector<double>& vec )
 Point scatter_direction( const Point dir_i, const double mu0 )
 {
     // Sample azimuthal direction
-    const double     azi = PI2 * Urand();
+    const double     azi = PI_2 * Urand();
     const double cos_azi = std::cos(azi);
     const double sin_azi = std::sin(azi);
     const double      Ac = std::sqrt( 1.0 - mu0 * mu0 );

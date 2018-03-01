@@ -5,7 +5,7 @@
 
 #include "Random.h"
 #include "Nuclide.h"
-#include "Solver.h"
+#include "Algorithm.h"
 
 //==============================================================================
 // Getters

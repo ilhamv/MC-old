@@ -4,8 +4,8 @@
 #include "Particle.h"
 #include "Random.h"
 #include "Point.h"
-#include "Const.h"    // PI2, PI_sqrt, PI_half
-#include "Solver.h"   // scatter_direction
+#include "Constants.h"    // PI2, PI_sqrt, PI_half
+#include "Algorithm.h"   // scatter_direction
 
 //=============================================================================
 // Getters

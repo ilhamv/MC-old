@@ -5,9 +5,9 @@
 #include "Distribution.h"
 #include "Random.h"
 #include "Point.h"
-#include "Const.h"       // PI2
-#include "Solver.h"
-#include "Solver.h" // Linterpolate
+#include "Constants.h"       // PI2
+#include "Algorithm.h"
+#include "Algorithm.h" // Linterpolate
 
 double Uniform_Distribution::sample( const double param /*= 0.0*/ ) 
 {
@@ -62,7 +62,7 @@ Point IsotropicDirection_Distribution::sample( const double param /*= 0.0*/ )
 {
     // Sample polar cosine and azimuthal angle uniformly
     const double mu  = 2.0 * Urand() - 1.0;
-    const double azi = PI2 * Urand();
+    const double azi = PI_2 * Urand();
 
 	
     // Convert to Cartesian coordinates

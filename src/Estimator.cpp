@@ -4,7 +4,7 @@
 
 #include "Estimator.h"
 #include "Geometry.h"
-#include "Solver.h"  // Binary_Search, Linterpolate
+#include "Algorithm.h"  // Binary_Search, Linterpolate
 #include "Material.h"
 #include "H5Cpp.h"
 
@@ -274,7 +274,7 @@ void Estimator::score( const Particle& P, const double l )
     std::vector<int> idx( e_filters.size(), 0 ); // Current combination
     while( true ){
         // Find minimum length
-        double l = MAX;
+        double l = MAX_float;
         for( int i = 0; i < e_filters.size(); i++ ){
             l = std::min( l, e_idx_l[i][idx[i]].second );
         }
@@ -292,7 +292,7 @@ void Estimator::score( const Particle& P, const double l )
         // Go to next combination
         for( int i = 0; i < e_filters.size(); i++ ){
             e_idx_l[i][idx[i]].second -= l;
-            if ( e_idx_l[i][idx[i]].second < EPSILON ){ 
+            if ( e_idx_l[i][idx[i]].second < EPSILON_float ){ 
                 if ( idx[i] == e_idx_l[i].size() - 1 ) { return; }
                 idx[i]++; 
             }

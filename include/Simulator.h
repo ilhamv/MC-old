@@ -3,7 +3,7 @@
 #include <memory>  
 #include <stack>   
 
-#include "Const.h"              
+#include "Constants.h"              
 #include "pugixml.hpp"
 #include <Eigen/Dense>
 #include "Distribution.h"
@@ -37,7 +37,7 @@ class Simulator_t
         
         // Cut off
         double Ecut_off = 0.0;
-        double tcut_off = MAX;
+        double tcut_off = MAX_float;
 
         // Survival rouletting
         double wr = 0.25; // Weight rouletting
