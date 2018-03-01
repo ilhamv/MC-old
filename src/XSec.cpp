@@ -1,5 +1,5 @@
 #include "XSec.h"
-#include "Algorithm.h" // Linterpolate
+#include "Algorithm.h" // interpolate
 #include <iostream>
 
 double Table_XSec:: xs( const double E, const unsigned long long bin /*= 0*/ )
@@ -28,7 +28,7 @@ double Table_XSec:: xs( const double E, const unsigned long long bin /*= 0*/ )
     	double E1,E2,XS1,XS2,XS;
     	E1  = Edata->at(bin); E2  = Edata->at(bin+1);
 	XS1 = XSdata[bin];    XS2 = XSdata[bin+1];
-    	XS  = Linterpolate(E,E1,E2,XS1,XS2);
+    	XS  = interpolate(E,E1,E2,XS1,XS2);
 		
 	E_current = E;
 	XS_current = XS;

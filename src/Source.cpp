@@ -1,10 +1,10 @@
 #include <cmath>
 #include <iostream>
 
+#include "Source.h"
 #include "Distribution.h"
 #include "Random.h"
 #include "Particle.h"
-#include "Source.h"
 #include "Point.h"
 
 
@@ -28,7 +28,7 @@ Particle SourcePoint::get_source()
 //=============================================================================
 
 void SourceBank::add_source( const std::shared_ptr<Source> S, 
-                            const double prob )
+                             const double prob )
 {
     sources.push_back( std::make_pair( S, prob ) );
     total += prob;

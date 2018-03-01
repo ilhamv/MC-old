@@ -22,7 +22,7 @@ class Material_t
 {
     private:
 	std::string                      m_name;    // Material name
-        IsotropicDirection_Distribution  isotropic; // For implicit fission
+        DistributionIsotropicDirection  isotropic; // For implicit fission
 	
         // Nuclides contained and its corresponding density
 	std::vector< std::pair< std::shared_ptr<Nuclide_t>, double > > nuclides;        

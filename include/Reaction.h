@@ -24,7 +24,7 @@ class Reaction_t
 	
     protected:
 	std::shared_ptr<XSec_t> r_nu;
-	std::shared_ptr< Distribution_t<double> > Chi_dist;
+	std::shared_ptr< Distribution<double> > Chi_dist;
 
     public:
 	// Constructor: Pass the microXs
@@ -74,11 +74,11 @@ class Capture_Reaction : public Reaction_t
 class Scatter_Reaction : public Reaction_t 
 {
     private:
-	std::shared_ptr< Distribution_t<double> > scatter_dist; // Scattering angle distribution
+	std::shared_ptr< Distribution<double> > scatter_dist; // Scattering angle distribution
 	const double                              A;            // Nuclide mass
     public:
 	// Constructor: Pass the microXs
-	 Scatter_Reaction( std::shared_ptr<XSec_t> x, const std::shared_ptr< Distribution_t<double> >& D, const double a ) :
+	 Scatter_Reaction( std::shared_ptr<XSec_t> x, const std::shared_ptr< Distribution<double> >& D, const double a ) :
 		Reaction_t(x,1), scatter_dist(D), A(a) {}; // Pass the microXs and scattering angle distribution
 	~Scatter_Reaction() {};
 
@@ -91,11 +91,11 @@ class Scatter_Reaction : public Reaction_t
 class Scatter_Zero_Reaction : public Reaction_t 
 {
     private:
-	std::shared_ptr< Distribution_t<double> > scatter_dist; // Scattering angle distribution
+	std::shared_ptr< Distribution<double> > scatter_dist; // Scattering angle distribution
 	const double                              A;            // Nuclide mass
     public:
 	// Constructor: Pass the microXs
-	 Scatter_Zero_Reaction( std::shared_ptr<XSec_t> x, const std::shared_ptr< Distribution_t<double> >& D, const double a ) :
+	 Scatter_Zero_Reaction( std::shared_ptr<XSec_t> x, const std::shared_ptr< Distribution<double> >& D, const double a ) :
 		Reaction_t(x,1), scatter_dist(D), A(a) {}; // Pass the microXs and scattering angle distribution
 	~Scatter_Zero_Reaction() {};
 
@@ -110,12 +110,12 @@ class Scatter_Zero_Reaction : public Reaction_t
 class Fission_Reaction : public Reaction_t 
 {
     private:
-	std::shared_ptr< Distribution_t<int> >    nu_dist;   // Fission multiplicity distribution
-	IsotropicDirection_Distribution           isotropic; // Isotropic distribution for emerging neutron
+	std::shared_ptr< Distribution<int> >    nu_dist;   // Fission multiplicity distribution
+	DistributionIsotropicDirection           isotropic; // Isotropic distribution for emerging neutron
 
     public:
 	// Constructor: Pass the microXs and distributions
-	 Fission_Reaction( std::shared_ptr<XSec_t> x, std::shared_ptr<XSec_t> n, const std::shared_ptr< Distribution_t<double> >& W  ) :
+	 Fission_Reaction( std::shared_ptr<XSec_t> x, std::shared_ptr<XSec_t> n, const std::shared_ptr< Distribution<double> >& W  ) :
 	 	Reaction_t(x,2,n)
 	{
 		Chi_dist = W;

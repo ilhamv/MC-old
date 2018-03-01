@@ -4,7 +4,7 @@
 
 #include "Estimator.h"
 #include "Geometry.h"
-#include "Algorithm.h"  // Binary_Search, Linterpolate
+#include "Algorithm.h"  // binary_search, interpolate
 #include "Material.h"
 #include "H5Cpp.h"
 
@@ -104,7 +104,7 @@ std::vector<std::pair<int,double>> FilterSurface::idx_l( const Particle& P,
     std::pair<int,double> i_l;
 
     // Index location
-    i_l.first  = Binary_Search( P.surface_old()->ID(), f_grid ) + 1;
+    i_l.first  = binary_search( P.surface_old()->ID(), f_grid ) + 1;
     // Track length to score
     i_l.second = l;
 
@@ -120,7 +120,7 @@ std::vector<std::pair<int,double>> FilterCell::idx_l( const Particle& P,
     std::pair<int,double> i_l;
 
     // Index location
-    i_l.first  = Binary_Search( P.cell()->ID(), f_grid ) + 1;
+    i_l.first  = binary_search( P.cell()->ID(), f_grid ) + 1;
     // Track length to score
     i_l.second = l;
 
@@ -136,7 +136,7 @@ std::vector<std::pair<int,double>> FilterEnergy::idx_l( const Particle& P,
     std::pair<int,double> i_l;
     
     // Index location
-    i_l.first  = Binary_Search( P.energy(), f_grid );
+    i_l.first  = binary_search( P.energy(), f_grid );
     // Check if inside the grids
     if ( i_l.first < 0 || i_l.first >= f_Nbin ) { return v_i_l; }
     // Track length to score
@@ -153,7 +153,7 @@ std::vector<std::pair<int,double>> FilterEnergyOld::idx_l( const Particle& P,
     std::pair<int,double> i_l;
     
     // Index location
-    i_l.first  = Binary_Search( P.energy_old(), f_grid );
+    i_l.first  = binary_search( P.energy_old(), f_grid );
     // Check if inside the grids
     if ( i_l.first < 0 || i_l.first >= f_Nbin ) { return v_i_l; }
     // Track length to score
@@ -170,8 +170,8 @@ std::vector<std::pair<int,double>> FilterTime::idx_l( const Particle& P,
     std::pair<int,double> i_l;
     
     // Edge bin locations
-    int loc1 = Binary_Search( P.time_old(), f_grid ); // before track
-    int loc2 = Binary_Search( P.time(), f_grid );     // after
+    int loc1 = binary_search( P.time_old(), f_grid ); // before track
+    int loc2 = binary_search( P.time(), f_grid );     // after
     
     // Distribute score into spanned bins
     if ( loc1 == loc2 ) // 1 bin spanned

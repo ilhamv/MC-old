@@ -1,5 +1,6 @@
 #include <stack> // stack
 
+#include "Random.h"
 #include "Constants.h"
 #include "Algorithm.h"
 #include "Reaction.h"

@@ -1,13 +1,15 @@
 #include <vector>
 #include <iostream>
 
-#include "Constants.h" // MAX
+#include "Random.h"
 #include "Algorithm.h"
+#include "Constants.h"
 #include "Point.h"
 
-// Quad solver for geometry-point evaluation
-// return smallest positive real root if it exists; if it does not, return very big number
-double solve_quad( const double a, const double b, const double c ) 
+
+// Return smallest positive real root if it exists; 
+//   if it does not, return very big number
+double geometry_quad( const double a, const double b, const double c ) 
 {
     // Determinant
     const double D = b*b - 4.0 * a * c;
@@ -15,9 +17,7 @@ double solve_quad( const double a, const double b, const double c )
     // roots are complex, no intersection, return huge number
     // or identical roots, tangent, return huge number
     if ( D <= 0.0 ) { return MAX_float; }
-  	
-    else 
-    {
+    else{
         const double sqrtD = std::sqrt(D);
         const double ai = 0.5 / a;
 
@@ -33,16 +33,14 @@ double solve_quad( const double a, const double b, const double c )
     }
 }
 
-
 // Binary search a double location in a bin grid
-int Binary_Search( const double x, const std::vector<double>& vec )
+int binary_search( const double x, const std::vector<double>& vec )
 {
     int left  = 0;
     int right = vec.size() - 1;
     int mid;
 
-    while ( left <= right )
-    {
+    while ( left <= right ){
         mid = ( left +  right ) / 2;        
         if ( vec[mid] < x ) { left  = mid + 1; }
         else                { right = mid - 1; }
@@ -56,9 +54,7 @@ int Binary_Search( const double x, const std::vector<double>& vec )
     // 	                         (-1 if value = lowest grid)
 }
 
-
-// Scatter direction
-// Return final direction dir_f after scatter initial direction dir_i with scattering cosine mu
+// Return final direction with scattering cosine mu
 Point scatter_direction( const Point dir_i, const double mu0 )
 {
     // Sample azimuthal direction
@@ -68,75 +64,39 @@ Point scatter_direction( const Point dir_i, const double mu0 )
     const double      Ac = std::sqrt( 1.0 - mu0 * mu0 );
     Point      dir_f; // Final direction
 
-    if( dir_i.z != 1.0 )
-    {
+    if( dir_i.z != 1.0 ){
         const double       B = std::sqrt( 1.0 - dir_i.z * dir_i.z );
         const double       C = Ac / B;
 		
-        dir_f.x = dir_i.x * mu0 + ( dir_i.x * dir_i.z * cos_azi - dir_i.y * sin_azi ) * C;
-        dir_f.y = dir_i.y * mu0 + ( dir_i.y * dir_i.z * cos_azi + dir_i.x * sin_azi ) * C;
+        dir_f.x = dir_i.x * mu0 
+                  + ( dir_i.x * dir_i.z * cos_azi - dir_i.y * sin_azi ) * C;
+        dir_f.y = dir_i.y * mu0 
+                  + ( dir_i.y * dir_i.z * cos_azi + dir_i.x * sin_azi ) * C;
         dir_f.z = dir_i.z * mu0 - cos_azi * Ac * B;
     }
 	
     // If dir_i = 0i + 0j + k, interchange z and y in the scattering formula
-    else
-    {
+    else{
         const double       B = std::sqrt( 1.0 - dir_i.y * dir_i.y );
         const double       C = Ac / B;
 		
         Point            q; // to store new direction point
         
-        dir_f.x = dir_i.x * mu0 + ( dir_i.x * dir_i.y * cos_azi - dir_i.z * sin_azi ) * C;
-        dir_f.z = dir_i.z * mu0 + ( dir_i.z * dir_i.y * cos_azi + dir_i.x * sin_azi ) * C;
+        dir_f.x = dir_i.x * mu0 
+                  + ( dir_i.x * dir_i.y * cos_azi - dir_i.z * sin_azi ) * C;
+        dir_f.z = dir_i.z * mu0 
+                  + ( dir_i.z * dir_i.y * cos_azi + dir_i.x * sin_azi ) * C;
         dir_f.y = dir_i.y * mu0 - cos_azi * Ac * B;
     }
     return dir_f;
 }
 
-// Lagrenge interpolation
-double Linterpolate( const double x, const double x1, const double x2, const double y1, const double y2 )
+double interpolate( const double x, const double x1, const double x2,
+                    const double y1, const double y2 )
 { return ( x - x2 ) / ( x1 - x2 ) * y1 + ( x - x1 ) / ( x2 - x1 ) * y2; }
 
-
-// Shannon entropy
-void Shannon_Entropy_Mesh::clear()
-{
-    total = 0;
-    for ( int i = 0; i < x_nmesh; i++ ){
-        for ( int j = 0; j < y_nmesh; j++ ){
-	    for ( int k = 0; k < z_nmesh; k++ ){
-		mesh[i][j][k] = 0.0;
-	    }
-	}
-    }
-    return;
-}
-
-void Shannon_Entropy_Mesh::update( const Point& p, const double N )
-{
-    int x_index = floor( ( ( p.x - xmin ) * x_nmesh ) / (xmax - xmin) );
-    int y_index = floor( ( ( p.y - ymin ) * y_nmesh ) / (ymax - ymin) );
-    int z_index = floor( ( ( p.z - zmin ) * z_nmesh ) / (zmax - zmin) );
-
-    mesh[x_index][y_index][z_index] += N;
-    total += N;
-    return;
-}
-
-double Shannon_Entropy_Mesh::entropy()
-{
-    double e = 0.0;
-    for ( int i = 0; i < x_nmesh; i++ ){
-	for ( int j = 0; j < y_nmesh; j++ ){
-	    for ( int k = 0; k < z_nmesh; k++ ){
-		const double p = mesh[i][j][k] / total;
-		e -= p * std::log2(p);
-	    }
-	}
-    }
-    return e;
-}
-std::shared_ptr<Cell> search_cell( const Point& p, const std::vector<std::shared_ptr<Cell>>& Cell )
+std::shared_ptr<Cell> search_cell( const Point& p,
+                            const std::vector<std::shared_ptr<Cell>>& Cell )
 {
     for( const auto& C : Cell ){
         if ( C->testPoint( p ) ){ return C; }

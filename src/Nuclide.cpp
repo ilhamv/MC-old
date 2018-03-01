@@ -82,7 +82,7 @@ void Nuclide_t::checkE( const double E )
 {
     if ( !E_table->empty() ){
 	if ( E != E_current ){ 
-	    idx_help  = Binary_Search( E, *E_table );
+	    idx_help  = binary_search( E, *E_table );
 	    E_current = E;
 	}
     }

@@ -1,21 +1,21 @@
-#include <iostream>// cout
-#include <cstring> // string, strcmp
+#include <iostream>
+#include <cstring> 
 
 #include "Simulator.h"
 
 
 int main( int argc, char* argv[] )
 {
-    // Check # of arguments passed
-    if ( argc == 1 ) { std::cout<< "Please provide input file\n"; return 1; }
-
-    // Variable declarations
-    std::string input_file = argv[1]; // Input file name 
+    // Input
+    if ( argc == 1 ){ 
+        std::cout<< "[INPUT ERROR] Please provide input.xml directory...\n";
+        std::exit(EXIT_FAILURE);
+    }
+    std::string input_file = argv[1]; 
 
     // Set up simulation
-    Simulator_t MC_Simulator( input_file );
+    Simulator MC_Simulator( input_file );
     std::cout<<"\nSimulation setup done,\nNow running the simulation...\n\n";
-    std::cout.flush();
 
     // Start simulation
     MC_Simulator.start();
@@ -23,7 +23,7 @@ int main( int argc, char* argv[] )
 
     // Report simulation results
     MC_Simulator.report();
-    std::cout<<"output.h5 created.\n";
+    std::cout<<"output.h5 Done!\n";
 
     return 0;
 }

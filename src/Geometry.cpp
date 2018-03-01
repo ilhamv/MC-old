@@ -2,7 +2,7 @@
 #include "Particle.h"
 #include "Point.h"
 #include "Constants.h"  // MAX, EPSILON
-#include "Algorithm.h" // solve_quad
+#include "Algorithm.h" // geometry_quad
 #include "Estimator.h"
 #include "Material.h"
 
@@ -184,7 +184,7 @@ double Sphere_Surface::distance( const Particle& P )
   	double b = 2.0 * ( ( p.x - x0 ) * u.x + ( p.y - y0 ) * u.y + ( p.z - z0 ) * u.z );
   	double c = eval( p );
 
-  	return solve_quad( 1.0, b, c );
+  	return geometry_quad( 1.0, b, c );
 }
 
 void Sphere_Surface::reflect( Particle& P ) { return; }
@@ -207,7 +207,7 @@ double CylinderX_Surface::distance( const Particle& P )
 	double b = 2.0 * ( ( p.y - y0 ) * u.y + ( p.z - z0 ) * u.z );
   	double c = eval( p );
 
-  	return solve_quad( a, b, c );
+  	return geometry_quad( a, b, c );
 }
 
 void CylinderX_Surface::reflect( Particle& P ) { return; }
@@ -230,7 +230,7 @@ double CylinderY_Surface::distance( const Particle& P )
 	double b = 2.0 * ( ( p.x - x0 ) * u.x + ( p.z - z0 ) * u.z );
   	double c = eval( p );
 
-  	return solve_quad( a, b, c );
+  	return geometry_quad( a, b, c );
 }
 
 void CylinderY_Surface::reflect( Particle& P ) { return; }
@@ -253,7 +253,7 @@ double CylinderZ_Surface::distance( const Particle& P )
 	double b = 2.0 * ( ( p.x - x0 ) * u.x + ( p.y - y0 ) * u.y );
   	double c = eval( p );
 
-  	return solve_quad( a, b, c );
+  	return geometry_quad( a, b, c );
 }
 
 void CylinderZ_Surface::reflect( Particle& P ) { return; }
@@ -277,7 +277,7 @@ double ConeX_Surface::distance( const Particle& P )
   	double b = 2.0 * ( - rad_sq * ( p.x - x0 ) * u.x + ( p.y - y0 ) * u.y + ( p.z - z0 ) * u.z );
   	double c = eval( p );
 
-  	return solve_quad( a, b, c );
+  	return geometry_quad( a, b, c );
 }
 
 void ConeX_Surface::reflect( Particle& P ) { return; }
@@ -301,7 +301,7 @@ double ConeY_Surface::distance( const Particle& P )
   	double b = 2.0 * ( ( p.x - x0 ) * u.x - rad_sq * ( p.y - y0 ) * u.y + ( p.z - z0 ) * u.z );
   	double c = eval( p );
 
-  	return solve_quad( a, b, c );
+  	return geometry_quad( a, b, c );
 }
 
 void ConeY_Surface::reflect( Particle& P ) { return; }
@@ -325,7 +325,7 @@ double ConeZ_Surface::distance( const Particle& P )
   	double b = 2.0 * ( ( p.x - x0 ) * u.x + ( p.y - y0 ) * u.y - rad_sq * ( p.z - z0 ) * u.z );
   	double c = eval( p );
 
-  	return solve_quad( a, b, c );
+  	return geometry_quad( a, b, c );
 }
 
 void ConeZ_Surface::reflect( Particle& P ) { return; }

@@ -3,21 +3,21 @@
 #include <memory>  
 #include <stack>   
 
-#include "Constants.h"              
-#include "pugixml.hpp"
 #include <Eigen/Dense>
+
+#include "Constants.h"              
 #include "Distribution.h"
 #include "Particle.h"
+#include "Source.h"
 
 #include "Geometry.h"
-#include "Source.h"
 #include "Nuclide.h"
 #include "Material.h"
 #include "Reaction.h"
 #include "Estimator.h"
 
 
-class Simulator_t
+class Simulator
 {
     public:
         std::string simulation_name;
@@ -69,12 +69,12 @@ class Simulator_t
         // 0: Collision and flux, 1: InScatter, 2:Fission
         
         // User-defined distributions
-        std::vector<std::shared_ptr<Distribution_t<double>>>Distribution_Double;
-        std::vector<std::shared_ptr<Distribution_t<Point>>>Distribution_Point;
+        std::vector<std::shared_ptr<Distribution<double>>>Distribution_Double;
+        std::vector<std::shared_ptr<Distribution<Point>>>Distribution_Point;
 
         // Constructor: Set up the simulator with XML parser
-        Simulator_t( const std::string input_dir );
-        ~Simulator_t() {};
+        Simulator( const std::string input_dir );
+        ~Simulator() {};
 
         // Start simulation
         void start();

@@ -16,7 +16,7 @@
 // Set up
 //=============================================================================
 
-Simulator_t::Simulator_t( const std::string input_dir )
+Simulator::Simulator( const std::string input_dir )
 {
     io_dir = input_dir+"/";
     XML_input( io_dir, simulation_name, Nsample, ksearch, tdmc, Ncycle, 
@@ -37,7 +37,7 @@ Simulator_t::Simulator_t( const std::string input_dir )
 // Move particle
 //=============================================================================
 
-void Simulator_t::move_particle( Particle& P, const double l )
+void Simulator::move_particle( Particle& P, const double l )
 {
     P.move( l );
     if(ksearch) { k_estimator->estimate_TL(P,l); }
@@ -51,7 +51,7 @@ void Simulator_t::move_particle( Particle& P, const double l )
 //=============================================================================
 // Collision
 //=============================================================================
-void Simulator_t::collision( Particle& P )
+void Simulator::collision( Particle& P )
 {
     if (ksearch) { k_estimator->estimate_C(P); }
     if(tally){ 
@@ -66,7 +66,7 @@ void Simulator_t::collision( Particle& P )
 // Cut-off and weight rouletting
 //=============================================================================
 
-void Simulator_t::cut_off( Particle& P )
+void Simulator::cut_off( Particle& P )
 {
     if ( P.energy() <= Ecut_off || P.time() >= tcut_off || P.weight() == 0.0 ){
         P.kill();
@@ -84,7 +84,7 @@ void Simulator_t::cut_off( Particle& P )
 // THE Simulation
 //=============================================================================
 
-void Simulator_t::start()
+void Simulator::start()
 {
     // Simulation loop
     for ( icycle = 0; icycle < Ncycle ; icycle++ ){
@@ -166,7 +166,7 @@ void Simulator_t::start()
 //=============================================================================
 // Set TRM
 //=============================================================================
-void Simulator_t::set_TRM()
+void Simulator::set_TRM()
 {;
 }
 
@@ -175,7 +175,7 @@ void Simulator_t::set_TRM()
 // Report results
 //=============================================================================
 
-void Simulator_t::report()
+void Simulator::report()
 {
     // H5 output
     io_dir += "output.h5";
@@ -305,7 +305,7 @@ void Simulator_t::report()
     dataset = group.createDataSet( "imag", type_double, space_alpha);
     dataset.write(alpha_imag.data(), type_double);
 }
-void Simulator_t::Split_Roulette( Particle& P, std::stack<Particle>& p_bank )
+void Simulator::Split_Roulette( Particle& P, std::stack<Particle>& p_bank )
 {
     // Importances
     const double Iold = P.cell_old()->importance();

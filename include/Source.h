@@ -5,11 +5,9 @@
 #include <memory>     
 
 #include "Particle.h"
-#include "Constants.h"    
 #include "Geometry.h"
 #include "Point.h"
-
-class Cell;
+#include "Distribution.h"
 
 
 //=============================================================================
@@ -40,13 +38,13 @@ class SourcePoint : public Source
     private:
 	const Point s_pos;
         const std::shared_ptr<Cell> s_cell;
-    	const std::shared_ptr<Distribution_t<Point>>  s_dir;
-    	const std::shared_ptr<Distribution_t<double>> s_energy;
+    	const std::shared_ptr<Distribution<Point>>  s_dir;
+    	const std::shared_ptr<Distribution<double>> s_energy;
 
     public:
 	SourcePoint( const Point p, const std::shared_ptr<Cell> cell,
-                     const std::shared_ptr< Distribution_t<Point>> dir,
-		     const std::shared_ptr< Distribution_t<double>> enrg ) :
+                     const std::shared_ptr< Distribution<Point>> dir,
+		     const std::shared_ptr< Distribution<double>> enrg ) :
             s_pos(p), s_cell(cell), s_dir(dir), s_energy(enrg) {};
 	~SourcePoint() {};
 
