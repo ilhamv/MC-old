@@ -8,7 +8,6 @@
 #include <fstream>      // file stream
 #include <dirent.h>     // open a folder
 
-#include "VReduction.h" // Split_Roulette
 #include "Const.h"      // MAX
 #include "pugixml.hpp"
 #include "Geometry.h"
@@ -21,6 +20,7 @@
 #include "Estimator.h"
 #include "XSec.h"
 #include "XMLparser.h"
+#include "Solver.h"
 
 
 // Function that returns an item from a vector of objects of type T by name provided
@@ -993,8 +993,9 @@ if(input_trmm){
 //==========================================================================
 
 pugi::xml_node input_sources = input_file.child("sources");
-for( const auto& s : input_sources.children("source") ){
+for( const auto& s : input_sources.children() ){
     std::shared_ptr<Source> S;
+    std::string s_type = s.name();
 
     // defaults
     double prob = 1.0;
@@ -1011,32 +1012,33 @@ for( const auto& s : input_sources.children("source") ){
     }
     if ( s.attribute("direction") ){
   	s_dir_name = s.attribute("direction").value();
-  	s_dir = findByName( Distribution_Point, dir_dist_name );
+  	s_dir = findByName( Distribution_Point, s_dir_name );
     }
     if ( s.attribute("energy") ){
   	s_energy_name = s.attribute("energy").value();
-  	s_energy      = findByName( Distribution_Double, enrg_dist_name );
+  	s_energy      = findByName( Distribution_Double, s_energy_name );
     }
-    if ( !s_ds_ir || !s_enrg ){
+    if ( !s_dir || !s_energy ){
     	std::cout<< "[ERROR] unknown direction distribution in source.\n";
         std::exit(EXIT_FAILURE);
     }
  
-    if ( s.name() == "point" ){
+    if ( s_type == "point" ){
 	const double x = s.attribute("x").as_double();
 	const double y = s.attribute("y").as_double();
 	const double z = s.attribute("z").as_double();
         Point p(x,y,z);
-	S = std::make_shared<Point_Source>( p, search_cell(p, cell), s_dir, 
+	S = std::make_shared<SourcePoint>( p, search_cell(p, cell), s_dir, 
                                             s_energy );
     }
     else{
-        std::cout << "unknown source type.\n";
+        std::cout << "[INPUT ERROR] Unknown source type...\n";
         std::exit(EXIT_FAILURE);
     }
 		
     Sbank.add_source( S, prob );
-}    
+}   
+
 }
 
 

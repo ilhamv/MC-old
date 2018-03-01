@@ -5,6 +5,7 @@
 #include "Estimator.h"
 #include "Geometry.h"
 #include "Solver.h"  // Binary_Search, Linterpolate
+#include "Material.h"
 #include "H5Cpp.h"
 
 

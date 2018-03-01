@@ -305,7 +305,7 @@ void Simulator_t::report()
     dataset = group.createDataSet( "imag", type_double, space_alpha);
     dataset.write(alpha_imag.data(), type_double);
 }
-void Split_Roulette( Particle& P, std::stack<Particle>& p_bank )
+void Simulator_t::Split_Roulette( Particle& P, std::stack<Particle>& p_bank )
 {
     // Importances
     const double Iold = P.cell_old()->importance();

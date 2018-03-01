@@ -7,7 +7,6 @@
 
 
 <distributions>
-    <delta name="pos" datatype="point" x="0.0" y="0.0" z="0.0" />
     <isotropic name="dir" datatype="point" />
     <delta name="enrg" datatype="double" val="14.1e6"/>
 </distributions>
@@ -46,7 +45,7 @@
 
 
 <sources>
-    <source position="pos" direction="dir" energy="enrg"/>
+    <point x="0.0" y="0.0" z="0.0" direction="dir" energy="enrg"/>
 </sources>
 
 

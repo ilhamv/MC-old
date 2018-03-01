@@ -1,19 +1,18 @@
 #ifndef _MATERIAL_HEADER_
 #define _MATERIAL_HEADER_
 
-#include <vector>     // vector
-#include <memory>     // shared_ptr
-#include <cmath>      // log
-#include <stack>      // stack
-#include <cstring>    // string
+#include <vector>
+#include <memory>
+#include <cmath> 
+#include <stack> 
+#include <cstring>
 
 #include "Particle.h"
 #include "Nuclide.h"
 #include "Random.h"
-#include "Const.h"   // MAXD
+#include "Const.h"
 #include "Source.h"
 
-// Forward declaration
 class Nuclide_t;
 class SourceBank;
 class Fission_Source;

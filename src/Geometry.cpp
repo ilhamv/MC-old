@@ -3,6 +3,8 @@
 #include "Point.h"
 #include "Const.h"  // MAX, EPSILON
 #include "Solver.h" // solve_quad
+#include "Estimator.h"
+#include "Material.h"
 
 
 //==============================================================================

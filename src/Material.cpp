@@ -136,16 +136,16 @@ void Material_t::collision_sample( Particle& P,std::stack<Particle>& Pbank,
     std::shared_ptr<Nuclide_t> N_fission = nuclide_nufission( P.energy() );
     if (ksearch){ 
         for ( int i = 0 ; i < bank_nu ; i++ ){
-            Fbank.add_source( std::make_shared<Delta_Source>
-                    ( P.pos(), isotropic.sample(), N_fission->Chi(P.energy()),
-                      1.0, P.time() ) );
+            Particle P_new( P.pos(), isotropic.sample(),
+                            N_fission->Chi(P.energy()), P.time(), 1.0, 0,
+                            P.cell() );
+            Fbank.add_source( std::make_shared<SourceDelta>(P_new), 1.0 );
         }
     } else{
         for ( int i = 0 ; i < bank_nu ; i++ ){
-            Particle P_new ( P.pos(), isotropic.sample(),
-                                    N_fission->Chi( P.energy() ), P.time(), 
-                                    1.0, P.tdmc() );
-            P_new.set_cell( P.cell() );
+            Particle P_new( P.pos(), isotropic.sample(),
+                            N_fission->Chi(P.energy()), P.time(), 1.0, 
+                            P.tdmc(), P.cell() );
             Pbank.push(P_new);
         }
     }

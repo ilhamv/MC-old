@@ -1,19 +1,19 @@
-#ifndef _GEOMETRY_HEADER_
-#define _GEOMETRY_HEADER_
+#ifndef GEOMETRY_H
+#define GEOMETRY_H
 
-#include <memory>      // shared_ptr
-#include <vector>      // vector
-#include <cstring>     // string
+#include <memory> 
+#include <vector> 
+#include <stack>
+#include <cstring>
 
-#include "Const.h"     // EPSILON
+#include "Const.h"
 #include "Particle.h"
-#include "Estimator.h"
 #include "Point.h"
-#include "Material.h"
 
 class Estimator;
 class SourceBank;
 class Cell;
+class Material_t;
 
 
 //=============================================================================
@@ -352,4 +352,4 @@ class Cell : public Geometry_t
 };
 
 
-#endif
+#endif // GEOMETRY_H

@@ -24,11 +24,10 @@ class Source
 
 	virtual Particle get_source() = 0;
 };
-
 class SourceDelta : public Source
 {
     private:
-        const Particle s_P;// = Particle(Point(),Point(),0.0,0.0,1.0,0,NULL);
+        const Particle s_P;
 
     public:
         SourceDelta( const Particle& P ): s_P(P) {};
@@ -36,7 +35,6 @@ class SourceDelta : public Source
 
         Particle get_source();
 };
-
 class SourcePoint : public Source
 {
     private:

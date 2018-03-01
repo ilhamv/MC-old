@@ -1,4 +1,5 @@
 #include <cmath>
+#include <iostream>
 
 #include "Distribution.h"
 #include "Random.h"
@@ -47,6 +48,12 @@ Particle SourceBank::get_source()
             return So.first->get_source();
         }
     }
-    std::cout<< "[ERROR] Source bank is empty.\n";
-    std::exit(EXIT_FAILURE);
+    if( total == 0 ){
+        std::cout<< "[ERROR] Source bank is empty...\n";
+        std::exit(EXIT_FAILURE);
+    }
+    else{
+        std::cout<< "[ERROR] Source particle lost...\n";
+        std::exit(EXIT_FAILURE);
+    }
 }
