@@ -10,9 +10,9 @@
 
 
 // Getters
-std::string Material_t::name()   { return m_name; }   // Name
+std::string Material::name()   { return m_name; }   // Name
 // macroXsec
-double Material_t::SigmaS( const double E ) 
+double Material::SigmaS( const double E ) 
 { 
 	double sum = 0.0;
 	for ( auto& n : nuclides )
@@ -21,7 +21,7 @@ double Material_t::SigmaS( const double E )
 	}	
 	return sum;
 }
-double Material_t::SigmaC( const double E ) 
+double Material::SigmaC( const double E ) 
 { 
 	double sum = 0.0;
 	for ( auto& n : nuclides )
@@ -30,7 +30,7 @@ double Material_t::SigmaC( const double E )
 	}	
 	return sum;
 }
-double Material_t::SigmaA( const double E ) 
+double Material::SigmaA( const double E ) 
 { 
 	double sum = 0.0;
 	for ( auto& n : nuclides )
@@ -39,7 +39,7 @@ double Material_t::SigmaA( const double E )
 	}	
 	return sum;
 }
-double Material_t::SigmaF( const double E ) 
+double Material::SigmaF( const double E ) 
 { 
 	double sum = 0.0;
 	for ( auto& n : nuclides )
@@ -48,7 +48,7 @@ double Material_t::SigmaF( const double E )
 	}	
 	return sum;
 }
-double Material_t::SigmaT( const double E ) 
+double Material::SigmaT( const double E ) 
 { 
 	double sum = 0.0;
 	for ( auto& n : nuclides )
@@ -57,7 +57,7 @@ double Material_t::SigmaT( const double E )
 	}	
 	return sum;
 }
-double Material_t::nuSigmaF( const double E ) 
+double Material::nuSigmaF( const double E ) 
 { 
 	double sum = 0.0;
 	for ( auto& n : nuclides )
@@ -70,17 +70,17 @@ double Material_t::nuSigmaF( const double E )
 
 // Add a nuclide
 // the supplied variable are the nuclide and its nuclide density
-void Material_t::addNuclide( const std::shared_ptr< Nuclide_t >& Nuclide, double N ) 
+void Material::addNuclide( const std::shared_ptr< Nuclide_t >& Nuclide, double N ) 
 { nuclides.push_back( std::make_pair( Nuclide, N ) ); }
 
 
 // Sample collision distance
-double Material_t::collision_distance_sample( const double E )
+double Material::collision_distance_sample( const double E )
 { return - std::log( Urand() ) / SigmaT( E ); }
 
 
 // Sample collided nuclide
-std::shared_ptr<Nuclide_t> Material_t::nuclide_sample( const double E )
+std::shared_ptr<Nuclide_t> Material::nuclide_sample( const double E )
 {
     double u = SigmaT( E ) * Urand();
     double s = 0.0;
@@ -94,7 +94,7 @@ std::shared_ptr<Nuclide_t> Material_t::nuclide_sample( const double E )
 }
 
 // Sample scattered nuclide
-std::shared_ptr<Nuclide_t> Material_t::nuclide_scatter( const double E )
+std::shared_ptr<Nuclide_t> Material::nuclide_scatter( const double E )
 {
     double u = SigmaS( E ) * Urand();
     double s = 0.0;
@@ -108,7 +108,7 @@ std::shared_ptr<Nuclide_t> Material_t::nuclide_scatter( const double E )
 }
 
 // Sample nu-fission nuclide
-std::shared_ptr<Nuclide_t> Material_t::nuclide_nufission( const double E )
+std::shared_ptr<Nuclide_t> Material::nuclide_nufission( const double E )
 {
     double u = nuSigmaF( E ) * Urand();
     double s = 0.0;
@@ -125,7 +125,7 @@ std::shared_ptr<Nuclide_t> Material_t::nuclide_nufission( const double E )
 // Collision
 //=============================================================================
 
-void Material_t::collision_sample( Particle& P,std::stack<Particle>& Pbank,
+void Material::collision_sample( Particle& P,std::stack<Particle>& Pbank,
                                    const bool ksearch, SourceBank& Fbank, 
                                    const double k )
 {
@@ -164,7 +164,7 @@ void Material_t::collision_sample( Particle& P,std::stack<Particle>& Pbank,
 		
 
 // Simulate scattering for scattering matrix MGXS
-void Material_t::simulate_scatter( Particle& P )
+void Material::simulate_scatter( Particle& P )
 {
 	// Sample the scattering nuclide
 	double u = SigmaS( P.energy() ) * Urand();

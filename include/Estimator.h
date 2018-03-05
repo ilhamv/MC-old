@@ -10,10 +10,10 @@
 #include <cstring>  
 #include <sstream>  
 
-#include "Particle.h"
-#include "Geometry.h"
-#include "Distribution.h"
 #include "H5Cpp.h"
+
+#include "Particle.h"
+#include "Distribution.h"
 
 
 //=============================================================================

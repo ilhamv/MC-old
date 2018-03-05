@@ -5,9 +5,10 @@
 #include <memory>     
 
 #include "Particle.h"
-#include "Geometry.h"
 #include "Point.h"
 #include "Distribution.h"
+
+class Cell;
 
 
 //=============================================================================

@@ -1,8 +1,8 @@
 #include "Geometry.h"
 #include "Particle.h"
 #include "Point.h"
-#include "Constants.h"  // MAX, EPSILON
-#include "Algorithm.h" // geometry_quad
+#include "Constants.h" 
+#include "Algorithm.h" 
 #include "Estimator.h"
 #include "Material.h"
 
@@ -226,83 +226,56 @@ void SurfaceCylinderZ::reflect( Particle& P ) { return; }
 // Cell
 //=============================================================================
 
-// Getters
-double Cell::importance() { return r_importance; } // importance
-// Get macroXsec of the contained material
-double Cell::SigmaT  ( const double E ) { return c_material->SigmaT( E ); }
-double Cell::SigmaA  ( const double E ) { return c_material->SigmaA( E ); }
-double Cell::SigmaS  ( const double E ) { return c_material->SigmaS( E ); }
-double Cell::SigmaC  ( const double E ) { return c_material->SigmaC( E ); }
-double Cell::SigmaF  ( const double E ) { return c_material->SigmaF( E ); }
-double Cell::nuSigmaF( const double E ) { return c_material->nuSigmaF( E ); }
-std::shared_ptr<Material_t> Cell::material() { return c_material; }
+double Cell::importance() { return c_importance; } 
+std::shared_ptr<Material> Cell::material() { return c_material; }
+std::vector<std::pair<std::shared_ptr<Surface>,int>>& Cell::surfaces()
+{ return c_surfaces; }
 
-
-// Take in a pair of surface pointer and integer describing sense
-// and append to vector of surfaces
-void Cell::addSurface( const std::shared_ptr< Surface >& S, const int sense )
-{ surfaces.push_back( std::make_pair( S, sense ) ); }
-
-
-// Add the material
-void Cell::setMaterial( const std::shared_ptr< Material_t >& M ) 
-{ c_material = M; }
-
-
-// Test if point is inside the cell
-bool Cell::testPoint( const Point& p )
-{
-  	// Loop over surfaces in cell, if not on correct side return false
-  	// if on correct side of all surfaces, particle is in the cell and return true
-  	for ( const auto& S : surfaces ) 
-	{
-    		// first = surface pointer, second = +/- 1 indicating sense
-    		if ( S.first->eval( p ) * S.second < 0 ) { return false; }  
-  	}
-  	return true;
+void Cell::add_surface( const std::shared_ptr< Surface >& S, const int sense )
+{ 
+    c_surfaces.push_back( std::make_pair( S, sense ) ); 
 }
-
-
-// Find the closest surface and travel distance for particle p to reach
-std::pair< std::shared_ptr< Surface >, double > Cell::surface_intersect( const Particle& P ) 
-{
-  	double dist = MAX_float;
-	std::shared_ptr< Surface > S = nullptr;
-  	for ( const auto& s : surfaces ) 
-	{
-    		double d = s.first->distance( P );
-    		if ( d < dist )
-		{ 
-			dist = d;
-			S    = s.first;
-		}
-  	}
-	return std::make_pair( S, dist ); 
+void Cell::set_material( const std::shared_ptr< Material >& M ) 
+{ 
+    c_material = M; 
 }
-
-
-// Return particle collision distance
+bool Cell::test_point( const Point& p )
+{
+    // Loop over surfaces in cell, if not on correct side return false
+    for ( const auto& S : c_surfaces ) {
+    	if ( S.first->eval( p ) * S.second < 0 ) { return false; }  
+    }
+    return true;
+}
 double Cell::collision_distance( const double E )
 { 
-	if ( c_material ) 
-	{ return c_material->collision_distance_sample( E ); }
-	// Vacuum --> return sligthly less than very large number for collision distance
-	// to ensure collision if no surface intersection
-	else { return MAX_float_less; } // MAX_float_less = 0.9 MAX_float
+    if ( c_material ) { return c_material->collision_distance_sample( E ); }
+    // Vacuum --> return sligthly less than very large number
+    //            to ensure collision (kill) if no surface intersection
+    else { return MAX_float_less; }
 }
-
-
-// Collision
-// Let the Material take care of the collision sample and reaction process
-void Cell::collision( Particle& P, std::stack< Particle >& Pbank, const bool ksearch, SourceBank& Fbank, const double k )
+std::pair<std::shared_ptr<Surface>, double> 
+Cell::surface_intersect( const Particle& P ) 
+{
+    double dist = MAX_float;
+    std::shared_ptr< Surface > S = nullptr;
+    for ( const auto& s : c_surfaces ) {
+    	double d = s.first->distance( P );
+    	if ( d < dist ){ 
+	    dist = d;
+	    S    = s.first;
+	}
+    }
+    return std::make_pair( S, dist ); 
+}
+void Cell::collision( Particle& P, std::stack< Particle >& Pbank, 
+                      const bool ksearch, SourceBank& Fbank, const double k )
 { 
-	if ( c_material ) 
-	{ c_material->collision_sample( P, Pbank, ksearch, Fbank, k ); }
-	// Vacuum --> Kill particle at collision
-	else { return P.kill(); }
+    if ( c_material ){ 
+        c_material->collision_sample( P, Pbank, ksearch, Fbank, k ); 
+    }
+    // Vacuum --> Kill particle at collision
+    else { return P.kill(); }
 }	
-
-
-// Simulate scattering for scattering matrix MGXS
 void Cell::simulate_scatter( Particle& P )
 { c_material->simulate_scatter( P ); }

@@ -1,5 +1,5 @@
-#ifndef _MATERIAL_HEADER_
-#define _MATERIAL_HEADER_
+#ifndef _MATERIAL_H
+#define _MATERIAL_H
 
 #include <vector>
 #include <memory>
@@ -9,28 +9,22 @@
 
 #include "Particle.h"
 #include "Nuclide.h"
-#include "Random.h"
-#include "Constants.h"
 #include "Source.h"
 
-class Nuclide_t;
-class SourceBank;
-class Fission_Source;
 
-// Material base class
-class Material_t
+class Material
 {
     private:
-	std::string                      m_name;    // Material name
-        DistributionIsotropicDirection  isotropic; // For implicit fission
+	std::string m_name;
+        DistributionIsotropicDirection isotropic;
 	
         // Nuclides contained and its corresponding density
 	std::vector< std::pair< std::shared_ptr<Nuclide_t>, double > > nuclides;        
 
     public:
      	// Constructor: pass the material name 
-	Material_t( const std::string n ) : m_name(n) {};
-	~Material_t() {};
+	Material( const std::string n ) : m_name(n) {};
+	~Material() {};
 
 	// Getters
 	std::string name();// Name
@@ -64,4 +58,4 @@ class Material_t
 };
 
 
-#endif
+#endif // MATERIAL_H

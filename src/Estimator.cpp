@@ -27,7 +27,7 @@ double ScoreKernelTrackLength::score( const Particle& P, const double l )
 // Collision
 double ScoreKernelCollision::score( const Particle& P, const double l )
 { 
-    return P.weight() / P.cell()->SigmaT( P.energy() ); 
+    return P.weight() / P.cell()->material()->SigmaT( P.energy() ); 
 }
 // Velocity
 double ScoreKernelVelocity::score( const Particle& P, const double l )
@@ -57,37 +57,37 @@ double ScoreFlux::score( const Particle& P, const double l )
 // Absorption
 double ScoreAbsorption::score( const Particle& P, const double l )
 { 
-    return P.cell()->SigmaA( P.energy() ) * s_kernel->score(P,l); 
+    return P.cell()->material()->SigmaA( P.energy() ) * s_kernel->score(P,l); 
 }
 
 // Scatter
 double ScoreScatter::score( const Particle& P, const double l )
 { 
-    return P.cell()->SigmaS( P.energy() ) * s_kernel->score(P,l); 
+    return P.cell()->material()->SigmaS( P.energy() ) * s_kernel->score(P,l); 
 }
 
 // Capture
 double ScoreCapture::score( const Particle& P, const double l )
 { 
-    return P.cell()->SigmaC( P.energy() ) * s_kernel->score(P,l); 
+    return P.cell()->material()->SigmaC( P.energy() ) * s_kernel->score(P,l); 
 }
 
 // Fission
 double ScoreFission::score( const Particle& P, const double l )
 { 
-    return P.cell()->SigmaF( P.energy() ) * s_kernel->score(P,l); 
+    return P.cell()->material()->SigmaF( P.energy() ) * s_kernel->score(P,l); 
 }
 
 // NuFission
 double ScoreNuFission::score( const Particle& P, const double l )
 { 
-    return P.cell()->nuSigmaF( P.energy() ) * s_kernel->score(P,l); 
+    return P.cell()->material()->nuSigmaF( P.energy() ) * s_kernel->score(P,l); 
 }
 
 // Total
 double ScoreTotal::score( const Particle& P, const double l )
 { 
-    return P.cell()->SigmaT( P.energy() ) * s_kernel->score(P,l); 
+    return P.cell()->material()->SigmaT( P.energy() ) * s_kernel->score(P,l); 
 }
 
 
@@ -436,13 +436,13 @@ EstimatorK::EstimatorK( const unsigned long long Ncycle,
 
 void EstimatorK::estimate_C( const Particle& P )
 {
-    k_C += P.cell()->nuSigmaF(P.energy()) * P.weight() 
-           / P.cell()->SigmaT(P.energy());
+    k_C += P.cell()->material()->nuSigmaF(P.energy()) * P.weight() 
+           / P.cell()->material()->SigmaT(P.energy());
 }
 
 void EstimatorK::estimate_TL( const Particle& P, const double l )
 {
-    k_TL += P.cell()->nuSigmaF(P.energy()) * P.weight() * l;
+    k_TL += P.cell()->material()->nuSigmaF(P.energy()) * P.weight() * l;
 }
 
 void EstimatorK::end_history()

@@ -7,6 +7,10 @@
 #include "Point.h"
 
 
+//=============================================================================
+// Geometry 
+//=============================================================================
+
 // Return smallest positive real root if it exists; 
 //   if it does not, return very big number
 double geometry_quad( const double a, const double b, const double c ) 
@@ -32,6 +36,11 @@ double geometry_quad( const double a, const double b, const double c )
         return std::fmin( r1, r2 );
     }
 }
+
+
+//=============================================================================
+// Miscellany 
+//=============================================================================
 
 // Binary search a double location in a bin grid
 int binary_search( const double x, const std::vector<double>& vec )
@@ -126,12 +135,20 @@ void split_roulette( Particle& P, std::stack<Particle>& Pbank )
 	for ( int i = 0 ; i < n-1 ; i++ ){ Pbank.push( P ); }
     }
 }
-std::shared_ptr<Cell> search_cell( const Point& p,
-                            const std::vector<std::shared_ptr<Cell>>& Cell )
+
+void normalize_point( Point& p )
 {
-    for( const auto& C : Cell ){
-        if ( C->testPoint( p ) ){ return C; }
-    }
-    std::cout<< "[WARNING] A particle is lost:\n( x, y, z )  (" << p.x << ", " << p.y << ", " << p.z << " )\n";
-    std::exit(EXIT_FAILURE);
+    const double denom = p.x*p.x + p.y*p.y + p.z*p.z;
+    p.x /= denom;
+    p.y /= denom;
+    p.z /= denom;
 }
+
+bool point_equal( const Point p1, const Point p2 )
+{
+    if( p1.x != p2.x ){ return false; }
+    if( p1.y != p2.y ){ return false; }
+    if( p1.z != p2.z ){ return false; }
+    return true;
+}
+

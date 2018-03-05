@@ -8,21 +8,29 @@
 #include "Constants.h"              
 #include "Distribution.h"
 #include "Particle.h"
-#include "Source.h"
-
-#include "Geometry.h"
-#include "Nuclide.h"
-#include "Material.h"
 #include "Estimator.h"
+#include "Source.h"
+#include "Geometry.h"
+#include "Material.h"
+#include "Nuclide.h"
 
 
 class Simulator
 {
     private:
+        void set_nuclide( const std::string name, const std::string label, 
+                          std::shared_ptr<Nuclide_t>& Nuc );
+        template<typename T>
+        std::shared_ptr<T> find_by_name
+                           ( const std::vector<std::shared_ptr<T>>& vec, 
+                             const std::string name );
+        std::shared_ptr<Cell> search_cell( const Point& p );
+        
         void move_particle( Particle& P, const double l );
         void collision( Particle& P );
         void surface_hit( Particle& P, const std::shared_ptr<Surface>& S );
-        void cut_off( Particle&P );
+        void cut_off( Particle& P );
+	bool test_point( const Point& p, const std::shared_ptr<Cell>& C );
 
     public:
         std::string simulation_name;
@@ -57,7 +65,7 @@ class Simulator
         std::vector<std::shared_ptr<Surface>>  Surfaces;
         std::vector<std::shared_ptr<Cell>>       Cells;
         std::vector<std::shared_ptr<Nuclide_t>>  Nuclides;
-        std::vector<std::shared_ptr<Material_t>> Materials;
+        std::vector<std::shared_ptr<Material>> Materials;
         std::vector<std::shared_ptr<Estimator>>  Estimators;
         
         // ksearch specific

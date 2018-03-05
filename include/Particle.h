@@ -58,7 +58,7 @@ class Particle
         void set_surface_old( const std::shared_ptr<Surface> S );
 
         // Modifiers
-        void kill();		                                               
+        void kill(); 
         void move( const double dmove );                                      
         void increment_tdmc();
 };

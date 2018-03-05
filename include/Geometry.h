@@ -9,11 +9,9 @@
 #include "Constants.h"
 #include "Particle.h"
 #include "Point.h"
+#include "Source.h"
 #include "Estimator.h"
-
-class Estimator;
-class SourceBank;
-class Material_t;
+#include "Material.h"
 
 
 //=============================================================================
@@ -52,7 +50,8 @@ class Surface : public Geometry
     	~Surface() {};
 
         virtual int bc() final { return s_bc; }
-        
+       
+        // Attached Estimators
         std::vector<std::shared_ptr<Estimator>> estimators;
 	virtual void attach_estimator( const std::shared_ptr<Estimator>& E ) 
             final{ estimators.push_back( E ); }
@@ -195,58 +194,37 @@ class SurfaceCylinderZ : public Surface
 class Cell : public Geometry
 {
     private:
-	const double r_importance;
-	std::vector<std::pair<std::shared_ptr<Surface>, int>> surfaces;
-        std::shared_ptr<Material_t> c_material = NULL;
+	const double c_importance;
+	std::vector<std::pair<std::shared_ptr<Surface>,int>> c_surfaces;
+        std::shared_ptr<Material> c_material = NULL;
 
     public:
-     	Cell( const std::string n, const int i, const double imp ) : // Pass name and importance
-            Geometry(n,i), r_importance(imp) {};
+     	Cell( const std::string n, const int i, const double imp ): 
+            Geometry(n,i), c_importance(imp) {};
     	~Cell() {};
 
-	// Getters
 	double importance();
-	double SigmaT  ( const double E );
-	double SigmaS  ( const double E );
-	double SigmaC  ( const double E );
-	double SigmaF  ( const double E );
-	double SigmaA  ( const double E );
-	double nuSigmaF( const double E );
-        std::shared_ptr<Material_t> material();
+        std::shared_ptr<Material> material();
+        std::vector<std::pair<std::shared_ptr<Surface>,int>>& surfaces();
 	
-	// Set the material
-	void setMaterial( const std::shared_ptr< Material_t >& M );
-	
-	// Add a bounding surface
-	void addSurface ( const std::shared_ptr< Surface  >& S, const int sense );
+	void add_surface( const std::shared_ptr<Surface >& S,const int sense );
+	void set_material( const std::shared_ptr<Material>& M );
 
-	// Return pointers to surfaces that belong to certain cell
-	std::vector< std::pair< std::shared_ptr< Surface >, int > > listSurfaces () { return surfaces; };
-
-	// Test if particle is in the cell
-	bool testPoint( const Point& p );
-	
-	// Move particle and score any estimators
-	void moveParticle( Particle& P, const double dmove, const bool tally );
-	
-	// Return the closest bounding surface and the corresponding particle hit distance 
-	std::pair< std::shared_ptr< Surface >, double > surface_intersect( const Particle& P );
-	
-	// Return particle collision distance
+	bool test_point( const Point& p );
 	double collision_distance( const double E );
-
-	// Let the Material take care of the collision sample and reaction process
-	void collision( Particle& P, std::stack< Particle >& Pbank, const bool ksearch, SourceBank& Fbank, const double k );
-
-	// Simulate scattering for scattering matrix MGXS
+	std::pair<std::shared_ptr<Surface>, double> 
+            surface_intersect( const Particle& P );
+	void collision( Particle& P, std::stack< Particle >& Pbank, 
+                        const bool ksearch, SourceBank& Fbank,const double k );
 	void simulate_scatter( Particle& P );	
         
         // Attached estimators
         std::vector<std::shared_ptr<Estimator>> estimators_C;
         std::vector<std::shared_ptr<Estimator>> estimators_TL;
-        // Attaching estimators
-	void attach_estimator_C( const std::shared_ptr<Estimator>& E ){ estimators_C.push_back( E ); }
-	void attach_estimator_TL( const std::shared_ptr<Estimator>& E ){ estimators_TL.push_back( E ); }
+	void attach_estimator_C( const std::shared_ptr<Estimator>& E )
+        { estimators_C.push_back( E ); }
+	void attach_estimator_TL( const std::shared_ptr<Estimator>& E )
+        { estimators_TL.push_back( E ); }
 };
 
 
