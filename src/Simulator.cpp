@@ -851,9 +851,9 @@ if(input_trmm){
     trmm_score = std::make_shared<ScoreFlux>("flux",trmm_sk);
     trmm_estimator_collision->add_score( trmm_score );
     trmm_sk = std::make_shared<ScoreKernelTrackLengthVelocity>();
-    trmm_score = std::make_shared<ScoreScatter>("InScatter",trmm_sk);
+    trmm_score = std::make_shared<ScoreScatterOld>("InScatter",trmm_sk);
     trmm_estimator_scatter->add_score( trmm_score );
-    trmm_score = std::make_shared<ScoreNuFission>("NuFission",trmm_sk);
+    trmm_score = std::make_shared<ScoreNuFissionOld>("NuFission",trmm_sk);
     trmm_estimator_fission->add_score( trmm_score );
 
     // Filters

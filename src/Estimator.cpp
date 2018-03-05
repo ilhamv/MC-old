@@ -66,6 +66,12 @@ double ScoreScatter::score( const Particle& P, const double l )
     return P.cell()->material()->SigmaS( P.energy() ) * s_kernel->score(P,l); 
 }
 
+// Scatter old
+double ScoreScatterOld::score( const Particle& P, const double l )
+{ 
+    return P.cell()->material()->SigmaS( P.energy_old() ) * s_kernel->score(P,l);
+}
+
 // Capture
 double ScoreCapture::score( const Particle& P, const double l )
 { 
@@ -82,6 +88,12 @@ double ScoreFission::score( const Particle& P, const double l )
 double ScoreNuFission::score( const Particle& P, const double l )
 { 
     return P.cell()->material()->nuSigmaF( P.energy() ) * s_kernel->score(P,l); 
+}
+
+// NuFission
+double ScoreNuFissionOld::score( const Particle& P, const double l )
+{ 
+    return P.cell()->material()->nuSigmaF( P.energy_old() ) * s_kernel->score(P,l); 
 }
 
 // Total
@@ -406,8 +418,8 @@ void EstimatorScatter::score( const Particle& P, const double l )
     P.cell()->simulate_scatter(P_simulated);
     Estimator::score( P_simulated, l );
 }
-// Fissio simulation estimator
-//   It simulates scattering event before scoring
+// Fission simulation estimator
+//   It simulates fission event before scoring
 void EstimatorFission::score( const Particle& P, const double l )
 {
     Particle P_simulated = P;

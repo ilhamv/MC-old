@@ -136,6 +136,17 @@ class ScoreScatter : public Score
 
 	double score( const Particle& P, const double l );
 };
+// Scatter Old
+class ScoreScatterOld : public Score
+{
+    public:
+	ScoreScatterOld( const std::string n,
+                      const std::shared_ptr<ScoreKernel>& k )
+            : Score(n,k) {};
+	~ScoreScatterOld() {};
+
+	double score( const Particle& P, const double l );
+};
 // Capture
 class ScoreCapture : public Score
 {
@@ -166,6 +177,17 @@ class ScoreNuFission : public Score
                         const std::shared_ptr<ScoreKernel>& k )
             : Score(n,k) {};
 	~ScoreNuFission() {};
+
+	double score( const Particle& P, const double l );
+};
+// NuFission Old
+class ScoreNuFissionOld : public Score
+{
+    public:
+	ScoreNuFissionOld( const std::string n,
+                        const std::shared_ptr<ScoreKernel>& k )
+            : Score(n,k) {};
+	~ScoreNuFissionOld() {};
 
 	double score( const Particle& P, const double l );
 };
