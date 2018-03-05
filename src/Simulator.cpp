@@ -29,8 +29,11 @@ std::shared_ptr<Cell> Simulator::search_cell( const Point& p )
 }
 
 
+
 //=============================================================================
-// Constructor: Simulator Set Up
+//=============================================================================
+// Start of Simulator Set Up
+//=============================================================================
 //=============================================================================
 
 template< typename T >
@@ -119,14 +122,14 @@ Simulator::Simulator( const std::string input_dir )
 
 
     // XML input file
-    io_dir += "input.xml";
+    std::string input_name = io_dir + "input.xml";
     pugi::xml_document input_file;
-    pugi::xml_parse_result load_result = input_file.load_file( io_dir.c_str() );
+    pugi::xml_parse_result load_result = input_file.load_file( input_name.c_str() );
 
     // Able to load file?
     if ( ! load_result ) 
     {
-        std::cout<< "Unable to load input file " << io_dir << ":\n";
+        std::cout<< "Unable to load input file " << input_name << ":\n";
 	std::cout<< load_result.description() << std::endl;
         std::exit(EXIT_FAILURE);
     }
@@ -160,6 +163,9 @@ if( input_ksearch ){
                                 .as_double();
     Npassive = input_ksearch.attribute("passive_cycles").as_double();
     Ncycle   = active + Npassive;
+    mode = "k-eigenvalue";
+    k_estimator = std::make_shared<EstimatorK>(Ncycle, Ncycle-Npassive, 
+                                               Nsample);
 }
 
 //=============================================================================
@@ -179,6 +185,7 @@ if( input_tdmc ){
     if( input_tdmc.attribute("split") ){
         tdmc_split = input_tdmc.attribute("split").as_double();
     }
+    mode = "time-dependent";
 }
         
 	// Set user distributuions
@@ -823,9 +830,6 @@ if(input_trmm){
         std::cout<< "[ERROR] TRMM should be run in ksearch mode\n" ;
         std::exit(EXIT_FAILURE);
     }
-    std::shared_ptr<Estimator>   trmm_estimator_collision;
-    std::shared_ptr<Estimator>   trmm_estimator_scatter;
-    std::shared_ptr<Estimator>   trmm_estimator_fission;
     std::shared_ptr<ScoreKernel> trmm_sk;
     std::shared_ptr<Score>       trmm_score;
     std::vector<double>          trmm_grid;
@@ -943,9 +947,6 @@ if(input_trmm){
     Estimators.push_back( trmm_estimator_collision );
     Estimators.push_back( trmm_estimator_scatter );
     Estimators.push_back( trmm_estimator_fission );
-    trmm_estimator.push_back( trmm_estimator_collision );
-    trmm_estimator.push_back( trmm_estimator_scatter );
-    trmm_estimator.push_back( trmm_estimator_fission );
 }
 
 
@@ -1001,13 +1002,15 @@ for( const auto& s : input_sources.children() ){
 }   
 
     
-    if(ksearch){
-        mode = "k-eigenvalue";
-        k_estimator = std::make_shared<EstimatorK>(Ncycle, Ncycle-Npassive, 
-                                                   Nsample);
-    }
-    if(tdmc) { mode = "time-dependent"; }
 }
+
+
+//=============================================================================
+//=============================================================================
+// End of Simulator Set Up
+//=============================================================================
+//=============================================================================
+
 
 
 //=============================================================================
@@ -1233,30 +1236,27 @@ void Simulator::report()
     if(!trmm){return;}
 
     // Set TRM
-    unsigned long long trm_N = trmm_estimator[0]->tally_size()/2;
+    unsigned long long trm_N = trmm_estimator_collision->tally_size()/2;
     Eigen::MatrixXd TRM,TRM_real;
     TRM = Eigen::MatrixXd(trm_N,trm_N);
 
     for( int f = 0; f < trm_N; f++ ){
         for( int i = 0; i < trm_N; i++ ){
             if( i == f ){
-                TRM(i,i) = -trmm_estimator[0]->tally(i).mean /
-                    trmm_estimator[0]->tally(i+trmm_estimator[0]->idx_factor[0]).mean;
-                TRM(i,i) += trmm_estimator[1]->tally(i+i*trm_N).mean /
-                    trmm_estimator[0]->tally(i+trmm_estimator[0]->idx_factor[0]).mean;
-                TRM(i,i) += trmm_estimator[2]->tally(i+i*trm_N).mean /
-                    trmm_estimator[0]->tally(i+trmm_estimator[0]->idx_factor[0]).mean;
+                TRM(i,i)  = -trmm_estimator_collision->tally(i).mean;
+                TRM(i,i) +=  trmm_estimator_scatter->tally(i+i*trm_N).mean;
+                TRM(i,i) +=  trmm_estimator_fission->tally(i+i*trm_N).mean;
+                TRM(i,i) /=  trmm_estimator_collision->tally(i+trm_N).mean;
             } else{
-                TRM(f,i) = trmm_estimator[1]->tally(f+i*trm_N).mean /
-                    trmm_estimator[0]->tally(i+trmm_estimator[0]->idx_factor[0]).mean;
-                TRM(f,i) += trmm_estimator[2]->tally(f+i*trm_N).mean /
-                    trmm_estimator[0]->tally(i+trmm_estimator[0]->idx_factor[0]).mean;
+                TRM(f,i)  = trmm_estimator_scatter->tally(f+i*trm_N).mean;
+                TRM(f,i) += trmm_estimator_fission->tally(f+i*trm_N).mean;
+                TRM(f,i) /= trmm_estimator_collision->tally(i+trm_N).mean;
             }
         }
     }
     TRM_real = TRM.real();
 
-    // Solve eigenvalue fo TRM
+    // Solve eigenvalue of TRM
     Eigen::MatrixXcd phi_mode;
     Eigen::VectorXcd alpha;
     Eigen::EigenSolver<Eigen::MatrixXd> eSolve(TRM);

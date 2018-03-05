@@ -78,8 +78,9 @@ class Simulator
         unsigned long long  tdmc_split = 1.0;
 
         // TRMM specific
-        std::vector<std::shared_ptr<Estimator>> trmm_estimator;
-        // 0: Collision and flux, 1: InScatter, 2:Fission
+        std::shared_ptr<Estimator> trmm_estimator_collision;
+        std::shared_ptr<Estimator> trmm_estimator_scatter;
+        std::shared_ptr<Estimator> trmm_estimator_fission;
         
         // User-defined distributions
         std::vector<std::shared_ptr<Distribution<double>>>Distribution_Double;
