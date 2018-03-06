@@ -1,4 +1,5 @@
 #include <memory>
+#include <vector>
 
 #include "gtest/gtest.h"
 #include "Point.h"
@@ -72,8 +73,10 @@ TEST( Particle, Particle )
     ASSERT_EQ( P.alive(), false );
     ASSERT_EQ( P.weight(), 0.0 ); 
 
-    std::shared_ptr<Cell> C  = std::make_shared<Cell>("cell", 1, 1.0);
-    std::shared_ptr<Cell> C2 = std::make_shared<Cell>("cell2", 1, 1.0);
+    std::vector<std::pair<std::shared_ptr<Surface>,int>> ss;
+    std::shared_ptr<Material> m;
+    std::shared_ptr<Cell> C  = std::make_shared<Cell>("cell", 1, 1.0, m, ss);
+    std::shared_ptr<Cell> C2 = std::make_shared<Cell>("cell2", 1, 1.0, m, ss );
     Particle P2( Point(1.0,2.0,3.0), Point(1.0,0.0,0.0), 1E6, 0.0, 1.0, 0, 
                  C );
     P2.set_cell(C2);

@@ -195,20 +195,19 @@ class Cell : public Geometry
 {
     private:
 	const double c_importance;
-	std::vector<std::pair<std::shared_ptr<Surface>,int>> c_surfaces;
-        std::shared_ptr<Material> c_material = NULL;
+	const std::vector<std::pair<std::shared_ptr<Surface>,int>> c_surfaces;
+        const std::shared_ptr<Material> c_material;
 
     public:
-     	Cell( const std::string n, const int i, const double imp ): 
-            Geometry(n,i), c_importance(imp) {};
+     	Cell( const std::string n, const int i, const double imp,
+              const std::shared_ptr<Material> m,
+              const std::vector<std::pair<std::shared_ptr<Surface>,int>> s ): 
+            Geometry(n,i), c_importance(imp), c_surfaces(s), c_material(m) {};
     	~Cell() {};
 
 	double importance();
-        std::shared_ptr<Material> material();
-        std::vector<std::pair<std::shared_ptr<Surface>,int>>& surfaces();
-	
-	void add_surface( const std::shared_ptr<Surface >& S,const int sense );
-	void set_material( const std::shared_ptr<Material>& M );
+        const std::shared_ptr<Material>& material();
+        const std::vector<std::pair<std::shared_ptr<Surface>,int>>& surfaces();
 
 	bool test_point( const Point& p );
 	double collision_distance( const double E );

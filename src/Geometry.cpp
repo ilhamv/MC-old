@@ -227,18 +227,10 @@ void SurfaceCylinderZ::reflect( Particle& P ) { return; }
 //=============================================================================
 
 double Cell::importance() { return c_importance; } 
-std::shared_ptr<Material> Cell::material() { return c_material; }
-std::vector<std::pair<std::shared_ptr<Surface>,int>>& Cell::surfaces()
+const std::shared_ptr<Material>& Cell::material() { return c_material; }
+const std::vector<std::pair<std::shared_ptr<Surface>,int>>& Cell::surfaces()
 { return c_surfaces; }
 
-void Cell::add_surface( const std::shared_ptr< Surface >& S, const int sense )
-{ 
-    c_surfaces.push_back( std::make_pair( S, sense ) ); 
-}
-void Cell::set_material( const std::shared_ptr< Material >& M ) 
-{ 
-    c_material = M; 
-}
 bool Cell::test_point( const Point& p )
 {
     // Loop over surfaces in cell, if not on correct side return false

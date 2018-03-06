@@ -63,8 +63,8 @@ class Nuclide_t
 	void simulate_fission( Particle& P );
         
         // Simulator
-	std::shared_ptr<Reaction_t> scatter = NULL;
-	std::shared_ptr<Reaction_t> fission = NULL;
+	std::shared_ptr<Reaction_t> scatter = nullptr;
+	std::shared_ptr<Reaction_t> fission = nullptr;
 
 };
 
