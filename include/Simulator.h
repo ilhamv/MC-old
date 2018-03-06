@@ -24,13 +24,18 @@ class Simulator
         std::shared_ptr<T> find_by_name
                            ( const std::vector<std::shared_ptr<T>>& vec, 
                              const std::string name );
+
+        bool test_point( const Point& p, const std::shared_ptr<Cell>& C );
         std::shared_ptr<Cell> search_cell( const Point& p );
-        
         void move_particle( Particle& P, const double l );
         void collision( Particle& P );
         void surface_hit( Particle& P, const std::shared_ptr<Surface>& S );
         void cut_off( Particle& P );
-	bool test_point( const Point& p, const std::shared_ptr<Cell>& C );
+        double collision_distance( const Particle& P );
+	std::pair<std::shared_ptr<Surface>, double> 
+            surface_intersect( const Particle& P );
+
+        DistributionIsotropicDirection isotropic;
 
     public:
         std::string simulation_name;

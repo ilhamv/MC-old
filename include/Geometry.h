@@ -208,14 +208,6 @@ class Cell : public Geometry
 	double importance();
         const std::shared_ptr<Material>& material();
         const std::vector<std::pair<std::shared_ptr<Surface>,int>>& surfaces();
-
-	bool test_point( const Point& p );
-	double collision_distance( const double E );
-	std::pair<std::shared_ptr<Surface>, double> 
-            surface_intersect( const Particle& P );
-	void collision( Particle& P, std::stack< Particle >& Pbank, 
-                        const bool ksearch, SourceBank& Fbank,const double k );
-	void simulate_scatter( Particle& P );	
         
         // Attached estimators
         std::vector<std::shared_ptr<Estimator>> estimators_C;

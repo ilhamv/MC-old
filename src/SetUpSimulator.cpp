@@ -435,38 +435,31 @@ if( input_tdmc ){
 	Nuclides.push_back( Nuc );
     }
 
-  	// Set materials
-  	pugi::xml_node input_materials = input_file.child("materials");
-  	for ( const auto& m : input_materials )
-	{
-    		const           std::string name = m.attribute("name").value();
-    		std::shared_ptr<Material>  Mat = std::make_shared<Material> ( name );
 
-    		// Add material nuclides
-    		for ( const auto& n : m.children() )
-		{
-			if ( (std::string) n.name() == "nuclide" ) 
-			{
-        			const std::string                   nuclide_name = n.attribute("name").value();
-        			const double                        density      = n.attribute("density").as_double();
-				const std::shared_ptr<Nuclide_t>    nucPtr       = find_by_name( Nuclides, nuclide_name );
-				
-      				if ( nucPtr ) 
-				{
-        				Mat->addNuclide( nucPtr, density );
-      				}
-      				else
-		       		{
-        				std::cout << "unknown nuclide " << nuclide_name << " in material " << name << std::endl;
-        				throw;
-      				}
-      			}
-    		}
-    		
-		// Push new material
-		Materials.push_back( Mat );
-  	}
-  
+//=============================================================================
+// Materials
+//=============================================================================
+
+pugi::xml_node input_materials = input_file.child("materials");
+for( const auto& m : input_materials.children("material") ){
+    const std::string m_name = m.attribute("name").value();
+    std::vector<std::pair<std::shared_ptr<Nuclide_t>,double>> m_nuclides;
+
+    for( const auto& n : m.children("nuclide") ){
+	const std::string n_name = n.attribute("name").value();
+	const double n_density = n.attribute("density").as_double();
+	const std::shared_ptr<Nuclide_t> N = find_by_name( Nuclides, n_name );	
+	if(N){
+	    m_nuclides.push_back( std::make_pair( N, n_density ) );
+	}else{
+	    std::cout << "[INPUT_ERROR] Unknown nuclide found...\n";
+            std::exit(EXIT_FAILURE);
+	}
+    }
+    std::shared_ptr<Material> M =std::make_shared<Material>( m_name, m_nuclides );
+    Materials.push_back( M );
+}
+
 	// Set surfaces
   	pugi::xml_node input_surfaces = input_file.child("surfaces");
   	for ( const auto& s : input_surfaces )

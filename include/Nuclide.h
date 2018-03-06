@@ -57,15 +57,9 @@ class Nuclide_t
 	
 	// Randomly sample a reaction type from the nuclide
 	std::shared_ptr<Reaction_t> reaction_sample( const double E, const bool ksearch );
-	
-	// Simulator
-	void simulate_scatter( Particle& P );
-	void simulate_fission( Particle& P );
         
-        // Simulator
+        // Reaction
 	std::shared_ptr<Reaction_t> scatter = nullptr;
-	std::shared_ptr<Reaction_t> fission = nullptr;
-
 };
 
 

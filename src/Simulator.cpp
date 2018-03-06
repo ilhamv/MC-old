@@ -12,19 +12,67 @@
 
 
 //=============================================================================
+// Test Point
+//=============================================================================
+
+bool Simulator::test_point( const Point& p, const std::shared_ptr<Cell>& C )
+{
+    // Loop over surfaces in cell, if not on correct side return false
+    for ( const auto& S : C->surfaces() ) {
+    	if ( S.first->eval( p ) * S.second < 0 ) { return false; }  
+    }
+    return true;
+}
+
+
+//=============================================================================
 // Search Cell
 //=============================================================================
 
 std::shared_ptr<Cell> Simulator::search_cell( const Point& p )
 {
     for( const auto& C : Cells ){
-        if ( C->test_point( p ) ){ return C; }
+        if ( test_point( p, C ) ){ return C; }
     }
     std::cout<< "[WARNING] A particle is lost:\n( x, y, z )  (" << p.x << ", " 
              << p.y << ", " << p.z << " )\n";
     std::exit(EXIT_FAILURE);
 }
 
+
+//=============================================================================
+// Collision Distance
+//=============================================================================
+
+double Simulator::collision_distance( const Particle& P )
+{
+    if ( P.cell()->material() ){ 
+        return -std::log(Urand()) / P.cell()->material()->SigmaT( P.energy() );
+    }
+    // Vacuum --> return sligthly less than very large number
+    //            to ensure collision (kill) if no surface intersection
+    else { return MAX_float_less; }
+}
+
+ 
+//=============================================================================
+// Surface Intersect
+//=============================================================================
+
+std::pair<std::shared_ptr<Surface>, double> Simulator::surface_intersect
+    ( const Particle& P ) 
+{
+    double dist = MAX_float;
+    std::shared_ptr< Surface > S = nullptr;
+    for ( const auto& s : P.cell()->surfaces() ) {
+    	double d = s.first->distance( P );
+    	if ( d < dist ){ 
+	    dist = d;
+	    S    = s.first;
+	}
+    }
+    return std::make_pair( S, dist ); 
+}
 
 //=============================================================================
 // Move particle
@@ -47,11 +95,49 @@ void Simulator::move_particle( Particle& P, const double l )
 
 void Simulator::collision( Particle& P )
 {
-    if (ksearch) { k_estimator->estimate_C(P); }
+    if(ksearch) { k_estimator->estimate_C(P); }
+    
     if(tally){ 
         for( auto& e : P.cell()->estimators_C ) { e->score( P, 0 ); }
     }
-    P.cell()->collision( P, Pbank, ksearch, Fbank, k );			
+    
+    // Vacuum --> Kill particle at collision
+    if( !P.cell()->material() ){ return P.kill(); }
+    
+    std::shared_ptr<Material> M = P.cell()->material();
+    
+    // Implicit Fission
+    const double bank_nu = std::floor( P.weight() / k * M->nuSigmaF(P.energy())
+                                       / M->SigmaT(P.energy()) + Urand() );
+
+    std::shared_ptr<Nuclide_t> N_fission = M->nuclide_nufission( P.energy() );
+
+    if(ksearch){ 
+        for ( int i = 0 ; i < bank_nu ; i++ ){
+            Particle P_new( P.pos(), isotropic.sample(),
+                            N_fission->Chi(P.energy()), P.time(), 1.0, 0,
+                            P.cell() );
+            Fbank.add_source( std::make_shared<SourceDelta>(P_new), 1.0 );
+        }
+    } else{
+        for ( int i = 0 ; i < bank_nu ; i++ ){
+            Particle P_new( P.pos(), isotropic.sample(),
+                            N_fission->Chi(P.energy()), P.time(), 1.0, 
+                            P.tdmc(), P.cell() );
+            Pbank.push(P_new);
+        }
+    }
+    
+    // Implicit Absorption
+    const double implicit = M->SigmaC(P.energy()) + M->SigmaF(P.energy());
+    P.set_weight( P.weight() * ( M->SigmaT(P.energy()) - implicit ) 
+                  / M->SigmaT(P.energy()) );
+
+    std::shared_ptr<Nuclide_t> N_scatter = M->nuclide_scatter( P.energy() );
+    if(!N_scatter){ return; }
+    
+    // The only analog reaction
+    N_scatter->scatter->sample( P, Pbank );
 }
 
 
@@ -98,20 +184,6 @@ void Simulator::cut_off( Particle& P )
 
 
 //=============================================================================
-// Cut-off and weight rouletting
-//=============================================================================
-
-bool Simulator::test_point( const Point& p, const std::shared_ptr<Cell>& C )
-{
-    // Loop over surfaces in cell, if not on correct side return false
-    for ( const auto& S : C->surfaces() ) {
-    	if ( S.first->eval( p ) * S.second < 0 ) { return false; }
-    }
-    return true;
-}
-
-
-//=============================================================================
 // THE Simulation
 //=============================================================================
 
@@ -133,14 +205,12 @@ void Simulator::start()
 
                 // Particle loop
                 while ( P.alive() ){
-                     // To hold nearest surface and its distance
-                    std::pair< std::shared_ptr< Surface >, double > SnD;
-                                    
                     // Determine nearest surface and its distance
-                    SnD = P.cell()->surface_intersect( P );
+                    const std::pair< std::shared_ptr< Surface >, double > SnD =
+                        surface_intersect( P );
 
                     // Determine collision distance
-                    double dcol = P.cell()->collision_distance( P.energy() );
+                    double dcol = collision_distance( P );
 
                     // Exceeding TDMC time boundary?
                     if(tdmc){

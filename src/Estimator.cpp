@@ -415,7 +415,10 @@ unsigned long long Estimator::tally_size()
 void EstimatorScatter::score( const Particle& P, const double l )
 {
     Particle P_simulated = P;
-    P.cell()->simulate_scatter(P_simulated);
+    // Simulate scattering
+    std::stack<Particle> NULLBANK;
+    P.cell()->material()->nuclide_scatter(P.energy())
+            ->scatter->sample(P_simulated,NULLBANK);
     Estimator::score( P_simulated, l );
 }
 // Fission simulation estimator
