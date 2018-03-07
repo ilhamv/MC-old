@@ -1,5 +1,5 @@
-#include <vector> // vector
-#include <memory> // shared_ptr
+#include <vector> 
+#include <memory> 
 #include <cassert>
 #include <iostream>
 
@@ -11,11 +11,8 @@
 // Getters
 //==============================================================================
 
-std::string Nuclide_t::name()
-{ 
-    return n_name; 
-}
-double Nuclide_t::sigmaS( const double E ) 
+std::string Nuclide::name() { return n_name; }
+double Nuclide::sigmaS( const double E ) 
 { 
     checkE( E );
     for( auto& r : n_reactions )
@@ -24,7 +21,7 @@ double Nuclide_t::sigmaS( const double E )
     }
     return 0.0;
 }
-double Nuclide_t::sigmaC( const double E ) 
+double Nuclide::sigmaC( const double E ) 
 { 
     checkE( E );
     for( auto& r : n_reactions )
@@ -33,7 +30,7 @@ double Nuclide_t::sigmaC( const double E )
     }
     return 0.0;
 }
-double Nuclide_t::sigmaF( const double E ) 
+double Nuclide::sigmaF( const double E ) 
 { 
     checkE( E );
     for( auto& r : n_reactions )
@@ -42,7 +39,7 @@ double Nuclide_t::sigmaF( const double E )
     }
     return 0.0;
 }
-double Nuclide_t::sigmaA( const double E ) 
+double Nuclide::sigmaA( const double E ) 
 { 
     checkE( E );
     double sum = 0.0;
@@ -54,7 +51,7 @@ double Nuclide_t::sigmaA( const double E )
     }
     return sum;
 }
-double Nuclide_t::sigmaT( const double E )
+double Nuclide::sigmaT( const double E )
 { 
     checkE( E );
     double sum = 0.0;
@@ -62,7 +59,7 @@ double Nuclide_t::sigmaT( const double E )
     for( auto& r : n_reactions ){ sum += r->xs( E, idx_help ); }
     return sum; 
 }
-double Nuclide_t::nusigmaF( const double E ) 
+double Nuclide::nusigmaF( const double E ) 
 { 
     checkE( E );
     for ( auto& r : n_reactions )
@@ -78,7 +75,7 @@ double Nuclide_t::nusigmaF( const double E )
 // Check energy at cross secton call
 //   if it's another different energy, 
 //   search the location on the table --> idx_help
-void Nuclide_t::checkE( const double E )
+void Nuclide::checkE( const double E )
 {
     if ( !E_table->empty() ){
 	if ( E != E_current ){ 
@@ -90,7 +87,7 @@ void Nuclide_t::checkE( const double E )
 
 
 // Sample Chi spectrum
-double Nuclide_t::Chi( const double E )
+double Nuclide::Chi( const double E )
 { 
     for ( auto& r : n_reactions )
     {
@@ -101,14 +98,14 @@ double Nuclide_t::Chi( const double E )
 
 
 // Set energy grids for table look-up XS
-void Nuclide_t::setTable( const std::shared_ptr< std::vector<double> >& Evec )
+void Nuclide::setTable( const std::shared_ptr< std::vector<double> >& Evec )
 {
     E_table = Evec;
 }
 
 
 // Add reaction
-void Nuclide_t::addReaction( const std::shared_ptr< Reaction_t >& R ) 
+void Nuclide::addReaction( const std::shared_ptr< Reaction_t >& R ) 
 { 
     if ( R->type() == 1 ) { scatter = R; }
     n_reactions.push_back( R ); 
@@ -116,7 +113,7 @@ void Nuclide_t::addReaction( const std::shared_ptr< Reaction_t >& R )
 
 
 // Randomly sample a reaction type from the nuclide
-std::shared_ptr< Reaction_t > Nuclide_t::reaction_sample( const double E, 
+std::shared_ptr< Reaction_t > Nuclide::reaction_sample( const double E, 
                                                           const bool ksearch )
 {
     //Note: Implicit Capture/Absorption is implemented

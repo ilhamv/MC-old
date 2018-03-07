@@ -1,10 +1,10 @@
-#ifndef _REACTION_HEADER_
-#define _REACTION_HEADER_
+#ifndef _REACTION_H
+#define _REACTION_H
 
-#include <vector>  // vector
-#include <memory>  // shared_ptr
-#include <stack>   // stack
-#include <cstring> // string
+#include <vector>  
+#include <memory> 
+#include <stack>   
+#include <cstring> 
 
 #include "Particle.h"
 #include "Distribution.h"
@@ -129,4 +129,4 @@ class Fission_Reaction : public Reaction_t
 };
 
 
-#endif
+#endif // REACTION_H

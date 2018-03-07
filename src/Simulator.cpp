@@ -110,7 +110,7 @@ void Simulator::collision( Particle& P )
     const double bank_nu = std::floor( P.weight() / k * M->nuSigmaF(P.energy())
                                        / M->SigmaT(P.energy()) + Urand() );
 
-    std::shared_ptr<Nuclide_t> N_fission = M->nuclide_nufission( P.energy() );
+    std::shared_ptr<Nuclide> N_fission = M->nuclide_nufission( P.energy() );
 
     if(ksearch){ 
         for ( int i = 0 ; i < bank_nu ; i++ ){
@@ -133,7 +133,7 @@ void Simulator::collision( Particle& P )
     P.set_weight( P.weight() * ( M->SigmaT(P.energy()) - implicit ) 
                   / M->SigmaT(P.energy()) );
 
-    std::shared_ptr<Nuclide_t> N_scatter = M->nuclide_scatter( P.energy() );
+    std::shared_ptr<Nuclide> N_scatter = M->nuclide_scatter( P.energy() );
     if(!N_scatter){ return; }
     
     // The only analog reaction

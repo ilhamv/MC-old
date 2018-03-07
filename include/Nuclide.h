@@ -1,5 +1,5 @@
-#ifndef _NUCLIDE_HEADER_
-#define _NUCLIDE_HEADER_
+#ifndef _NUCLIDE_H
+#define _NUCLIDE_H
 
 #include <memory>  // shared_ptr
 #include <vector>  // vector
@@ -13,25 +13,30 @@ class Reaction_t;
 // Nuclide
 //==============================================================================
 
-class Nuclide_t
+class Nuclide
 {
     private:
-    	std::string                                  n_name;
-	const double                                 n_A;
-	std::vector< std::shared_ptr< Reaction_t > > n_reactions;
+    	const std::string n_name;
+	const double n_A;
+	std::vector<std::shared_ptr<Reaction_t>> n_reactions;
 
         // To avoid redundant table look-up
 	unsigned long long idx_help  = 0;
 	double             E_current = 0; 
 	
         // xs table energy grid
-        std::shared_ptr< std::vector<double> > E_table = 
-            std::make_shared< std::vector<double> >();
+        std::shared_ptr<std::vector<double>> E_table = 
+            std::make_shared<std::vector<double>>();
+	
+        // Check energy at cross secton call
+	//   if it's another different energy, search the location on the table --> idx_help
+	void checkE( const double E );
+	
 
     public:
-	Nuclide_t( const std::string str, const double a ) : n_name(str), 
+	Nuclide( const std::string str, const double a ) : n_name(str), 
                                                              n_A(a) {};
-        ~Nuclide_t() {};
+        ~Nuclide() {};
 
 	// Getters
 	std::string name();
@@ -45,10 +50,6 @@ class Nuclide_t
 	// Set energy grids for table look-up XS
 	void setTable ( const std::shared_ptr< std::vector<double> >& Evec );
 
-	// Check energy at cross secton call
-	//   if it's another different energy, search the location on the table --> idx_help
-	void checkE( const double E );
-	
 	// Sample Chi spectrum
 	double Chi( const double E );
 
@@ -63,4 +64,4 @@ class Nuclide_t
 };
 
 
-#endif
+#endif // NUCLIDE_H

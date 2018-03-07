@@ -16,12 +16,11 @@ class Material
 {
     private:
 	const std::string m_name;
-	const std::vector<std::pair<std::shared_ptr<Nuclide_t>,double>>nuclides;
-        
+	const std::vector<std::pair<std::shared_ptr<Nuclide>,double>>nuclides;
 
     public:
 	Material( const std::string n, 
-          const std::vector<std::pair<std::shared_ptr<Nuclide_t>,double>> nd ):
+          const std::vector<std::pair<std::shared_ptr<Nuclide>,double>> nd ):
             m_name(n), nuclides(nd) {};
 	~Material() {};
 
@@ -35,9 +34,9 @@ class Material
 	double  nuSigmaF( const double E );
 	
 	// Sample collided nuclide
-	std::shared_ptr<Nuclide_t> nuclide_sample( const double E );
-	std::shared_ptr<Nuclide_t> nuclide_scatter( const double E );
-	std::shared_ptr<Nuclide_t> nuclide_nufission( const double E );
+	std::shared_ptr<Nuclide> nuclide_sample( const double E );
+	std::shared_ptr<Nuclide> nuclide_scatter( const double E );
+	std::shared_ptr<Nuclide> nuclide_nufission( const double E );
 };
 
 

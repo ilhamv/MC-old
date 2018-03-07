@@ -67,7 +67,7 @@ double Material::nuSigmaF( const double E )
 // Sample collided nuclide
 //==============================================================================
 
-std::shared_ptr<Nuclide_t> Material::nuclide_sample( const double E )
+std::shared_ptr<Nuclide> Material::nuclide_sample( const double E )
 {
     double u = SigmaT( E ) * Urand();
     double s = 0.0;
@@ -77,7 +77,7 @@ std::shared_ptr<Nuclide_t> Material::nuclide_sample( const double E )
     }
     return nullptr;
 }
-std::shared_ptr<Nuclide_t> Material::nuclide_scatter( const double E )
+std::shared_ptr<Nuclide> Material::nuclide_scatter( const double E )
 {
     double u = SigmaS( E ) * Urand();
     double s = 0.0;
@@ -87,7 +87,7 @@ std::shared_ptr<Nuclide_t> Material::nuclide_scatter( const double E )
     }
     return nullptr;
 }
-std::shared_ptr<Nuclide_t> Material::nuclide_nufission( const double E )
+std::shared_ptr<Nuclide> Material::nuclide_nufission( const double E )
 {
     double u = nuSigmaF( E ) * Urand();
     double s = 0.0;

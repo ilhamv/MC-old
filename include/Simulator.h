@@ -19,7 +19,7 @@ class Simulator
 {
     private:
         void set_nuclide( const std::string name, const std::string label, 
-                          std::shared_ptr<Nuclide_t>& Nuc );
+                          std::shared_ptr<Nuclide>& Nuc );
         template<typename T>
         std::shared_ptr<T> find_by_name
                            ( const std::vector<std::shared_ptr<T>>& vec, 
@@ -69,7 +69,7 @@ class Simulator
         // THE OBJECTS
         std::vector<std::shared_ptr<Surface>>  Surfaces;
         std::vector<std::shared_ptr<Cell>>       Cells;
-        std::vector<std::shared_ptr<Nuclide_t>>  Nuclides;
+        std::vector<std::shared_ptr<Nuclide>>  Nuclides;
         std::vector<std::shared_ptr<Material>> Materials;
         std::vector<std::shared_ptr<Estimator>>  Estimators;
         

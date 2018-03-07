@@ -27,7 +27,7 @@ std::shared_ptr<T> Simulator::find_by_name(
 //=============================================================================
 
 void Simulator::set_nuclide( const std::string name, const std::string label, 
-                             std::shared_ptr<Nuclide_t>& Nuc )
+                             std::shared_ptr<Nuclide>& Nuc )
 {
     std::string dirName = "./xs_library/" + name + ".txt";
     std::ifstream xs_file (dirName);
@@ -50,7 +50,7 @@ void Simulator::set_nuclide( const std::string name, const std::string label,
     // Nuclide mass, 1st line
     if ( xs_file >> c1 ) { A = c1; }
     else { std::cout<< "Failed to read A in library file " << name << "\n"; throw; }
-    Nuc = std::make_shared<Nuclide_t> ( label, A );
+    Nuc = std::make_shared<Nuclide> ( label, A );
 
     // Chi sectrum parameters, 2nd to 4th lines
     for ( int i = 0 ; i < 3 ; i++ )
@@ -310,7 +310,7 @@ if( input_tdmc ){
     pugi::xml_node input_nuclides = input_file.child("nuclides");
     for ( const auto& n : input_nuclides )
     {
-	std::shared_ptr<Nuclide_t> Nuc;
+	std::shared_ptr<Nuclide> Nuc;
         const  std::string name   = n.attribute("name").value(); // Nuclide name (or label)
 	double             Amass = 1e9;                          // Default nuclide mass
 	const  std::string n_tag = n.name();                    // Nuclide tag
@@ -336,7 +336,7 @@ if( input_tdmc ){
 	        Amass = n.attribute("A").as_double();
     	    }
 
-	    Nuc   = std::make_shared<Nuclide_t> ( name, Amass );
+	    Nuc   = std::make_shared<Nuclide> ( name, Amass );
 
     	    // Add nuclide reactions
     	    for ( const auto& r : n.children() ) 
@@ -443,12 +443,12 @@ if( input_tdmc ){
 pugi::xml_node input_materials = input_file.child("materials");
 for( const auto& m : input_materials.children("material") ){
     const std::string m_name = m.attribute("name").value();
-    std::vector<std::pair<std::shared_ptr<Nuclide_t>,double>> m_nuclides;
+    std::vector<std::pair<std::shared_ptr<Nuclide>,double>> m_nuclides;
 
     for( const auto& n : m.children("nuclide") ){
 	const std::string n_name = n.attribute("name").value();
 	const double n_density = n.attribute("density").as_double();
-	const std::shared_ptr<Nuclide_t> N = find_by_name( Nuclides, n_name );	
+	const std::shared_ptr<Nuclide> N = find_by_name( Nuclides, n_name );	
 	if(N){
 	    m_nuclides.push_back( std::make_pair( N, n_density ) );
 	}else{
