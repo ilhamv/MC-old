@@ -6,8 +6,8 @@
 #include <cmath>   
 #include <fstream> 
 
-#include "Simulator.h"
 #include "pugixml.hpp"
+#include "Simulator.h"
 
 
 template< typename T >
@@ -19,80 +19,6 @@ std::shared_ptr<T> Simulator::find_by_name(
 	if ( v->name() == name ) { return v; }
     }
     return nullptr;
-}
-
-
-//=============================================================================
-// Set Nuclide
-//=============================================================================
-
-void Simulator::set_nuclide( const std::string name, const std::string label, 
-                             std::shared_ptr<Nuclide>& Nuc )
-{
-    std::string dirName = "./xs_library/" + name + ".txt";
-    std::ifstream xs_file (dirName);
-    if ( !xs_file ){
-	std::cout << "unknown nuclide " << name << std::endl;
-	throw;
-    }
-
-    // Data loading
-    double A;    // Nuclide mass
-    std::vector<double> a; // Chi spectrum parameter a
-    std::vector<double> b; // Chi spectrum parameter b
-    auto E = std::make_shared< std::vector<double> >();
-    std::vector<double> sigmaS;
-    std::vector<double> sigmaC;
-    std::vector<double> sigmaF;
-    std::vector<double> nu;
-    double c1, c2, c3, c4, c5;
-
-    // Nuclide mass, 1st line
-    if ( xs_file >> c1 ) { A = c1; }
-    else { std::cout<< "Failed to read A in library file " << name << "\n"; throw; }
-    Nuc = std::make_shared<Nuclide> ( label, A );
-
-    // Chi sectrum parameters, 2nd to 4th lines
-    for ( int i = 0 ; i < 3 ; i++ )
-    {
-	if ( xs_file >> c1 >> c2 )
-	{
-	    a.push_back( c1 );	
-	    b.push_back( c2 );	
-	}
-	else { std::cout<< "Faled to read ab in library file " << name << "\n"; throw; }
-    }
-
-    // Cross sections
-    // 	Column --> what?
-    // 	1 --> energy (eV)
-    // 	2 --> sigmaS
-    // 	3 --> sigmaC
-    // 	4 --> sigmaF
-    // 	5 --> nu
-    while ( xs_file >> c1 >> c2 >> c3 >> c4 >> c5 )
-    {
-	E->push_back(c1);
-        sigmaS.push_back(c2);
-	sigmaC.push_back(c3);
-	sigmaF.push_back(c4);
-	nu.push_back(c5);
-    }
-        
-    Nuc->setTable( E );
-    auto XS_S = std::make_shared<Table_XSec> ( E, sigmaS );
-    auto XS_C = std::make_shared<Table_XSec> ( E, sigmaC );
-    auto XS_F = std::make_shared<Table_XSec> ( E, sigmaF );
-    auto XS_nu = std::make_shared<Table_XSec> ( E, nu );
-        
-    // Set reactions
-    Nuc->addReaction( std::make_shared<Capture_Reaction> ( XS_C ) );
-    Nuc->addReaction( std::make_shared< Scatter_Reaction > ( XS_S, std::make_shared< DistributionIsotropicScatter > (), A ) );
-    // Fissionable check
-    if ( nu[ nu.size() / 2 ] > 0.0 )
-    {
-	Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS_F, XS_nu, std::make_shared< DistributionWatt > ( a, b ) ) );
-    }
 }
 
 
@@ -306,134 +232,120 @@ if( input_tdmc ){
     		}
   	}	
 
-    // Set nuclides
-    pugi::xml_node input_nuclides = input_file.child("nuclides");
-    for ( const auto& n : input_nuclides )
-    {
-	std::shared_ptr<Nuclide> Nuc;
-        const  std::string name   = n.attribute("name").value(); // Nuclide name (or label)
-	double             Amass = 1e9;                          // Default nuclide mass
-	const  std::string n_tag = n.name();                    // Nuclide tag
-		
-        if ( n_tag != "nuclide" )
-        {
-            std::cout<< "[ERROR-INPUT] Unsupported tag under nuclides\n";
-            std::exit(EXIT_FAILURE);
+//=============================================================================
+// Nuclides
+//=============================================================================
+pugi::xml_node input_nuclides = input_file.child("nuclides");
+for( const auto& n : input_nuclides.children("nuclide") ){
+    std::shared_ptr<Nuclide> N;
+    const std::string n_name = n.attribute("name").value();
+    double            n_A = MAX_float;
+    std::shared_ptr<Reaction> n_capture = nullptr;
+    std::shared_ptr<Reaction> n_absorb = nullptr;
+    std::shared_ptr<Reaction> n_total = nullptr;
+    std::shared_ptr<ReactionScatter> n_scatter = nullptr;
+    std::shared_ptr<ReactionFission> n_fission = nullptr;
+    std::vector<double> n_E;
+	
+    // Standard ZAID nuclide
+    if ( n.attribute("ZAID") ){
+        const std::string n_ZAID = n.attribute("ZAID").value();
+        std::string dirName = "./xs_library/" + n_ZAID + ".txt";
+        std::ifstream xs_file (dirName);
+
+        // Data loading
+        double A;    // Nuclide mass
+        std::vector<double> a; // Chi spectrum parameter a
+        std::vector<double> b; // Chi spectrum parameter b
+        std::vector<double> sigmaS;
+        std::vector<double> sigmaC;
+        std::vector<double> sigmaF;
+        std::vector<double> sigmaA;
+        std::vector<double> sigmaT;
+        std::vector<double> nu;
+        double c1, c2, c3, c4, c5;
+
+        // Nuclide mass, 1st line
+        if ( xs_file >> c1 ) { n_A = c1; }
+        else { std::cout<< "Failed to read A in library file " << dirName << "\n"; throw; }
+
+        // Chi sectrum parameters, 2nd to 4th lines
+        for ( int i = 0 ; i < 3 ; i++ ){
+            if ( xs_file >> c1 >> c2 ){
+                a.push_back( c1 );	
+                b.push_back( c2 );	
+            }
+            else { std::cout<< "Faled to read ab in library file " << dirName  << "\n"; throw; }
         }
 
-        // Standard ZAID nuclide
-        if ( n.attribute("ZAID") )
-        {
-	    set_nuclide( n.attribute("ZAID").value(), name, Nuc );
+        // Cross sections
+        // 	Column --> what?
+        // 	1 --> energy (eV)
+        // 	2 --> sigmaS
+        // 	3 --> sigmaC
+        // 	4 --> sigmaF
+        // 	5 --> nu
+        while ( xs_file >> c1 >> c2 >> c3 >> c4 >> c5 ){
+            n_E.push_back(c1);
+            sigmaS.push_back(c2);
+            sigmaC.push_back(c3);
+            sigmaF.push_back(c4);
+            sigmaA.push_back(c3+c4);
+            sigmaT.push_back(c2+c3+c4);
+            nu.push_back(c5);
         }
-
-        // User defined nuclide
-        else
-        {
-    	    // Provided nuclide mass input
-	    if ( n.attribute("A") ) 
-    	    {
-	        Amass = n.attribute("A").as_double();
-    	    }
-
-	    Nuc   = std::make_shared<Nuclide> ( name, Amass );
-
-    	    // Add nuclide reactions
-    	    for ( const auto& r : n.children() ) 
-	    {
-            	const std::string       rxn_type = r.name();
-			
-		// Set XSec
-		std::shared_ptr<XSec_t> XS;
-		
-		// Constant XSec
-		if ( r.attribute("xs") ) 
-    		{
-      		    const double xs = r.attribute("xs").as_double();
-		    XS = std::make_shared<Constant_XSec> ( xs );
-    		}
-		// Table look-up XSec
-		else if ( r.attribute("xs_file") ) 
-		{
-                    std::string filename;
-	            std::string dirName = r.attribute("xs_file").value();
-                
-	            // cross section loading
-	            std::ifstream xs_file (dirName);
-		    auto E_vec = std::make_shared<std::vector<double>>();
-        	    std::vector<double> XS_vec;
-        	    double c1,c2;
-                
-		    if (xs_file.is_open())
-                    {
-                	while(xs_file >> c1 >> c2)
-	        	{
-        	    	    E_vec->push_back(c1);
-                    	    XS_vec.push_back(c2); //4th column is scatter
-                	}
-                	    xs_file.close();
-                	    XS = std::make_shared<Table_XSec> ( E_vec, XS_vec );
-	                Nuc->setTable( E_vec );
-                    }
-                    else
-		    { 
-			std::cout << "[ERROR-INPUT] Unable to open xs table file for reaction " << rxn_type << " in nuclide " << name << std::endl;
-                        std::exit(EXIT_FAILURE);
-		    }
-		}
-		// Unknown XSec type
-		else
-		{
-		    std::cout << "[ERROR-INPUT] Appropriate cross section type for reaction " << rxn_type << " is required" << std::endl;
-                    std::exit(EXIT_FAILURE);
-		}
-		
-		// Capture
-		if ( rxn_type == "capture" )
-		{
-        	    Nuc->addReaction( std::make_shared<Capture_Reaction> ( XS ) );
-	      	}      
-
-		// Scatter
-		else if ( rxn_type == "scatter" )
-		{
-		    // Set scattering cosine distribution
-		    if ( !r.attribute("distribution") ) 
-		    { 
-			std::cout << "[ERROR-INPUT] Scattering cosine distribution is required for scattering reaction " << std::endl;
-                        std::exit(EXIT_FAILURE);
-		    }
-		
-		    const std::string dist_name = r.attribute("distribution").value();
-  		    std::shared_ptr< Distribution<double> > f_mu = find_by_name( Distribution_Double, dist_name );
-
-                    const std::string mod = r.attribute("model").value();
-                    if ( mod == "zero" )
-                    {
-		        Nuc->addReaction( std::make_shared< Scatter_Zero_Reaction > ( XS, f_mu, Amass ) );
-                    }
-                    else
-                    {
-		        Nuc->addReaction( std::make_shared< Scatter_Reaction > ( XS, f_mu, Amass ) );
-                    }
-      		}
-		
-		// Fission
-		else if ( rxn_type == "fission" )
-		{
-		    auto nubar = std::make_shared<Constant_XSec> ( r.attribute("nubar").as_double() );
-		    
-                    const std::string dist_name = r.attribute("chi").value();
-  		    std::shared_ptr< Distribution<double> > watt = find_by_name( Distribution_Double, dist_name );
-                
-		    Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS, nubar, watt ) );
-		} 
-	    } // End reactions
-    	} // End user defined nuclide
-		
-	// Push new nuclide
-	Nuclides.push_back( Nuc );
+            
+        auto XS_S = std::make_shared<XSTable> ( sigmaS );
+        auto XS_C = std::make_shared<XSTable> ( sigmaC );
+        auto XS_F = std::make_shared<XSTable> ( sigmaF );
+        auto XS_A = std::make_shared<XSTable> ( sigmaA );
+        auto XS_T = std::make_shared<XSTable> ( sigmaT );
+        auto XS_nu = std::make_shared<XSTable> ( nu );
+            
+        // Set reactions
+        n_capture = std::make_shared<Reaction>(XS_C);
+        n_absorb = std::make_shared<Reaction>(XS_A);
+        n_total = std::make_shared<Reaction>(XS_T);
+        n_scatter = std::make_shared<ReactionScatter>
+            ( XS_S, std::make_shared<DistributionIsotropicScatter>(), n_A );
+        n_fission = std::make_shared<ReactionFission>( XS_F, XS_nu,
+                std::make_shared<DistributionWatt>( a, b ) );
     }
+    // User defined nuclide
+    else{
+	if ( n.attribute("A") ){
+	    n_A = n.attribute("A").as_double();
+    	}
+
+    	// Add nuclide reactions
+    	for ( const auto& r : n.children() ){
+            const std::string rxn_type = r.name();
+			
+	    // Set XSec
+	    std::shared_ptr<XS> XS;
+	    if ( r.attribute("xs") ){
+      		const double xs = r.attribute("xs").as_double();
+		XS = std::make_shared<XSConstant> ( xs );
+    	    }
+	    else{
+	        std::cout << "[ERROR-INPUT] Unknown XS type...\n";
+                std::exit(EXIT_FAILURE);
+	    }	
+	    
+            // The Reaction
+	    if( rxn_type == "capture" ){
+        	n_capture = std::make_shared<Reaction> ( XS );
+	    } else{
+                std::cout<<"User defined nuclide only support capture now\n";
+                std::exit(EXIT_FAILURE);
+            }
+    	}
+		
+    }
+    N = std::make_shared<Nuclide> ( n_name, n_A, n_capture, n_scatter, 
+                                    n_fission, n_absorb, n_total, n_E );
+    Nuclides.push_back( N );
+}
 
 
 //=============================================================================

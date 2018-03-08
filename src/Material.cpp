@@ -1,6 +1,7 @@
-#include <vector>  // vector
-#include <memory>  // shared_ptr
+#include <vector>  
+#include <memory>  
 #include <cassert>
+#include <iostream>
 
 #include "Random.h"
 #include "Particle.h"
@@ -47,7 +48,7 @@ double Material::SigmaF( const double E )
     return sum;
 }
 double Material::SigmaT( const double E ) 
-{ 
+{
     double sum = 0.0;
     for ( auto& n : nuclides ){
 	sum += n.first->sigmaT( E ) * n.second;
@@ -59,6 +60,7 @@ double Material::nuSigmaF( const double E )
     double sum = 0.0;
     for ( auto& n : nuclides ){
 	sum += n.first->nusigmaF( E ) * n.second;
+        std::cout<<n.first->name()<<": "<<n.first->nusigmaF(E)<<"\n";
     }	
     return sum;
 }

@@ -1,51 +1,54 @@
-#ifndef _XSEC_HEADER_
-#define _XSEC_HEADER_
+#ifndef _XS_H
+#define _XS_H
 
-
-#include <cmath> // sqrt
 #include <vector>
-#include <memory>
 
 
-class XSec_t
+//=============================================================================
+// XS
+//=============================================================================
+
+class XS
 {
     public:
-     	XSec_t() {};
-    	~XSec_t() {};
+     	XS() {};
+    	~XS() {};
 		
-        // Get cross section in energy
-	virtual double xs( const double E, const unsigned long long idx = 0 ) = 0;
+	virtual double xs( const unsigned long long idx, const double E, 
+                           const std::vector<double>& E_vec ) = 0;
 };
 
-
-// Constant cross section
-class Constant_XSec : public XSec_t
+//=============================================================================
+// Constant
+//=============================================================================
+class XSConstant : public XS
 {
     const double val;
 
     public:
-	 Constant_XSec( const double x ) : val(x) {};
-	~Constant_XSec() {};
+	 XSConstant( const double x ) : val(x) {};
+	~XSConstant() {};
 
-        double xs( const double E, const unsigned long long idx = 0 ) { return val; }
+	double xs( const unsigned long long idx, const double E, 
+                   const std::vector<double>& E_vec );
 };
 
-
-// Table look-up cross section
-class Table_XSec : public XSec_t
+//=============================================================================
+// Table
+//=============================================================================
+class XSTable : public XS
 {
-	private:
-		std::shared_ptr< std::vector<double> > Edata;
-		std::vector<double>                    XSdata;
-		double                                 E_current = 0.0;  // Current energy and XS store (to save time in repeating energy binary search)
-		double                                 XS_current = 0.0;
+    private:
+	const std::vector<double> XSdata;
+	double E_current = 0.0; 
+	double XS_current = 0.0;
 
-	public:
-		 Table_XSec( const std::shared_ptr< std::vector<double> >& p1, const std::vector<double> p2 ) : Edata(p1), XSdata(p2) {};
-		~Table_XSec() {};
+    public:
+	XSTable( const std::vector<double> XS ): XSdata(XS) {};
+	~XSTable() {};
 
-		double xs( const double E, const unsigned long long idx = 0 );
-        
+	double xs( const unsigned long long idx, const double E, 
+                   const std::vector<double>& E_vec );
 };
 
-#endif
+#endif // XS_H

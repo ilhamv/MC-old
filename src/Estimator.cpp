@@ -416,9 +416,8 @@ void EstimatorScatter::score( const Particle& P, const double l )
 {
     Particle P_simulated = P;
     // Simulate scattering
-    std::stack<Particle> NULLBANK;
     P.cell()->material()->nuclide_scatter(P.energy())
-            ->scatter->sample(P_simulated,NULLBANK);
+            ->scatter()->sample(P_simulated);
     Estimator::score( P_simulated, l );
 }
 // Fission simulation estimator
@@ -428,7 +427,7 @@ void EstimatorFission::score( const Particle& P, const double l )
     Particle P_simulated = P;
     const double energy_final = P.cell()->material()
                                 ->nuclide_nufission( P.energy() )
-                                ->Chi( P.energy() );
+                                ->fission()->Chi( P.energy() );
     P_simulated.set_energy(energy_final);
     Estimator::score( P_simulated, l );
 }

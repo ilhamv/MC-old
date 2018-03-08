@@ -115,15 +115,15 @@ void Simulator::collision( Particle& P )
     if(ksearch){ 
         for ( int i = 0 ; i < bank_nu ; i++ ){
             Particle P_new( P.pos(), isotropic.sample(),
-                            N_fission->Chi(P.energy()), P.time(), 1.0, 0,
-                            P.cell() );
+                            N_fission->fission()->Chi(P.energy()), P.time(), 
+                            1.0, 0, P.cell() );
             Fbank.add_source( std::make_shared<SourceDelta>(P_new), 1.0 );
         }
     } else{
         for ( int i = 0 ; i < bank_nu ; i++ ){
             Particle P_new( P.pos(), isotropic.sample(),
-                            N_fission->Chi(P.energy()), P.time(), 1.0, 
-                            P.tdmc(), P.cell() );
+                            N_fission->fission()->Chi(P.energy()), P.time(), 
+                            1.0, P.tdmc(), P.cell() );
             Pbank.push(P_new);
         }
     }
@@ -137,7 +137,7 @@ void Simulator::collision( Particle& P )
     if(!N_scatter){ return; }
     
     // The only analog reaction
-    N_scatter->scatter->sample( P, Pbank );
+    N_scatter->scatter()->sample( P );
 }
 
 

@@ -7,127 +7,55 @@
 #include "Nuclide.h"
 #include "Algorithm.h"
 
+
+//==============================================================================
+// XS Binary search tool
+//==============================================================================
+
+// Check energy at cross secton call
+//   if it's another different energy, 
+//   search the location on the table --> idx
+void Nuclide::checkE( const double E )
+{
+    if ( E != E_current ){ 
+	idx  = binary_search( E, n_E );
+	E_current = E;
+    }
+}
+
+
 //==============================================================================
 // Getters
 //==============================================================================
 
 std::string Nuclide::name() { return n_name; }
-double Nuclide::sigmaS( const double E ) 
-{ 
+std::shared_ptr<ReactionScatter> Nuclide::scatter() { return n_scatter; }
+std::shared_ptr<ReactionFission> Nuclide::fission() { return n_fission; }
+
+double Nuclide::sigmaS( const double E ){
     checkE( E );
-    for( auto& r : n_reactions )
-    {
-	if( r->type() == 1 ) { return r->xs( E, idx_help ); }
-    }
-    return 0.0;
+    return n_scatter->xs(idx, E, n_E);
 }
-double Nuclide::sigmaC( const double E ) 
-{ 
+double Nuclide::sigmaC( const double E ){
     checkE( E );
-    for( auto& r : n_reactions )
-    {
-        if( r->type() == 0 ) { return r->xs( E, idx_help ); }
-    }
-    return 0.0;
+    return n_capture->xs(idx, E, n_E);
 }
-double Nuclide::sigmaF( const double E ) 
-{ 
+double Nuclide::sigmaF( const double E ){
     checkE( E );
-    for( auto& r : n_reactions )
-    {
-	if( r->type() == 2 ) { return r->xs( E, idx_help ); }
-    }
-    return 0.0;
+    return n_fission->xs(idx, E, n_E);
 }
 double Nuclide::sigmaA( const double E ) 
 { 
     checkE( E );
-    double sum = 0.0;
-    for( auto& r : n_reactions )
-    {
-	if( r->type() == 0 || r->type() == 2 ){ 
-            sum += r->xs( E, idx_help ); 
-        }
-    }
-    return sum;
+    return n_absorb->xs(idx, E, n_E);
 }
-double Nuclide::sigmaT( const double E )
+double Nuclide::sigmaT( const double E ) 
 { 
     checkE( E );
-    double sum = 0.0;
-
-    for( auto& r : n_reactions ){ sum += r->xs( E, idx_help ); }
-    return sum; 
+    return n_total->xs(idx, E, n_E);
 }
 double Nuclide::nusigmaF( const double E ) 
 { 
     checkE( E );
-    for ( auto& r : n_reactions )
-    {
-	if( r->type() == 2 ){ 
-            return r->xs( E, idx_help ) * r->nu( E, idx_help ); 
-        }
-    }
-    return 0.0;
-}
-
-
-// Check energy at cross secton call
-//   if it's another different energy, 
-//   search the location on the table --> idx_help
-void Nuclide::checkE( const double E )
-{
-    if ( !E_table->empty() ){
-	if ( E != E_current ){ 
-	    idx_help  = binary_search( E, *E_table );
-	    E_current = E;
-	}
-    }
-}
-
-
-// Sample Chi spectrum
-double Nuclide::Chi( const double E )
-{ 
-    for ( auto& r : n_reactions )
-    {
-	if ( r->type() == 2 ) { return r->Chi(E); }
-    }
-    return 0.0;
-};
-
-
-// Set energy grids for table look-up XS
-void Nuclide::setTable( const std::shared_ptr< std::vector<double> >& Evec )
-{
-    E_table = Evec;
-}
-
-
-// Add reaction
-void Nuclide::addReaction( const std::shared_ptr< Reaction_t >& R ) 
-{ 
-    if ( R->type() == 1 ) { scatter = R; }
-    n_reactions.push_back( R ); 
-}
-
-
-// Randomly sample a reaction type from the nuclide
-std::shared_ptr< Reaction_t > Nuclide::reaction_sample( const double E, 
-                                                          const bool ksearch )
-{
-    //Note: Implicit Capture/Absorption is implemented
-    double         implicit  = sigmaC(E);
-    if (ksearch) { implicit += sigmaF(E); }
-
-    const double u = (sigmaT( E ) - implicit ) * Urand();
-
-    double s = 0.0;
-    for( auto& r : n_reactions ){
-	if ( !r->type() == 0 && !( ksearch && r->type() == 2 ) ){
-            s += r->xs( E );
-	    if ( s > u ) { return r; }
-        }
-    }
-    return nullptr;
+    return n_fission->xs(idx, E, n_E) * n_fission->nu(idx, E, n_E);
 }

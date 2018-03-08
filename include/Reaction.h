@@ -13,119 +13,65 @@
 
 
 //=============================================================================
-// Base
+// Basic Reaction
 //=============================================================================
 
-class Reaction_t
+class Reaction
 {
     private:
-	std::shared_ptr<XSec_t> r_xs;
-        const int r_type;
-	
-    protected:
-	std::shared_ptr<XSec_t> r_nu;
-	std::shared_ptr< Distribution<double> > Chi_dist;
+	std::shared_ptr<XS> r_xs;
 
     public:
-	// Constructor: Pass the microXs
-       	 Reaction_t( std::shared_ptr<XSec_t> x, const int t,
-                     std::shared_ptr<XSec_t> n = std::make_shared<Constant_XSec>(0.0) ) : r_xs(x), r_type(t), r_nu(n) {}; // Pass the microXs
-	~Reaction_t() {};
+       	 Reaction( const std::shared_ptr<XS> x ) : r_xs(x) {};
+	~Reaction() {};
 
-	// Get the microXs
-	virtual double xs( const double E, const unsigned long long idx = 0 ) final { return r_xs->xs( E, idx ); };
-
-	// Get the microXs
-	virtual double nu( const double E, const unsigned long long idx = 0 ) final { return r_nu->xs( E, idx ); };
-
-	// Sample the Chi spectrum
-	virtual double Chi( const double E ) final { return Chi_dist->sample(E); }
-	
-	// Sample the reaction process on the working particle and the particle bank
-	virtual void sample( Particle& P, std::stack< Particle >& Pbank ) = 0;
-	
-	// Check type
-        //   0 -> Capture
-        //   1 -> Scatter
-        //   2 -> Fission
-	virtual int type() final { return r_type; }
+	double xs( const unsigned long long idx, const double E,
+                   const std::vector<double>& E_vec );
 };
 
 
 //=============================================================================
-// Capture
+// Scatter reaction
 //=============================================================================
 
-class Capture_Reaction : public Reaction_t 
-{
-    public:
-	// Constructor: Pass the microXs
-	 Capture_Reaction( std::shared_ptr<XSec_t> x ) : Reaction_t(x,0) {}; // Pass the microXs
-	~Capture_Reaction() {};
-
-	// Kill the working particle upon reaction sample
-	void  sample( Particle& P, std::stack< Particle >& Pbank );
-};
-
-
-//=============================================================================
-// Scatter reaction, room temperature
-//=============================================================================
-class Scatter_Reaction : public Reaction_t 
+class ReactionScatter : public Reaction 
 {
     private:
-	std::shared_ptr< Distribution<double> > scatter_dist; // Scattering angle distribution
-	const double                              A;            // Nuclide mass
+	const std::shared_ptr< Distribution<double> > scatter_dist; 
+	const double A;
     public:
-	// Constructor: Pass the microXs
-	 Scatter_Reaction( std::shared_ptr<XSec_t> x, const std::shared_ptr< Distribution<double> >& D, const double a ) :
-		Reaction_t(x,1), scatter_dist(D), A(a) {}; // Pass the microXs and scattering angle distribution
-	~Scatter_Reaction() {};
+	 ReactionScatter( const std::shared_ptr<XS> x, 
+                          const std::shared_ptr<Distribution<double>>& D, 
+                          const double a ): 
+             Reaction(x), scatter_dist(D), A(a) {}; 
+	~ReactionScatter() {};
 
-	// Scatter the working particle
-	void  sample( Particle& P, std::stack< Particle >& Pbank );
-};
-
-
-// Scatter reaction, zero K
-class Scatter_Zero_Reaction : public Reaction_t 
-{
-    private:
-	std::shared_ptr< Distribution<double> > scatter_dist; // Scattering angle distribution
-	const double                              A;            // Nuclide mass
-    public:
-	// Constructor: Pass the microXs
-	 Scatter_Zero_Reaction( std::shared_ptr<XSec_t> x, const std::shared_ptr< Distribution<double> >& D, const double a ) :
-		Reaction_t(x,1), scatter_dist(D), A(a) {}; // Pass the microXs and scattering angle distribution
-	~Scatter_Zero_Reaction() {};
-
-	// Scatter the working particle
-	void  sample( Particle& P, std::stack< Particle >& Pbank );
+	void  sample( Particle& P );
 };
 
 
 //=============================================================================
 // Fission reaction
 //=============================================================================
-class Fission_Reaction : public Reaction_t 
+class ReactionFission : public Reaction 
 {
     private:
-	std::shared_ptr< Distribution<int> >    nu_dist;   // Fission multiplicity distribution
-	DistributionIsotropicDirection           isotropic; // Isotropic distribution for emerging neutron
+	const std::shared_ptr<XS> r_nu;
+        const std::shared_ptr<Distribution<double>> r_Chi;
 
     public:
 	// Constructor: Pass the microXs and distributions
-	 Fission_Reaction( std::shared_ptr<XSec_t> x, std::shared_ptr<XSec_t> n, const std::shared_ptr< Distribution<double> >& W  ) :
-	 	Reaction_t(x,2,n)
-	{
-		Chi_dist = W;
-	}
+	 ReactionFission( const std::shared_ptr<XS> x, 
+                          const std::shared_ptr<XS> n, 
+                          const std::shared_ptr<Distribution<double>>& W  ) :
+	 	Reaction(x), r_nu(n), r_Chi(W) {};
 
-	~Fission_Reaction() {};
+	~ReactionFission() {};
 
-	// Sample fission multiplicity, then appropriately pushing new fission particles to the bank
-	// --> Reaction.cpp
-	void sample( Particle& P, std::stack< Particle >& Pbank );
+
+	double nu( const unsigned long long idx, const double E,
+                   const std::vector<double>& E_vec );
+        double Chi( const double E );
 };
 
 
