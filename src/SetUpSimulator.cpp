@@ -246,6 +246,7 @@ for( const auto& n : input_nuclides.children("nuclide") ){
     std::shared_ptr<ReactionScatter> n_scatter = nullptr;
     std::shared_ptr<ReactionFission> n_fission = nullptr;
     std::vector<double> n_E;
+    std::vector<std::shared_ptr<Distribution<double>>> n_ChiD; n_ChiD.resize(6,nullptr);
 	
     // Standard ZAID nuclide
     if ( n.attribute("ZAID") ){
@@ -263,7 +264,10 @@ for( const auto& n : input_nuclides.children("nuclide") ){
         std::vector<double> sigmaA;
         std::vector<double> sigmaT;
         std::vector<double> nu;
-        double c1, c2, c3, c4, c5;
+        std::vector<double> beta;
+        std::vector<double> lambda;
+        std::vector<double> fraction;
+        double c1, c2, c3, c4, c5, c6;
 
         // Nuclide mass, 1st line
         if ( xs_file >> c1 ) { n_A = c1; }
@@ -285,7 +289,8 @@ for( const auto& n : input_nuclides.children("nuclide") ){
         // 	3 --> sigmaC
         // 	4 --> sigmaF
         // 	5 --> nu
-        while ( xs_file >> c1 >> c2 >> c3 >> c4 >> c5 ){
+        // 	6 --> nu delayed
+        while ( xs_file >> c1 >> c2 >> c3 >> c4 >> c5 >> c6 ){
             n_E.push_back(c1);
             sigmaS.push_back(c2);
             sigmaC.push_back(c3);
@@ -293,6 +298,34 @@ for( const auto& n : input_nuclides.children("nuclide") ){
             sigmaA.push_back(c3+c4);
             sigmaT.push_back(c2+c3+c4);
             nu.push_back(c5);
+            if(c6!=0) { beta.push_back(c6/c5); }
+            else { beta.push_back(c6); }
+        }
+        if(sigmaF[0] != 0){
+            std::vector<double> c; c.resize(7);
+            std::vector<double> d_E;
+            std::vector<std::vector<double>> cdf;
+            std::vector<double> dummy = {0.0};
+            cdf.resize(6,dummy);
+            dirName = "./xs_library/" + n_ZAID + "D.txt";
+            std::ifstream d_file (dirName);
+            d_file >> c[0] >> c[1] >> c[2] >> c[3] >> c[4] >> c[5];
+            for( int i = 0; i < 6; i++ ){
+                lambda.push_back(c[i]);
+            }
+            d_file >> c[0] >> c[1] >> c[2] >> c[3] >> c[4] >> c[5];
+            for( int i = 0; i < 6; i++ ){
+                beta.push_back(c[i]);
+            }
+            while( d_file >> c[0] >> c[1] >> c[2] >> c[3] >> c[4] >> c[5] >> c[6] ){
+                d_E.push_back(c[0]);
+                for( int i = 0; i < 6; i++ ){
+                    cdf[i].push_back(cdf[i].back()+c[i+1]);
+                }
+            }
+            for( int i = 0; i < 6; i++ ){
+                n_ChiD[i] = std::make_shared<DistributionDelayedNeutron>(cdf[i],d_E);
+            }
         }
             
         auto XS_S = std::make_shared<XSTable> ( sigmaS );
@@ -301,6 +334,7 @@ for( const auto& n : input_nuclides.children("nuclide") ){
         auto XS_A = std::make_shared<XSTable> ( sigmaA );
         auto XS_T = std::make_shared<XSTable> ( sigmaT );
         auto XS_nu = std::make_shared<XSTable> ( nu );
+        auto XS_beta = std::make_shared<XSTable> ( beta );
             
         // Set reactions
         n_capture = std::make_shared<Reaction>(XS_C);
@@ -309,7 +343,9 @@ for( const auto& n : input_nuclides.children("nuclide") ){
         n_scatter = std::make_shared<ReactionScatter>
             ( XS_S, std::make_shared<DistributionIsotropicScatter>(), n_A );
         n_fission = std::make_shared<ReactionFission>( XS_F, XS_nu,
-                std::make_shared<DistributionWatt>( a, b ) );
+                std::make_shared<DistributionWatt>( a, b ),
+                n_ChiD,
+                XS_beta, lambda, fraction );
     }
     // User defined nuclide
     else{

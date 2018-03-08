@@ -60,7 +60,6 @@ double Material::nuSigmaF( const double E )
     double sum = 0.0;
     for ( auto& n : nuclides ){
 	sum += n.first->nusigmaF( E ) * n.second;
-        std::cout<<n.first->name()<<": "<<n.first->nusigmaF(E)<<"\n";
     }	
     return sum;
 }

@@ -94,3 +94,9 @@ Point DistributionIndepndentXYZ::sample( const double param /*= 0.0*/ )
 {
     return Point( dist_x->sample(), dist_y->sample(), dist_z->sample() );
 }
+double DistributionDelayedNeutron::sample( const double param /*= 0.0*/ ) 
+{
+    const double xi = Urand();
+    const int idx = binary_search( xi, CDF );
+    return interpolate( xi, CDF[idx], CDF[idx+1], v[idx], v[idx+1] );
+}

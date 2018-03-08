@@ -94,4 +94,18 @@ class DistributionIndepndentXYZ : public Distribution<Point>
 };
 
 
+class DistributionDelayedNeutron : public Distribution<double>
+{
+    private:
+        const std::vector<double> CDF;
+        const std::vector<double> v;
+    public:
+     	 DistributionDelayedNeutron( const std::vector<double> cdf, 
+                              const std::vector<double> val,
+                              const std::string label = "" ):
+             CDF(cdf), v(val), Distribution(label) {};
+    	~DistributionDelayedNeutron() {};
+        double sample( const double param = 0.0 );
+};
+
 #endif // DISTRIBUTION_H

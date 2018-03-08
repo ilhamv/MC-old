@@ -126,4 +126,14 @@ double ReactionFission::nu( const unsigned long long idx, const double E,
            const std::vector<double>& E_vec ) 
 { return r_nu->xs( idx, E, E_vec ); }
 
-double ReactionFission::Chi( const double E ) { return r_Chi->sample( E ); }
+double ReactionFission::Chi( const double E ) 
+{ return r_Chi->sample( E ); }
+double ReactionFission::ChiD( const int g, const double E ) 
+{ return r_ChiD[g]->sample( E ); }
+double ReactionFission::beta( const unsigned long long idx, const double E, 
+          const std::vector<double>& E_vec )
+{ return r_beta->xs( idx, E, E_vec ); }
+double ReactionFission::lambda( const int g ) 
+{ return r_lambda[g]; }
+double ReactionFission::fraction( const int g ) 
+{ return r_fraction[g]; }
