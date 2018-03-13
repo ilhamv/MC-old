@@ -153,16 +153,11 @@ void Simulator::collision( Particle& P )
             }
             for( int i = 0 ; i < bank_nu ; i++ ){
                 p_energy = N_fission->fission()->ChiD(cg,P.energy());
-                p_time = exponential_sample( N_fission->fission()->lambda(cg) );
-                for( int j = P.tdmc(); j < tdmc_time.size(); j++ ){
-                    if( p_time < tdmc_time[P.tdmc()] ){
-                        p_tdmc = j;
-                        Particle P_new( P.pos(), isotropic.sample(),
-                                     p_energy, p_time, 1.0, p_tdmc, P.cell() );
-                        add_fission_source( std::make_shared<SourceDelta>(P_new)
-                                                                          ,1.0);
-                    }
-                }
+                p_time = P.time();
+                p_tdmc = P.tdmc();
+                Particle P_new( P.pos(), isotropic.sample(),
+                                p_energy, p_time, 1.0, p_tdmc, P.cell() );
+                add_fission_source( std::make_shared<SourceDelta>(P_new),1.0);
             }
         }
     } else{
