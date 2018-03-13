@@ -57,6 +57,7 @@ class Nuclide
 	double sigmaC( const double E );
 	double sigmaF( const double E );
 	double nusigmaF( const double E );
+	double beta( const double E );
 };
 
 

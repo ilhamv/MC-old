@@ -27,5 +27,7 @@ void split_roulette( Particle& P, std::stack<Particle>& Pbank );
 void normalize_point( Point& p );
 bool point_equal( const Point p1, const Point p2 );
 
+double exponential_sample( const double param );
+
 
 #endif // ALGORITHM_H

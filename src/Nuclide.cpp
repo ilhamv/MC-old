@@ -59,3 +59,7 @@ double Nuclide::nusigmaF( const double E )
     checkE( E );
     return n_fission->xs(idx, E, n_E) * n_fission->nu(idx, E, n_E);
 }
+double Nuclide::beta( const double E ){
+    checkE( E );
+    return n_fission->beta(idx, E, n_E);
+}

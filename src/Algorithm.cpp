@@ -152,3 +152,8 @@ bool point_equal( const Point p1, const Point p2 )
     return true;
 }
 
+double exponential_sample( const double param )
+{
+    return -std::log(Urand()) / param;
+}
+

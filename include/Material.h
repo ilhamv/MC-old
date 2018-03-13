@@ -26,12 +26,12 @@ class Material
 
 	// Getters
 	std::string name();
-	double    SigmaT( const double E );
-	double    SigmaS( const double E );
-	double    SigmaA( const double E );
-	double    SigmaC( const double E );
-	double    SigmaF( const double E );
-	double  nuSigmaF( const double E );
+	double   SigmaT( const double E );
+	double   SigmaS( const double E );
+	double   SigmaA( const double E );
+	double   SigmaC( const double E );
+	double   SigmaF( const double E );
+	double nuSigmaF( const double E );
 	
 	// Sample collided nuclide
 	std::shared_ptr<Nuclide> nuclide_sample( const double E );

@@ -35,6 +35,10 @@ class Simulator
 	std::pair<std::shared_ptr<Surface>, double> 
             surface_intersect( const Particle& P );
 
+        void add_fission_source( const std::shared_ptr<Source>& S, 
+                                 const double i );
+        void push_particle_bank( const Particle& P );
+
         DistributionIsotropicDirection isotropic;
 
     public:

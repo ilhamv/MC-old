@@ -315,7 +315,7 @@ for( const auto& n : input_nuclides.children("nuclide") ){
             }
             d_file >> c[0] >> c[1] >> c[2] >> c[3] >> c[4] >> c[5];
             for( int i = 0; i < 6; i++ ){
-                beta.push_back(c[i]);
+                fraction.push_back(c[i]);
             }
             while( d_file >> c[0] >> c[1] >> c[2] >> c[3] >> c[4] >> c[5] >> c[6] ){
                 d_E.push_back(c[0]);

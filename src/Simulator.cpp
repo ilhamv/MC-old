@@ -26,6 +26,24 @@ bool Simulator::test_point( const Point& p, const std::shared_ptr<Cell>& C )
 
 
 //=============================================================================
+// Push Particle Bank
+//=============================================================================
+void Simulator::push_particle_bank( const Particle& P )
+{
+    Pbank.push(P);
+}
+        
+
+//==============================================================================
+// Add Fission Source
+//==============================================================================
+void Simulator::add_fission_source( const std::shared_ptr<Source>& S,
+                                    const double i )
+{
+    Fbank.add_source( S, i );
+}
+
+//=============================================================================
 // Search Cell
 //=============================================================================
 
@@ -47,7 +65,7 @@ std::shared_ptr<Cell> Simulator::search_cell( const Point& p )
 double Simulator::collision_distance( const Particle& P )
 {
     if ( P.cell()->material() ){ 
-        return -std::log(Urand()) / P.cell()->material()->SigmaT( P.energy() );
+        return exponential_sample( P.cell()->material()->SigmaT( P.energy() ) );
     }
     // Vacuum --> return sligthly less than very large number
     //            to ensure collision (kill) if no surface intersection
@@ -113,18 +131,73 @@ void Simulator::collision( Particle& P )
     std::shared_ptr<Nuclide> N_fission = M->nuclide_nufission( P.energy() );
 
     if(ksearch){ 
-        for ( int i = 0 ; i < bank_nu ; i++ ){
-            Particle P_new( P.pos(), isotropic.sample(),
-                            N_fission->fission()->Chi(P.energy()), P.time(), 
-                            1.0, 0, P.cell() );
-            Fbank.add_source( std::make_shared<SourceDelta>(P_new), 1.0 );
+        // k-eigenvalue
+        if( Urand() > N_fission->beta(P.energy()) ){
+            // Prompt
+            for ( int i = 0 ; i < bank_nu ; i++ ){
+                Particle P_new( P.pos(), isotropic.sample(),
+                                N_fission->fission()->Chi(P.energy()), P.time(),
+                                1.0, P.tdmc(), P.cell() );
+                add_fission_source( std::make_shared<SourceDelta>(P_new),1.0);
+            }
+        } else{
+            // Delayed
+            const double xi = Urand();
+            double sum = 0;
+            int cg, p_tdmc;
+            double p_energy, p_time;
+            // Precursor group cg
+            for( int i = 0; i < 6; i++ ){
+                sum += N_fission->fission()->fraction(i);
+                if( sum > xi ){ cg = i; break; }
+            }
+            for( int i = 0 ; i < bank_nu ; i++ ){
+                p_energy = N_fission->fission()->ChiD(cg,P.energy());
+                p_time = exponential_sample( N_fission->fission()->lambda(cg) );
+                for( int j = P.tdmc(); j < tdmc_time.size(); j++ ){
+                    if( p_time < tdmc_time[P.tdmc()] ){
+                        p_tdmc = j;
+                        Particle P_new( P.pos(), isotropic.sample(),
+                                     p_energy, p_time, 1.0, p_tdmc, P.cell() );
+                        add_fission_source( std::make_shared<SourceDelta>(P_new)
+                                                                          ,1.0);
+                    }
+                }
+            }
         }
     } else{
-        for ( int i = 0 ; i < bank_nu ; i++ ){
-            Particle P_new( P.pos(), isotropic.sample(),
-                            N_fission->fission()->Chi(P.energy()), P.time(), 
-                            1.0, P.tdmc(), P.cell() );
-            Pbank.push(P_new);
+        // Fixed Source
+        if( Urand() > N_fission->beta(P.energy()) ){
+            // Prompt
+            for ( int i = 0 ; i < bank_nu ; i++ ){
+                Particle P_new( P.pos(), isotropic.sample(),
+                                N_fission->fission()->Chi(P.energy()), P.time(),
+                                1.0, P.tdmc(), P.cell() );
+                push_particle_bank(P_new);
+            }
+        } else{
+            // Delayed
+            const double xi = Urand();
+            double sum = 0;
+            int cg, p_tdmc;
+            double p_energy, p_time;
+            // Precursor group cg
+            for( int i = 0; i < 6; i++ ){
+                sum += N_fission->fission()->fraction(i);
+                if( sum > xi ){ cg = i; break; }
+            }
+            for( int i = 0 ; i < bank_nu ; i++ ){
+                p_energy = N_fission->fission()->ChiD(cg,P.energy());
+                p_time = exponential_sample( N_fission->fission()->lambda(cg) );
+                for( int j = P.tdmc(); j < tdmc_time.size(); j++ ){
+                    if( p_time < tdmc_time[P.tdmc()] ){
+                        p_tdmc = j;
+                        Particle P_new( P.pos(), isotropic.sample(),
+                                     p_energy, p_time, 1.0, p_tdmc, P.cell() );
+                        push_particle_bank(P_new);
+                    }
+                }
+            }
         }
     }
     
@@ -224,7 +297,7 @@ void Simulator::start()
                             if(P.alive()){
                                 P.set_weight(P.weight()/tdmc_split);
                                 for( int i = 0; i < tdmc_split - 1; i++ ){
-                                    Pbank.push(P);
+                                    push_particle_bank(P);
                                 }
                             }
                             continue;
