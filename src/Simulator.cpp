@@ -124,7 +124,7 @@ Particle Simulator::forced_decay( const Particle& P,
     p_time = initial + Urand() * interval;
     for( int k = 0; k < 6; k++ ){
         prob[k] += N->fission()->f_lambda(k) * std::exp(-N->fission()->lambda(k)
-                   *p_time);
+                                                        *(p_time - P.time()) );
         p_weight += prob[k];
     } 
     p_weight *= interval;
