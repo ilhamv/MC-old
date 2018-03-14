@@ -137,3 +137,5 @@ double ReactionFission::lambda( const int g )
 { return r_lambda[g]; }
 double ReactionFission::fraction( const int g ) 
 { return r_fraction[g]; }
+double ReactionFission::f_lambda( const int g ) 
+{ return r_f_lambda[g]; }

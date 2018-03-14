@@ -86,7 +86,12 @@ if( input_tdmc ){
     tdmc = true;
     const std::string grid_string = input_tdmc.attribute("time").value();
     std::istringstream  iss( grid_string );
-    for( double s; iss >> s; ) { tdmc_time.push_back(s); }
+    tdmc_interval.push_back(0.0);
+    for( double s; iss >> s; ){
+        tdmc_time.push_back(s); 
+        tdmc_interval.push_back(s-tdmc_interval.back()); 
+    }
+    tdmc_interval.erase(tdmc_interval.begin());
     if( input_ksearch ){
         std::cout<<"ksearch and tdmc could not coexist\n";
         std::exit(EXIT_FAILURE);
@@ -267,6 +272,7 @@ for( const auto& n : input_nuclides.children("nuclide") ){
         std::vector<double> beta;
         std::vector<double> lambda;
         std::vector<double> fraction;
+        std::vector<double> f_lambda;
         double c1, c2, c3, c4, c5, c6;
 
         // Nuclide mass, 1st line
@@ -316,6 +322,7 @@ for( const auto& n : input_nuclides.children("nuclide") ){
             d_file >> c[0] >> c[1] >> c[2] >> c[3] >> c[4] >> c[5];
             for( int i = 0; i < 6; i++ ){
                 fraction.push_back(c[i]);
+                f_lambda.push_back(lambda[i]*c[i]);
             }
             while( d_file >> c[0] >> c[1] >> c[2] >> c[3] >> c[4] >> c[5] >> c[6] ){
                 d_E.push_back(c[0]);
@@ -345,7 +352,7 @@ for( const auto& n : input_nuclides.children("nuclide") ){
         n_fission = std::make_shared<ReactionFission>( XS_F, XS_nu,
                 std::make_shared<DistributionWatt>( a, b ),
                 n_ChiD,
-                XS_beta, lambda, fraction );
+                XS_beta, lambda, fraction, f_lambda );
     }
     // User defined nuclide
     else{

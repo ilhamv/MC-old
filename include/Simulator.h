@@ -31,6 +31,10 @@ class Simulator
         void collision( Particle& P );
         void surface_hit( Particle& P, const std::shared_ptr<Surface>& S );
         void cut_off( Particle& P );
+        Particle forced_decay( const Particle& P, 
+                               const std::shared_ptr<Nuclide>& N, 
+                               const double initial, const double interval,
+                               const int p_tdmc);
         double collision_distance( const Particle& P );
 	std::pair<std::shared_ptr<Surface>, double> 
             surface_intersect( const Particle& P );
@@ -84,6 +88,7 @@ class Simulator
 
         // TDMC specific
         std::vector<double> tdmc_time;
+        std::vector<double> tdmc_interval;
         unsigned long long  tdmc_split = 1.0;
 
         // TRMM specific

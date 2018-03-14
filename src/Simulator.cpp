@@ -4,6 +4,7 @@
 #include <memory>  
 #include <stack>   
 #include <cmath>   
+#include <numeric>
 
 #include "Simulator.h"
 #include "Algorithm.h"
@@ -108,6 +109,42 @@ void Simulator::move_particle( Particle& P, const double l )
 
 
 //=============================================================================
+// Forced delay neutron decay
+//=============================================================================
+
+Particle Simulator::forced_decay( const Particle& P, 
+                                  const std::shared_ptr<Nuclide>& N, 
+                                  const double initial, const double interval,
+                                  const int p_tdmc )
+{
+    double p_time, p_energy;
+    int cg;
+    double p_weight = 0.0;
+    std::vector<double> prob(6);
+    p_time = initial + Urand() * interval;
+    for( int k = 0; k < 6; k++ ){
+        prob[k] += N->fission()->f_lambda(k) * std::exp(-N->fission()->lambda(k)
+                   *p_time);
+        p_weight += prob[k];
+    } 
+    p_weight *= interval;
+    
+    const double xi = Urand() 
+                      * std::accumulate( prob.begin(), prob.end(), 0.0 );
+    double sum = 0;
+    for( int k = 0; k < 6; k++ ){
+        sum += prob[k];
+        if( sum > xi ){ cg = k; break; }
+    }
+
+    p_energy = N->fission()->ChiD(cg,P.energy());
+    return Particle( P.pos(), isotropic.sample(), 
+                     p_energy, p_time, p_weight, p_tdmc, 
+                     P.cell() );
+}
+
+
+//=============================================================================
 // Collision
 //=============================================================================
 
@@ -172,24 +209,40 @@ void Simulator::collision( Particle& P )
             }
         } else{
             // Delayed
-            const double xi = Urand();
-            double sum = 0;
-            int cg, p_tdmc;
-            double p_energy, p_time;
-            // Precursor group cg
-            for( int i = 0; i < 6; i++ ){
-                sum += N_fission->fission()->fraction(i);
-                if( sum > xi ){ cg = i; break; }
-            }
-            for( int i = 0 ; i < bank_nu ; i++ ){
-                p_energy = N_fission->fission()->ChiD(cg,P.energy());
-                p_time = exponential_sample( N_fission->fission()->lambda(cg) );
-                for( int j = P.tdmc(); j < tdmc_time.size(); j++ ){
-                    if( p_time < tdmc_time[P.tdmc()] ){
-                        p_tdmc = j;
-                        Particle P_new( P.pos(), isotropic.sample(),
-                                     p_energy, p_time, 1.0, p_tdmc, P.cell() );
-                        push_particle_bank(P_new);
+            if(tdmc){
+                // Combined and forced decay
+                for( int i = 0 ; i < bank_nu ; i++ ){
+                    push_particle_bank( forced_decay( P, N_fission, P.time(),
+                                        tdmc_time[P.tdmc()] - P.time(), 
+                                        P.tdmc() ) );
+                    for( int j = P.tdmc(); j < tdmc_time.size()-1; j++ ){
+                        push_particle_bank(
+                                forced_decay(P, N_fission, tdmc_time[j],
+                                             tdmc_interval[j+1], j+1) );
+                    }
+                }
+            } else{
+                int cg, p_tdmc;
+                double p_energy, p_time;
+                // Precursor group cg
+                const double xi = Urand();
+                double sum = 0;
+                for( int i = 0; i < 6; i++ ){
+                    sum += N_fission->fission()->fraction(i);
+                    if( sum > xi ){ cg = i; break; }
+                }
+                for( int i = 0 ; i < bank_nu ; i++ ){
+                    p_energy = N_fission->fission()->ChiD(cg,P.energy());
+                    p_time = exponential_sample( 
+                            N_fission->fission()->lambda(cg) );
+                    for( int j = P.tdmc(); j < tdmc_time.size(); j++ ){
+                        if( p_time < tdmc_time[P.tdmc()] ){
+                            p_tdmc = j;
+                            Particle P_new( P.pos(), isotropic.sample(), 
+                                            p_energy, p_time, 1.0, p_tdmc, 
+                                            P.cell() );
+                            push_particle_bank(P_new);
+                        }
                     }
                 }
             }

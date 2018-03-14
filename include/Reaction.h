@@ -62,6 +62,7 @@ class ReactionFission : public Reaction
         const std::shared_ptr<XS> r_beta;
         const std::vector<double> r_lambda;
         const std::vector<double> r_fraction;
+        const std::vector<double> r_f_lambda;
 
     public:
 	// Constructor: Pass the microXs and distributions
@@ -71,8 +72,10 @@ class ReactionFission : public Reaction
                     const std::vector<std::shared_ptr<Distribution<double>>> D,
                           const std::shared_ptr<XS> b,
                           const std::vector<double> l,
-                          const std::vector<double> f) :Reaction(x), 
-         r_nu(n), r_Chi(W), r_ChiD(D), r_beta(b), r_lambda(l), r_fraction(f) {};
+                          const std::vector<double> f,
+                          const std::vector<double> fl) :Reaction(x), 
+         r_nu(n), r_Chi(W), r_ChiD(D), r_beta(b), r_lambda(l), r_fraction(f),
+         r_f_lambda(fl) {};
 
 	~ReactionFission() {};
 
@@ -85,6 +88,7 @@ class ReactionFission : public Reaction
                      const std::vector<double>& E_vec );
         double lambda( const int g );
         double fraction( const int g );
+        double f_lambda( const int g );
 };
 
 
