@@ -30,7 +30,7 @@ class Simulator
         void move_particle( Particle& P, const double l );
         void collision( Particle& P );
         void surface_hit( Particle& P, const std::shared_ptr<Surface>& S );
-        void cut_off( Particle& P );
+        void weight_roulette( Particle& P );
         Particle forced_decay( const Particle& P, 
                                const std::shared_ptr<Nuclide>& N, 
                                const double initial, const double interval,
@@ -61,10 +61,6 @@ class Simulator
         bool tdmc    = false;
         bool trmm    = false;
         
-        // Cut off
-        double Ecut_off = 0.0;
-        double tcut_off = MAX_float;
-
         // Survival rouletting
         double wr = 0.25; // Weight rouletting
         double ws = 1.0;  // Survival weight

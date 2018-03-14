@@ -58,14 +58,6 @@ pugi::xml_node input_tdmc        = input_simulation.child("tdmc");
 simulation_name = input_description.attribute("name").value();
 Nsample         = input_description.attribute("samples").as_double();
 
-// Cut-off
-if( input_file.child("cut-off").attribute("energy") ){
-    Ecut_off = input_file.child("cut-off").attribute("energy").as_double();
-}
-if( input_file.child("cut-off").attribute("time") ){
-    tcut_off = input_file.child("cut-off").attribute("time").as_double();
-}
-
 // ksearch
 if( input_ksearch ){
     ksearch  = true;
@@ -96,7 +88,6 @@ if( input_tdmc ){
         std::cout<<"ksearch and tdmc could not coexist\n";
         std::exit(EXIT_FAILURE);
     }
-    tcut_off = tdmc_time.back();
     if( input_tdmc.attribute("split") ){
         tdmc_split = input_tdmc.attribute("split").as_double();
     }

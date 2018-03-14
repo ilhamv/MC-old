@@ -212,13 +212,16 @@ void Simulator::collision( Particle& P )
             if(tdmc){
                 // Combined and forced decay
                 for( int i = 0 ; i < bank_nu ; i++ ){
-                    push_particle_bank( forced_decay( P, N_fission, P.time(),
-                                        tdmc_time[P.tdmc()] - P.time(), 
-                                        P.tdmc() ) );
+                    Particle P_new = forced_decay( P, N_fission, P.time(), 
+                                                tdmc_time[P.tdmc()] - P.time(), 
+                                                P.tdmc() );
+                    weight_roulette( P_new );
+                    if( P_new.alive() ) { push_particle_bank( P_new ); }
                     for( int j = P.tdmc(); j < tdmc_time.size()-1; j++ ){
-                        push_particle_bank(
-                                forced_decay(P, N_fission, tdmc_time[j],
-                                             tdmc_interval[j+1], j+1) );
+                        P_new = forced_decay(P, N_fission, tdmc_time[j],
+                                             tdmc_interval[j+1], j+1);
+                        weight_roulette( P_new );
+                        if( P_new.alive() ) {push_particle_bank( P_new ); }
                     }
                 }
             } else{
@@ -286,20 +289,15 @@ void Simulator::surface_hit( Particle& P, const std::shared_ptr<Surface>& S )
 
 
 //=============================================================================
-// Cut-off and weight rouletting
+// Weight Roulette
 //=============================================================================
 
-void Simulator::cut_off( Particle& P )
+void Simulator::weight_roulette( Particle& P )
 {
-    if ( P.energy() <= Ecut_off || P.time() >= tcut_off || P.weight() == 0.0 ){
-        P.kill();
-    }
-    else{
-        // Weight rouletting
-        if( P.weight() < wr ){
-            if( Urand() < P.weight() / ws ) { P.set_weight(ws); }
-            else { P.kill(); }
-        }
+    // Weight rouletting
+    if( P.weight() < wr ){
+        if( Urand() < P.weight() / ws ) { P.set_weight(ws); }
+        else { P.kill(); }
     }
 }
 
@@ -340,13 +338,18 @@ void Simulator::start()
                         if( std::min(SnD.second,dcol) > dbound ){
                             move_particle( P, dbound );
                             P.increment_tdmc();
-                            cut_off( P );
+                            if( P.time() == tdmc_time.back() ) { P.kill(); }
                             // Time splitting
                             if(P.alive()){
                                 P.set_weight(P.weight()/tdmc_split);
                                 for( int i = 0; i < tdmc_split - 1; i++ ){
-                                    push_particle_bank(P);
+                                    Particle P_new = P;
+                                    weight_roulette( P_new );
+                                    if( P_new.alive() ){ 
+                                        push_particle_bank(P_new); 
+                                    }
                                 }
+                                weight_roulette( P );
                             }
                             continue;
                         }
@@ -363,7 +366,7 @@ void Simulator::start()
                         move_particle( P, dcol );
                         collision( P );
                     }        
-                    cut_off( P );
+                    weight_roulette( P );
                 } 
             }
 
@@ -414,10 +417,6 @@ void Simulator::report()
     dataset.write(&Ntrack, type_ull);
     dataset = group.createDataSet( "mode", type_str, space_scalar );
     dataset.write(mode, type_str);
-    dataset = group.createDataSet( "cut_off-E", type_double, space_scalar);
-    dataset.write(&Ecut_off, type_double);
-    dataset = group.createDataSet( "cut_off-t", type_double, space_scalar);
-    dataset.write(&tcut_off, type_double);
     group = output.createGroup("/summary/survival_roulette");
     dataset = group.createDataSet( "wr", type_double, space_scalar);
     dataset.write(&wr, type_double);

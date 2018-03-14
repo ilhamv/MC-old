@@ -37,6 +37,9 @@ endif()
 
 # Show flags being used
 message(STATUS "C++ flags: ${cxxflags}")
+if(test)
+    message(STATUS "Test: ON")
+endif()
 
 # Convert to string
 string(REPLACE ";" " " cxxflags "${cxxflags}")
