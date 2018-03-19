@@ -318,7 +318,12 @@ for( const auto& n : input_nuclides.children("nuclide") ){
             while( d_file >> c[0] >> c[1] >> c[2] >> c[3] >> c[4] >> c[5] >> c[6] ){
                 d_E.push_back(c[0]);
                 for( int i = 0; i < 6; i++ ){
-                    cdf[i].push_back(cdf[i].back()+c[i+1]);
+                    cdf[i].push_back(c[i+1]);
+                }
+            }
+            for ( int j = 0; j < 6; j++ ){
+                for( int i = 1; i < d_E.size() + 1; i++ ){
+                    cdf[j][i] = cdf[j][i-1] + cdf[j][i] * (d_E[i]-d_E[i-1]);
                 }
             }
             for( int i = 0; i < 6; i++ ){

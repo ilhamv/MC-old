@@ -150,14 +150,14 @@ Particle Simulator::forced_decay( const Particle& P,
 
 void Simulator::collision( Particle& P )
 {
+    // Vacuum --> Kill particle at collision
+    if( !P.cell()->material() ){ return P.kill(); }
+    
     if(ksearch) { k_estimator->estimate_C(P); }
     
     if(tally){ 
         for( auto& e : P.cell()->estimators_C ) { e->score( P, 0 ); }
     }
-    
-    // Vacuum --> Kill particle at collision
-    if( !P.cell()->material() ){ return P.kill(); }
     
     std::shared_ptr<Material> M = P.cell()->material();
     
@@ -170,7 +170,7 @@ void Simulator::collision( Particle& P )
     if(ksearch){ 
         // k-eigenvalue
         if( Urand() > N_fission->beta(P.energy()) ){
-            // Prompt
+            // Prompt energy spectrum
             for ( int i = 0 ; i < bank_nu ; i++ ){
                 Particle P_new( P.pos(), isotropic.sample(),
                                 N_fission->fission()->Chi(P.energy()), P.time(),
@@ -178,22 +178,21 @@ void Simulator::collision( Particle& P )
                 add_fission_source( std::make_shared<SourceDelta>(P_new),1.0);
             }
         } else{
-            // Delayed
-            const double xi = Urand();
-            double sum = 0;
-            int cg, p_tdmc;
-            double p_energy, p_time;
+            std::cout<<"Here!\n";
+            // Delayed energy spectrum
+            double p_energy;
             // Precursor group cg
+            int cg;
+            double sum = 0;
+            const double xi = Urand();
             for( int i = 0; i < 6; i++ ){
                 sum += N_fission->fission()->fraction(i);
                 if( sum > xi ){ cg = i; break; }
             }
             for( int i = 0 ; i < bank_nu ; i++ ){
                 p_energy = N_fission->fission()->ChiD(cg,P.energy());
-                p_time = P.time();
-                p_tdmc = P.tdmc();
                 Particle P_new( P.pos(), isotropic.sample(),
-                                p_energy, p_time, 1.0, p_tdmc, P.cell() );
+                                p_energy, P.time(), 1.0, P.tdmc(), P.cell() );
                 add_fission_source( std::make_shared<SourceDelta>(P_new),1.0);
             }
         }
@@ -210,6 +209,7 @@ void Simulator::collision( Particle& P )
         } else{
             // Delayed
             if(tdmc){
+                std::cout<<"Here!\n";
                 // Combined and forced decay
                 for( int i = 0 ; i < bank_nu ; i++ ){
                     Particle P_new = forced_decay( P, N_fission, P.time(), 
@@ -440,8 +440,7 @@ void Simulator::report()
 
     // Set TRM
     unsigned long long trm_N = trmm_estimator_collision->tally_size()/2;
-    Eigen::MatrixXd TRM,TRM_real;
-    TRM = Eigen::MatrixXd(trm_N,trm_N);
+    Eigen::MatrixXd TRM = Eigen::MatrixXd(trm_N,trm_N);
 
     for( int f = 0; f < trm_N; f++ ){
         for( int i = 0; i < trm_N; i++ ){
@@ -457,7 +456,6 @@ void Simulator::report()
             }
         }
     }
-    TRM_real = TRM.real();
 
     // Solve eigenvalue of TRM
     Eigen::MatrixXcd phi_mode;
@@ -476,7 +474,7 @@ void Simulator::report()
     Eigen::VectorXcd phi0;
     Eigen::VectorXcd A;
     phi0 = Eigen::VectorXcd::Zero(trm_N);
-    phi0(trm_N-1) = 1.0 * std::sqrt( 14.1E6 * 191312955.067 ) * 100.0;
+    phi0(trm_N-1) = 13831.5926439 * std::sqrt( 14.1E6 ) * 100.0;
     Eigen::ColPivHouseholderQR<Eigen::MatrixXcd> dec(phi_mode);
     A = dec.solve(phi0);
 
@@ -501,7 +499,7 @@ void Simulator::report()
     hsize_t dimsM[2]; dimsM[0] = trm_N; dimsM[1] = trm_N;
     H5::DataSpace data_spaceM(2,dimsM);
     dataset = group.createDataSet( "TRM", type_double, data_spaceM);
-    dataset.write(TRM_real.data(), type_double);
+    dataset.write(TRM.data(), type_double);
     hsize_t dims[2]; dims[0] = t.size(); dims[1] = trm_N;
     H5::DataSpace data_spacev(2,dims);
     dataset = group.createDataSet( "flux", type_double, data_spacev);

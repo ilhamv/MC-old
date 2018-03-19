@@ -37,9 +37,6 @@ endif()
 
 # Show flags being used
 message(STATUS "C++ flags: ${cxxflags}")
-if(test)
-    message(STATUS "Test: ON")
-endif()
 
 # Convert to string
 string(REPLACE ";" " " cxxflags "${cxxflags}")
@@ -92,9 +89,12 @@ file(COPY ${CMAKE_SOURCE_DIR}/examples DESTINATION ${CMAKE_BINARY_DIR})
 #==============================================================================
 
 if(test)
+    message(STATUS "Test: ON")
     enable_testing()
     find_package(GTest REQUIRED)
     add_executable(unit_test.exe ${CMAKE_SOURCE_DIR}/test/unit_test.cpp)
     target_link_libraries(unit_test.exe GTest::GTest libMC)
     add_test(NAME UnitTest COMMAND unit_test.exe)
+else()
+    message(STATUS "Test: OFF")
 endif()

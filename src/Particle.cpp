@@ -43,7 +43,7 @@ void Particle::set_energy( const double E )
 { 
     p_energy_old = p_energy;
     p_energy     = E;
-    p_speed  = std::sqrt( p_energy * 191312955.067 ) * 100.0;
+    p_speed  = 13831.5926439 * std::sqrt( p_energy ) * 100.0;
     // constant: 2.0 * ( 1.60217662e-19 J/eV ) / ( 1.674927471e-27 kg )
 }
 void Particle::set_speed( const double v )
