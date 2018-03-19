@@ -178,7 +178,6 @@ void Simulator::collision( Particle& P )
                 add_fission_source( std::make_shared<SourceDelta>(P_new),1.0);
             }
         } else{
-            std::cout<<"Here!\n";
             // Delayed energy spectrum
             double p_energy;
             // Precursor group cg
@@ -209,7 +208,6 @@ void Simulator::collision( Particle& P )
         } else{
             // Delayed
             if(tdmc){
-                std::cout<<"Here!\n";
                 // Combined and forced decay
                 for( int i = 0 ; i < bank_nu ; i++ ){
                     Particle P_new = forced_decay( P, N_fission, P.time(), 
