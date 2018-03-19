@@ -6,4 +6,6 @@ mkdir build;
 cd build;
 cmake -Doptimize=ON ..;
 make;
-./MC examples/Problem_7_0.6;
+./MC examples/infinite_GCR_TRMM;
+cd examples/infinite_GCR_TRMM/;
+python plot;
