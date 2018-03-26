@@ -396,6 +396,7 @@ class Estimator
 
         Tally tally( const int i );
         unsigned long long tally_size();
+        unsigned long long score_size();
         // Multiplication of filter size with index > i
         std::vector<double> idx_factor;
 };

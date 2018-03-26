@@ -9,7 +9,8 @@ TRMM::TRMM( const Simulator& S )
 {
     // Sizes
     // N_flux is divided by 8 due to the number of scores
-    N_flux = S.trmm_estimator_simple->tally_size()/2;
+    N_flux = S.trmm_estimator_simple->tally_size()
+             / S.trmm_estimator_simple->score_size();
     TRM = Eigen::MatrixXd(N_flux,N_flux);
 
     // Block M

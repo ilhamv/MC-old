@@ -252,7 +252,7 @@ for( const auto& n : input_nuclides.children("nuclide") ){
         std::vector<double> nu;
         std::vector<double> beta;
         std::vector<double> lambda;
-        std::vector<double> fraction;
+        std::vector<double> fraction(6,0.0);
         std::vector<double> f_lambda;
         double c1, c2, c3, c4, c5, c6;
 
@@ -302,7 +302,7 @@ for( const auto& n : input_nuclides.children("nuclide") ){
             }
             d_file >> c[0] >> c[1] >> c[2] >> c[3] >> c[4] >> c[5];
             for( int i = 0; i < 6; i++ ){
-                fraction.push_back(c[i]);
+                fraction[i] = c[i];
                 f_lambda.push_back(lambda[i]*c[i]);
             }
             while( d_file >> c[0] >> c[1] >> c[2] >> c[3] >> c[4] >> c[5] >> c[6] ){
@@ -722,7 +722,7 @@ for ( auto& e : input_file.child("estimators").children("estimator") ){
 }
 
 //==========================================================================
-// TRMM Estimator
+// TRM Estimator
 //==========================================================================
 
 pugi::xml_node input_trmm = input_file.child("trmm");
@@ -746,20 +746,43 @@ if(input_trmm){
     trmm_estimator_fission = std::make_shared<EstimatorFission>
         ( "MG_fission", Nsample, Ncycle-Npassive );
 
-    // Score
+    //==========================================================================
+    // Scores
+    //==========================================================================
+
+    // Collision 
     trmm_sk = std::make_shared<ScoreKernelTrackLengthVelocity>();
     trmm_score = std::make_shared<ScoreTotal>("collision",trmm_sk);
     trmm_estimator_simple->add_score( trmm_score );
+
+    // Flux
     trmm_sk = std::make_shared<ScoreKernelTrackLength>();
     trmm_score = std::make_shared<ScoreFlux>("flux",trmm_sk);
     trmm_estimator_simple->add_score( trmm_score );
+
+    // Delayed NuFission
+    for( int i = 0; i < 6; i++ ){
+        const std::string label = "NuFissionDelayed_" + std::to_string(i+1);
+        trmm_score = std::make_shared<ScoreNuFissionDelayedOld>
+            (label,trmm_sk,i);
+        trmm_estimator_simple->add_score( trmm_score );
+    }
+
+    // InScatter
     trmm_sk = std::make_shared<ScoreKernelTrackLengthVelocity>();
     trmm_score = std::make_shared<ScoreScatterOld>("InScatter",trmm_sk);
     trmm_estimator_scatter->add_score( trmm_score );
-    trmm_score = std::make_shared<ScoreNuFissionOld>("NuFission",trmm_sk);
-    trmm_estimator_fission->add_score( trmm_score );
 
+    // Prompt NuFission
+    trmm_score = std::make_shared<ScoreNuFissionPromptOld>
+                                              ("NuFissionPrompt",trmm_sk);
+    trmm_estimator_fission->add_score( trmm_score );
+    
+    //==========================================================================
     // Filters
+    //==========================================================================
+
+    // Cell
     for( auto& c : input_trmm.children("cell") ){
         const std::string c_name = c.attribute("name").value();
         const std::shared_ptr<Cell> c_ptr = find_by_name( Cells, c_name );

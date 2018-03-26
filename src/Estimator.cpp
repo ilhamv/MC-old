@@ -422,6 +422,11 @@ unsigned long long Estimator::tally_size()
     return e_tally.size();
 }
 
+unsigned long long Estimator::score_size()
+{
+    return e_scores.size();
+}
+
 // Scattering simulation estimator
 //   It simulates scattering event before scoring
 void EstimatorScatter::score( const Particle& P, const double l )
