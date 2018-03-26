@@ -92,10 +92,7 @@ class Simulator
         // TRMM specific
         std::shared_ptr<Estimator> trmm_estimator_simple;
         std::shared_ptr<Estimator> trmm_estimator_scatter;
-        std::shared_ptr<Estimator> trmm_estimator_fission_prompt;
-        std::vector<std::shared_ptr<Estimator>> 
-                                       trmm_estimator_fission_delayed_emission;
-        std::vector<std::shared_ptr<Estimator>> trmm_estimator_decay;
+        std::shared_ptr<Estimator> trmm_estimator_fission;
         
         // User-defined distributions
         std::vector<std::shared_ptr<Distribution<double>>>Distribution_Double;

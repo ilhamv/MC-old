@@ -8,7 +8,6 @@
 
 int main( int argc, char* argv[] )
 {
-
     // I/O Directory
     if ( argc == 1 ){ 
         std::cout<< "[ERROR] Please provide input.xml directory...\n";
@@ -20,7 +19,10 @@ int main( int argc, char* argv[] )
     H5std_string output_name( io_dir + "output.h5" );
     H5::H5File output(output_name, H5F_ACC_TRUNC);
     
+    //=========================================================================
     // Monte Carlo Simulation
+    //=========================================================================
+
     Simulator MC_Simulator( io_dir );
     std::cout<<"\nSimulation setup done,\nNow running the simulation...\n\n";
     
@@ -30,10 +32,15 @@ int main( int argc, char* argv[] )
     MC_Simulator.report( output );
     std::cout<<"Simulation output done!\n";
 
+    //=========================================================================
     // TRMM Solver
-    TRMM MC_TRMM( MC_Simulator );
-    MC_TRMM.solve();
-    MC_TRMM.report( output );
+    //=========================================================================
 
+    if( MC_Simulator.trmm ){
+        TRMM MC_TRMM( MC_Simulator );
+        MC_TRMM.solve();
+        MC_TRMM.report( output );
+    }
+    
     return 0;
 }

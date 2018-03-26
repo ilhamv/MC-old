@@ -9,22 +9,20 @@ TRMM::TRMM( const Simulator& S )
 {
     // Sizes
     // N_flux is divided by 8 due to the number of scores
-    N_flux = S.trmm_estimator_simple->tally_size()/8;
+    N_flux = S.trmm_estimator_simple->tally_size()/2;
     TRM = Eigen::MatrixXd(N_flux,N_flux);
 
-    // M
+    // Block M
     for( int f = 0; f < N_flux; f++ ){
         for( int i = 0; i < N_flux; i++ ){
             if( i == f ){
                 TRM(i,i)  = -S.trmm_estimator_simple->tally(i).mean;
                 TRM(i,i) +=  S.trmm_estimator_scatter->tally(i+i*N_flux).mean;
-                TRM(i,i) +=  S.trmm_estimator_fission_prompt->tally(i+i*N_flux)
-                                                              .mean;
+                TRM(i,i) +=  S.trmm_estimator_fission->tally(i+i*N_flux).mean;
                 TRM(i,i) /=  S.trmm_estimator_simple->tally(i+N_flux).mean;
             } else{
                 TRM(f,i)  = S.trmm_estimator_scatter->tally(f+i*N_flux).mean;
-                TRM(f,i) += S.trmm_estimator_fission_prompt->tally(f+i*N_flux)
-                                                             .mean;
+                TRM(f,i) += S.trmm_estimator_fission->tally(f+i*N_flux).mean;
                 TRM(f,i) /= S.trmm_estimator_simple->tally(i+N_flux).mean;
             }
         }
