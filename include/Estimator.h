@@ -191,6 +191,31 @@ class ScoreNuFissionOld : public Score
 
 	double score( const Particle& P, const double l );
 };
+// NuFission Prompt Old
+class ScoreNuFissionPromptOld : public Score
+{
+    public:
+	ScoreNuFissionPromptOld( const std::string n,
+                                 const std::shared_ptr<ScoreKernel>& k )
+            : Score(n,k) {};
+	~ScoreNuFissionPromptOld() {};
+
+	double score( const Particle& P, const double l );
+};
+// NuFission Delayed Old
+class ScoreNuFissionDelayedOld : public Score
+{
+    private:
+        const unsigned cg;
+    public:
+	ScoreNuFissionDelayedOld( const std::string n,
+                                  const std::shared_ptr<ScoreKernel>& k,
+                                  const unsigned c )
+            : Score(n,k), cg(c) {};
+	~ScoreNuFissionDelayedOld() {};
+
+	double score( const Particle& P, const double l );
+};
 // Total
 class ScoreTotal : public Score
 {
@@ -391,6 +416,27 @@ class EstimatorFission : public Estimator
 	 EstimatorFission( const std::string n, const unsigned long long Ns,
                            const unsigned long long Na ) :Estimator(n,Ns,Na){};
 	~EstimatorFission() {};
+        void score( const Particle& P, const double l );
+};
+// Prompt Fission simulation estimator
+class EstimatorFissionPrompt : public Estimator
+{
+    public:
+	 EstimatorFissionPrompt( const std::string n, const unsigned long long Ns,
+                           const unsigned long long Na ) :Estimator(n,Ns,Na){};
+	~EstimatorFissionPrompt() {};
+        void score( const Particle& P, const double l );
+};
+// Delayed Fission simulation estimator
+class EstimatorFissionDelayed : public Estimator
+{
+    private:
+        const unsigned cg;
+    public:
+	 EstimatorFissionDelayed( const std::string n, const unsigned long long Ns,
+                           const unsigned long long Na, const unsigned c ) : 
+             cg(c), Estimator(n,Ns,Na){};
+	~EstimatorFissionDelayed() {};
         void score( const Particle& P, const double l );
 };
 

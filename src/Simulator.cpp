@@ -9,7 +9,6 @@
 #include "Simulator.h"
 #include "Algorithm.h"
 #include "Random.h"
-#include "H5Cpp.h"
 
 
 //=============================================================================
@@ -153,12 +152,15 @@ void Simulator::collision( Particle& P )
     // Vacuum --> Kill particle at collision
     if( !P.cell()->material() ){ return P.kill(); }
     
+    // ksearch estimate
     if(ksearch) { k_estimator->estimate_C(P); }
     
+    // Collision tally
     if(tally){ 
         for( auto& e : P.cell()->estimators_C ) { e->score( P, 0 ); }
     }
     
+    // Get material
     std::shared_ptr<Material> M = P.cell()->material();
     
     // Implicit Fission
@@ -390,12 +392,9 @@ void Simulator::start()
 // Report results
 //=============================================================================
 
-void Simulator::report()
+void Simulator::report( H5::H5File& output )
 {
-    // H5 output
-    io_dir += "output.h5";
-    H5std_string FILE_NAME(io_dir);
-    H5::H5File output(FILE_NAME, H5F_ACC_TRUNC);
+    // H5 tools
     H5::DataSet dataset;
     H5::Group group;
     H5::DataSpace space_scalar(H5S_SCALAR);
@@ -430,84 +429,7 @@ void Simulator::report()
         dataset.write(tdmc_time.data(), type_double);
     }
 
-    // Report estimators
+    // Estimators
     for ( auto& E : Estimators ) { E->report( output ); }
-    if(ksearch){k_estimator->report(output);}
-
-    if(!trmm){return;}
-
-    // Set TRM
-    unsigned long long trm_N = trmm_estimator_collision->tally_size()/2;
-    Eigen::MatrixXd TRM = Eigen::MatrixXd(trm_N,trm_N);
-
-    for( int f = 0; f < trm_N; f++ ){
-        for( int i = 0; i < trm_N; i++ ){
-            if( i == f ){
-                TRM(i,i)  = -trmm_estimator_collision->tally(i).mean;
-                TRM(i,i) +=  trmm_estimator_scatter->tally(i+i*trm_N).mean;
-                TRM(i,i) +=  trmm_estimator_fission->tally(i+i*trm_N).mean;
-                TRM(i,i) /=  trmm_estimator_collision->tally(i+trm_N).mean;
-            } else{
-                TRM(f,i)  = trmm_estimator_scatter->tally(f+i*trm_N).mean;
-                TRM(f,i) += trmm_estimator_fission->tally(f+i*trm_N).mean;
-                TRM(f,i) /= trmm_estimator_collision->tally(i+trm_N).mean;
-            }
-        }
-    }
-
-    // Solve eigenvalue of TRM
-    Eigen::MatrixXcd phi_mode;
-    Eigen::VectorXcd alpha;
-    Eigen::EigenSolver<Eigen::MatrixXd> eSolve(TRM);
-    phi_mode = eSolve.eigenvectors();
-    alpha    = eSolve.eigenvalues();
-    std::vector<double> alpha_real(trm_N);
-    std::vector<double> alpha_imag(trm_N);
-    for( int i = 0; i < trm_N; i++ ){
-        alpha_real[i] = alpha[i].real();
-        alpha_imag[i] = alpha[i].imag();
-    }
-
-    // Solve coefficients via initial condition
-    Eigen::VectorXcd phi0;
-    Eigen::VectorXcd A;
-    phi0 = Eigen::VectorXcd::Zero(trm_N);
-    phi0(trm_N-1) = 13831.5926439 * std::sqrt( 14.1E6 ) * 100.0;
-    Eigen::ColPivHouseholderQR<Eigen::MatrixXcd> dec(phi_mode);
-    A = dec.solve(phi0);
-
-    // Construct solution in time
-    std::vector<double> t = {0.0, 3E-8, 15E-8, 4E-6, 1E-4};
-    Eigen::MatrixXcd phi = Eigen::MatrixXcd::Zero(t.size(),trm_N);
-    std::vector<double> phi_real(trm_N*t.size());
-
-    unsigned long long idx = 0;
-    for( int i = 0; i < t.size(); i++){
-        for(int g = 0; g < trm_N; g++){
-            for(int n = 0; n < trm_N; n++){
-                phi(i,g) += A(n) * phi_mode(g,n) * std::exp( alpha[n] * t[i] );
-            }
-            phi_real[idx] = phi(i,g).real();
-            idx++;
-        }
-    }
-    
-    // TRMM results
-    group = output.createGroup("/TRMM");
-    hsize_t dimsM[2]; dimsM[0] = trm_N; dimsM[1] = trm_N;
-    H5::DataSpace data_spaceM(2,dimsM);
-    dataset = group.createDataSet( "TRM", type_double, data_spaceM);
-    dataset.write(TRM.data(), type_double);
-    hsize_t dims[2]; dims[0] = t.size(); dims[1] = trm_N;
-    H5::DataSpace data_spacev(2,dims);
-    dataset = group.createDataSet( "flux", type_double, data_spacev);
-    dataset.write(phi_real.data(), type_double);
-    
-    hsize_t dims_alpha[1]; dims_alpha[0] = trm_N;
-    H5::DataSpace space_alpha(1,dims_alpha);
-    group = group.createGroup("alpha");
-    dataset = group.createDataSet( "real", type_double, space_alpha);
-    dataset.write(alpha_real.data(), type_double);
-    dataset = group.createDataSet( "imag", type_double, space_alpha);
-    dataset.write(alpha_imag.data(), type_double);
+    if(ksearch){k_estimator->report(output);}    
 }

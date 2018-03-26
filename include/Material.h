@@ -32,11 +32,16 @@ class Material
 	double   SigmaC( const double E );
 	double   SigmaF( const double E );
 	double nuSigmaF( const double E );
+	double nuSigmaF_prompt( const double E );
+	double nuSigmaF_delayed( const double E, const int i);
 	
 	// Sample collided nuclide
 	std::shared_ptr<Nuclide> nuclide_sample( const double E );
 	std::shared_ptr<Nuclide> nuclide_scatter( const double E );
 	std::shared_ptr<Nuclide> nuclide_nufission( const double E );
+	std::shared_ptr<Nuclide> nuclide_nufission_prompt( const double E );
+	std::shared_ptr<Nuclide> nuclide_nufission_delayed( const double E,
+                                                            const int i );
 };
 
 

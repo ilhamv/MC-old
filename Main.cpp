@@ -1,29 +1,39 @@
 #include <iostream>
 #include <cstring> 
 
-#include "Simulator.h"
+#include "H5Cpp.h"
 
+#include "Simulator.h"
+#include "TRMM.h"
 
 int main( int argc, char* argv[] )
 {
-    // Input
+
+    // I/O Directory
     if ( argc == 1 ){ 
-        std::cout<< "[INPUT ERROR] Please provide input.xml directory...\n";
+        std::cout<< "[ERROR] Please provide input.xml directory...\n";
         std::exit(EXIT_FAILURE);
     }
-    std::string input_file = argv[1]; 
-
-    // Set up simulation
-    Simulator MC_Simulator( input_file );
+    const std::string io_dir = std::string(argv[1]) + "/"; 
+    
+    // HDF5 output
+    H5std_string output_name( io_dir + "output.h5" );
+    H5::H5File output(output_name, H5F_ACC_TRUNC);
+    
+    // Monte Carlo Simulation
+    Simulator MC_Simulator( io_dir );
     std::cout<<"\nSimulation setup done,\nNow running the simulation...\n\n";
-
-    // Start simulation
+    
     MC_Simulator.start();
-    std::cout<<"Simulation done!\n\nCreating output.h5...\n";
+    std::cout<<"Simulation done!\n\nReporting simulation output...\n";
+    
+    MC_Simulator.report( output );
+    std::cout<<"Simulation output done!\n";
 
-    // Report simulation results
-    MC_Simulator.report();
-    std::cout<<"output.h5 Done!\n";
+    // TRMM Solver
+    TRMM MC_TRMM( MC_Simulator );
+    MC_TRMM.solve();
+    MC_TRMM.report( output );
 
     return 0;
 }

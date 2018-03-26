@@ -59,6 +59,18 @@ double Nuclide::nusigmaF( const double E )
     checkE( E );
     return n_fission->xs(idx, E, n_E) * n_fission->nu(idx, E, n_E);
 }
+double Nuclide::nusigmaF_prompt( const double E ) 
+{ 
+    checkE( E );
+    return ( 1.0 - beta(E) ) 
+           * n_fission->xs(idx, E, n_E) * n_fission->nu(idx, E, n_E);
+}
+double Nuclide::nusigmaF_delayed( const double E, const int i ) 
+{ 
+    checkE( E );
+    return beta(E) * n_fission->fraction(i)
+           * n_fission->xs(idx, E, n_E) * n_fission->nu(idx, E, n_E);
+}
 double Nuclide::beta( const double E ){
     checkE( E );
     return n_fission->beta(idx, E, n_E);

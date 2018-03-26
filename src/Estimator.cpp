@@ -90,10 +90,22 @@ double ScoreNuFission::score( const Particle& P, const double l )
     return P.cell()->material()->nuSigmaF( P.energy() ) * s_kernel->score(P,l); 
 }
 
-// NuFission
+// NuFission Old
 double ScoreNuFissionOld::score( const Particle& P, const double l )
 { 
     return P.cell()->material()->nuSigmaF( P.energy_old() ) * s_kernel->score(P,l); 
+}
+
+// NuFission Prompt Old
+double ScoreNuFissionPromptOld::score( const Particle& P, const double l )
+{ 
+    return P.cell()->material()->nuSigmaF_prompt( P.energy_old() ) * s_kernel->score(P,l); 
+}
+
+// NuFission Delayed Old
+double ScoreNuFissionDelayedOld::score( const Particle& P, const double l )
+{ 
+    return P.cell()->material()->nuSigmaF_delayed( P.energy_old(), cg ) * s_kernel->score(P,l); 
 }
 
 // Total
@@ -428,6 +440,28 @@ void EstimatorFission::score( const Particle& P, const double l )
     const double energy_final = P.cell()->material()
                                 ->nuclide_nufission( P.energy() )
                                 ->fission()->Chi( P.energy() );
+    P_simulated.set_energy(energy_final);
+    Estimator::score( P_simulated, l );
+}
+// Prompt Fission simulation estimator
+//   It simulates fission event before scoring
+void EstimatorFissionPrompt::score( const Particle& P, const double l )
+{
+    Particle P_simulated = P;
+    const double energy_final = P.cell()->material()
+                                ->nuclide_nufission_prompt( P.energy() )
+                                ->fission()->Chi( P.energy() );
+    P_simulated.set_energy(energy_final);
+    Estimator::score( P_simulated, l );
+}
+// Delayed Fission simulation estimator
+//   It simulates fission event before scoring
+void EstimatorFissionDelayed::score( const Particle& P, const double l )
+{
+    Particle P_simulated = P;
+    const double energy_final = P.cell()->material()
+                                ->nuclide_nufission_delayed( P.energy(), cg )
+                                ->fission()->ChiD( cg, P.energy() );
     P_simulated.set_energy(energy_final);
     Estimator::score( P_simulated, l );
 }

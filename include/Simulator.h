@@ -1,9 +1,12 @@
+#ifndef SIMULATOR_H
+#define SIMULATOR_H
+
 #include <vector>  
 #include <cstring> 
 #include <memory>  
 #include <stack>   
 
-#include <Eigen/Dense>
+#include "H5Cpp.h"
 
 #include "Constants.h"              
 #include "Distribution.h"
@@ -47,7 +50,6 @@ class Simulator
 
     public:
         std::string simulation_name;
-        std::string io_dir;
         
         unsigned long long Nsample;     
         unsigned long long Ncycle   = 1; 
@@ -88,9 +90,12 @@ class Simulator
         unsigned long long  tdmc_split = 1.0;
 
         // TRMM specific
-        std::shared_ptr<Estimator> trmm_estimator_collision;
+        std::shared_ptr<Estimator> trmm_estimator_simple;
         std::shared_ptr<Estimator> trmm_estimator_scatter;
-        std::shared_ptr<Estimator> trmm_estimator_fission;
+        std::shared_ptr<Estimator> trmm_estimator_fission_prompt;
+        std::vector<std::shared_ptr<Estimator>> 
+                                       trmm_estimator_fission_delayed_emission;
+        std::vector<std::shared_ptr<Estimator>> trmm_estimator_decay;
         
         // User-defined distributions
         std::vector<std::shared_ptr<Distribution<double>>>Distribution_Double;
@@ -102,5 +107,7 @@ class Simulator
 
         // Start simulation
         void start();
-        void report();
+        void report( H5::H5File& output );
 };
+
+#endif // SIMULATOR_H
