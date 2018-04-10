@@ -19,11 +19,11 @@ TRMM::TRMM( const Simulator& S )
             if( i == f ){
                 TRM(i,i)  = -S.trmm_estimator_simple->tally(i).mean;
                 TRM(i,i) +=  S.trmm_estimator_scatter->tally(i+i*N_flux).mean;
-                TRM(i,i) +=  S.trmm_estimator_fission->tally(i+i*N_flux).mean;
+                TRM(i,i) +=  S.trmm_estimator_fission_prompt->tally(i+i*N_flux).mean;
                 TRM(i,i) /=  S.trmm_estimator_simple->tally(i+N_flux).mean;
             } else{
                 TRM(f,i)  = S.trmm_estimator_scatter->tally(f+i*N_flux).mean;
-                TRM(f,i) += S.trmm_estimator_fission->tally(f+i*N_flux).mean;
+                TRM(f,i) += S.trmm_estimator_fission_prompt->tally(f+i*N_flux).mean;
                 TRM(f,i) /= S.trmm_estimator_simple->tally(i+N_flux).mean;
             }
         }

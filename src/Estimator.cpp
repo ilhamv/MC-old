@@ -108,6 +108,13 @@ double ScoreNuFissionDelayedOld::score( const Particle& P, const double l )
     return P.cell()->material()->nuSigmaF_delayed( P.energy_old(), cg ) * s_kernel->score(P,l); 
 }
 
+// NuFission Delayed Decay Old
+double ScoreNuFissionDelayedDecayOld::score( const Particle& P, const double l )
+{ 
+    return P.cell()->material()->nuSigmaF_delayed_decay( P.energy_old(), cg ) 
+           * s_kernel->score(P,l); 
+}
+
 // Total
 double ScoreTotal::score( const Particle& P, const double l )
 { 
@@ -463,6 +470,7 @@ void EstimatorFissionPrompt::score( const Particle& P, const double l )
 //   It simulates fission event before scoring
 void EstimatorFissionDelayed::score( const Particle& P, const double l )
 {
+    
     Particle P_simulated = P;
     const double energy_final = P.cell()->material()
                                 ->nuclide_nufission_delayed( P.energy(), cg )

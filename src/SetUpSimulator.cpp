@@ -251,7 +251,7 @@ for( const auto& n : input_nuclides.children("nuclide") ){
         std::vector<double> sigmaT;
         std::vector<double> nu;
         std::vector<double> beta;
-        std::vector<double> lambda;
+        std::vector<double> lambda(6);
         std::vector<double> fraction(6,0.0);
         std::vector<double> f_lambda;
         double c1, c2, c3, c4, c5, c6;
@@ -298,7 +298,7 @@ for( const auto& n : input_nuclides.children("nuclide") ){
             std::ifstream d_file (dirName);
             d_file >> c[0] >> c[1] >> c[2] >> c[3] >> c[4] >> c[5];
             for( int i = 0; i < 6; i++ ){
-                lambda.push_back(c[i]);
+                lambda[i] = c[i];
             }
             d_file >> c[0] >> c[1] >> c[2] >> c[3] >> c[4] >> c[5];
             for( int i = 0; i < 6; i++ ){
@@ -738,13 +738,25 @@ if(input_trmm){
     std::vector<double>          trmm_grid;
     std::shared_ptr<Filter>      trmm_filter;
 
-    // Estimator
+    //==========================================================================
+    // TRM estimators
+    //==========================================================================
+
+    // Simple: Flux, collision, delayed nuFission, delayed nuFission/lambda
     trmm_estimator_simple = std::make_shared<Estimator>
-        ( "MG", Nsample, Ncycle-Npassive );
+        ( "TRM_simple", Nsample, Ncycle-Npassive );
     trmm_estimator_scatter = std::make_shared<EstimatorScatter>
-        ( "MG_scatter", Nsample, Ncycle-Npassive );
-    trmm_estimator_fission = std::make_shared<EstimatorFission>
-        ( "MG_fission", Nsample, Ncycle-Npassive );
+        ( "TRM_matrix_scatter", Nsample, Ncycle-Npassive );
+    trmm_estimator_fission_prompt = std::make_shared<EstimatorFissionPrompt>
+        ( "TRM_matrix_fission_prompt", Nsample, Ncycle-Npassive );
+    trmm_estimator_fission_delayed.resize(6);
+    for( int i = 0; i < 6 ; i++ ){
+        const std::string label = "TRMM_matrix_fission_delayed_" 
+                                  + std::to_string(i+1);
+        trmm_estimator_fission_delayed[i] = 
+            std::make_shared<EstimatorFissionDelayed>
+            ( label, Nsample, Ncycle-Npassive, i );
+    }
 
     //==========================================================================
     // Scores
@@ -768,15 +780,33 @@ if(input_trmm){
         trmm_estimator_simple->add_score( trmm_score );
     }
 
-    // InScatter
+    // Delayed NuFission/lambda
+    for( int i = 0; i < 6; i++ ){
+        const std::string label = "NuFissionDelayedLambda_" 
+                                  + std::to_string(i+1);
+        trmm_score = std::make_shared<ScoreNuFissionDelayedDecayOld>
+            (label,trmm_sk,i);
+        trmm_estimator_simple->add_score( trmm_score );
+    }
+
+    // Delayed NuFission Emission
     trmm_sk = std::make_shared<ScoreKernelTrackLengthVelocity>();
+    for( int i = 0; i < 6; i++ ){
+        const std::string label = "NuFissionDelayedEmission_" 
+                                  + std::to_string(i+1);
+        trmm_score = std::make_shared<ScoreNuFissionDelayedOld>
+            (label,trmm_sk,i);
+        trmm_estimator_fission_delayed[i]->add_score( trmm_score );
+    }
+
+    // InScatter
     trmm_score = std::make_shared<ScoreScatterOld>("InScatter",trmm_sk);
     trmm_estimator_scatter->add_score( trmm_score );
 
     // Prompt NuFission
     trmm_score = std::make_shared<ScoreNuFissionPromptOld>
                                               ("NuFissionPrompt",trmm_sk);
-    trmm_estimator_fission->add_score( trmm_score );
+    trmm_estimator_fission_prompt->add_score( trmm_score );
     
     //==========================================================================
     // Filters
@@ -793,14 +823,21 @@ if(input_trmm){
    	}
         c_ptr->attach_estimator_TL( trmm_estimator_simple );
         c_ptr->attach_estimator_TL( trmm_estimator_scatter );
-        c_ptr->attach_estimator_TL( trmm_estimator_fission );
+        c_ptr->attach_estimator_TL( trmm_estimator_fission_prompt );
+        for( int i = 0; i < 6; i++ ){
+            c_ptr->attach_estimator_TL( trmm_estimator_fission_delayed[i] );
+        }
         trmm_grid.push_back(c_ptr->ID());
     }
-    trmm_estimator_simple->add_filter( std::make_shared<FilterCell>(trmm_grid));
-    trmm_estimator_scatter->
-        add_filter( std::make_shared<FilterCell>(trmm_grid) );
-    trmm_estimator_fission->
-        add_filter( std::make_shared<FilterCell>(trmm_grid) );
+    trmm_filter = std::make_shared<FilterCell>(trmm_grid);
+    trmm_estimator_simple->add_filter( trmm_filter );
+    trmm_estimator_scatter->add_filter( trmm_filter );
+    trmm_estimator_fission_prompt->add_filter( trmm_filter );
+    for( int i = 0; i < 6; i++ ){
+        trmm_estimator_fission_delayed[i]->add_filter( trmm_filter );
+    }
+
+    // Other filters
     for( auto& f : input_trmm.children("filter") ){
         // Filter grid
         trmm_grid.clear();
@@ -854,7 +891,10 @@ if(input_trmm){
         if( f_name == "energy" ){
             trmm_filter = std::make_shared<FilterEnergyOld> (trmm_grid);
             trmm_estimator_scatter->add_filter(trmm_filter);
-            trmm_estimator_fission->add_filter(trmm_filter);
+            trmm_estimator_fission_prompt->add_filter(trmm_filter);
+            for( int i = 0; i < 6; i++ ){
+                trmm_estimator_fission_delayed[i]->add_filter(trmm_filter);
+            }
             trmm_filter = std::make_shared<FilterEnergy> (trmm_grid);
         } else if( f_name == "time" ){
             trmm_filter = std::make_shared<FilterTime> (trmm_grid);
@@ -864,15 +904,24 @@ if(input_trmm){
         }
         trmm_estimator_simple->add_filter(trmm_filter);
         trmm_estimator_scatter->add_filter(trmm_filter);
-        trmm_estimator_fission->add_filter(trmm_filter);
+        trmm_estimator_fission_prompt->add_filter(trmm_filter);
+        for( int i = 0; i < 6; i++ ){
+            trmm_estimator_fission_delayed[i]->add_filter(trmm_filter);
+        }
     }
     // Push new estimator
     trmm_estimator_simple->initialize_tallies();
     trmm_estimator_scatter->initialize_tallies();
-    trmm_estimator_fission->initialize_tallies();
+    trmm_estimator_fission_prompt->initialize_tallies();
+    for( int i = 0; i < 6; i++ ){
+        trmm_estimator_fission_delayed[i]->initialize_tallies();
+    }
     Estimators.push_back( trmm_estimator_simple );
     Estimators.push_back( trmm_estimator_scatter );
-    Estimators.push_back( trmm_estimator_fission );
+    Estimators.push_back( trmm_estimator_fission_prompt );
+    for( int i = 0; i < 6; i++ ){
+        Estimators.push_back( trmm_estimator_fission_delayed[i] );
+    }
 }
 
 

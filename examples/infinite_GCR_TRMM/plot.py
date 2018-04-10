@@ -23,8 +23,8 @@ plt.show();
 # k-eigenvalue spectrum
 #===============================================================================
 
-flux = np.array(f['MG/flux/mean']);
-energy = np.array(f['MG/energy']);
+flux = np.array(f['TRM_simple/flux/mean']);
+energy = np.array(f['TRM_simple/energy']);
 
 for i in range(len(flux)):
     flux[i] = flux[i] / (energy[i+1] - energy[i])
@@ -60,7 +60,7 @@ plt.show();
 #===============================================================================
 
 flux = np.array(f['TRMM/flux']);
-energy = np.array(f['MG/energy']);
+energy = np.array(f['TRM_simple/energy']);
 
 for i in range(len(flux)):
     flux[i] = flux[i] / (energy[i+1] - energy[i])

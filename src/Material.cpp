@@ -79,6 +79,15 @@ double Material::nuSigmaF_delayed( const double E, const int i )
     }	
     return sum;
 }
+double Material::nuSigmaF_delayed_decay( const double E, const int i ) 
+{ 
+    double sum = 0.0;
+    for ( auto& n : nuclides ){
+	sum += n.first->nusigmaF_delayed( E, i ) / n.first->fission()->lambda(i) 
+               * n.second;
+    }	
+    return sum;
+}
 
 //==============================================================================
 // Sample collided nuclide

@@ -216,6 +216,20 @@ class ScoreNuFissionDelayedOld : public Score
 
 	double score( const Particle& P, const double l );
 };
+// NuFission Delayed Decay Old
+class ScoreNuFissionDelayedDecayOld : public Score
+{
+    private:
+        const unsigned cg;
+    public:
+	ScoreNuFissionDelayedDecayOld( const std::string n,
+                                       const std::shared_ptr<ScoreKernel>& k,
+                                       const unsigned c )
+            : Score(n,k), cg(c) {};
+	~ScoreNuFissionDelayedDecayOld() {};
+
+	double score( const Particle& P, const double l );
+};
 // Total
 class ScoreTotal : public Score
 {

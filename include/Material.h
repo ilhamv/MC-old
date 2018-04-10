@@ -34,6 +34,7 @@ class Material
 	double nuSigmaF( const double E );
 	double nuSigmaF_prompt( const double E );
 	double nuSigmaF_delayed( const double E, const int i);
+	double nuSigmaF_delayed_decay( const double E, const int i);
 	
 	// Sample collided nuclide
 	std::shared_ptr<Nuclide> nuclide_sample( const double E );
