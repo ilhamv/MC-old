@@ -313,7 +313,12 @@ for( const auto& n : input_nuclides.children("nuclide") ){
             }
             for ( int j = 0; j < 6; j++ ){
                 for( int i = 1; i < d_E.size() + 1; i++ ){
+                    if( cdf[j][i] == 0 ){
+                        cdf[j].resize(i);
+                        break;
+                    }
                     cdf[j][i] = cdf[j][i-1] + cdf[j][i] * (d_E[i]-d_E[i-1]);
+                    std::cout<<j<<"  "<<i<<" "<<cdf[j][i]<<"\n";
                 }
             }
             for( int i = 0; i < 6; i++ ){
