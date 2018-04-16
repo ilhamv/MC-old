@@ -77,6 +77,24 @@ target_link_libraries(libMC ${ldflags} ${HDF5_LIBRARIES} pugixml)
 target_link_libraries(${program} ${ldflags} libMC)
 
 #==============================================================================
+# Define the TRMM program executable
+#==============================================================================
+
+file(GLOB libTRMM_SRC "src_TRMM/*.cpp")
+add_library(libTRMM ${libTRMM_SRC})
+
+set(program "TRMM.exe")
+add_executable(${program} Main_TRMM.cpp)
+
+target_include_directories(libTRMM PUBLIC ${HDF5_INCLUDE_DIRS})
+# Add HDF5 library directories to link line with -L
+foreach(LIBDIR ${HDF5_LIBRARY_DIRS})
+    list(APPEND ldflags "-L${LIBDIR}")
+endforeach()
+target_link_libraries(libTRMM ${ldflags} ${HDF5_LIBRARIES} pugixml)
+target_link_libraries(${program} ${ldflags} libTRMM)
+
+#==============================================================================
 # Copy important files
 #==============================================================================
 

@@ -11,7 +11,6 @@
 
 //=============================================================================
 // Scoring Kernel
-//   - Supports: Neutron, Track Length, Collision
 //=============================================================================
 
 // Neutron
@@ -43,10 +42,13 @@ double ScoreKernelTrackLengthVelocity::score( const Particle& P,
 
 //=============================================================================
 // Score
-//   - Specified Scoring Kernel
-//   - Supports: Flux, Absorption, Scatter, Capture, Fission,
-//               NuFission, Total
 //=============================================================================
+
+// Inverse Velocity
+double ScoreInverseVelocity::score( const Particle& P, const double l )
+{ 
+    return s_kernel->score(P,l) / P.speed(); 
+}
 
 // Flux
 double ScoreFlux::score( const Particle& P, const double l )
@@ -486,13 +488,16 @@ void EstimatorFissionDelayed::score( const Particle& P, const double l )
 
 EstimatorK::EstimatorK( const unsigned long long Ncycle, 
                         const unsigned long long Na,
-                        const unsigned long long Ns )
+                        const unsigned long long Ns,
+                        std::shared_ptr<Entropy> e )
 {
+    entropy = e;
     Nactive = Na;
     Nsample = Ns;
     k_cycle.resize(Ncycle,0.0);
     k_avg.resize(Nactive,0.0);
     k_uncer.resize(Nactive,0.0);
+    H_cycle.resize(Ncycle,0.0);
 }
 
 void EstimatorK::estimate_C( const Particle& P )
@@ -508,6 +513,9 @@ void EstimatorK::estimate_TL( const Particle& P, const double l )
 
 void EstimatorK::end_history()
 {
+    H = entropy->calculate_H();
+    H_sum += H;
+
     k_sum_C  += k_C;
     k_sum_TL += k_TL;
     k_sq_C   += k_C*k_C;
@@ -517,10 +525,12 @@ void EstimatorK::end_history()
 }
 void EstimatorK::report_cycle( const bool tally )
 {
+    H = H_sum / Nsample;
     const double mean_C  = k_sum_C / Nsample;
     const double mean_TL = k_sum_TL / Nsample;
     const double mean    = (mean_C + mean_TL)/2;
 
+    H_cycle[icycle] = H;
     k_cycle[icycle] = mean;
     k = k_cycle[icycle];
     std::cout<<icycle+1<<"   "<<k_cycle[icycle];
@@ -539,12 +549,14 @@ void EstimatorK::report_cycle( const bool tally )
         k_uncer[Navg-1] = std::sqrt(uncer_sq_accumulator)/Navg/2;
         std::cout<<"   "<<k_avg[Navg-1]<<"   +/-   "<<k_uncer[Navg-1];
     }
+    std::cout<<"   ("<<H_cycle[icycle]<<")";
     
     std::cout<<"\n";
     k_sum_C  = 0.0;
     k_sum_TL = 0.0;
     k_sq_C   = 0.0;
     k_sq_TL  = 0.0;
+    H_sum = 0.0;
     icycle++;
 }
 void EstimatorK::report( H5::H5File& output )
@@ -564,6 +576,8 @@ void EstimatorK::report( H5::H5File& output )
     space_vector = H5::DataSpace(1,dims);
     dataset = group.createDataSet( "k_cycle", type_double, space_vector);
     dataset.write(k_cycle.data(), type_double);
+    dataset = group.createDataSet( "H_cycle", type_double, space_vector);
+    dataset.write(H_cycle.data(), type_double);
     
     dataset = group.createDataSet( "mean", type_double, space_scalar);
     dataset.write(&k_avg.back(), type_double);

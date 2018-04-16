@@ -42,23 +42,76 @@ Simulator::Simulator( const std::string io_dir )
 pugi::xml_node input_simulation  = input_file.child("simulation");    
 pugi::xml_node input_description = input_simulation.child("description");
 pugi::xml_node input_ksearch     = input_simulation.child("ksearch");
+pugi::xml_node input_entropy     = input_simulation.child("entropy");
 pugi::xml_node input_tdmc        = input_simulation.child("tdmc");
 
 // Description
 simulation_name = input_description.attribute("name").value();
 Nsample         = input_description.attribute("samples").as_double();
 
-// ksearch
+
+//=============================================================================
+// KSEARCH
+//=============================================================================
+
 if( input_ksearch ){
     ksearch  = true;
+    
+    //=========================================================================
+    // Shannon entropy
+    //=========================================================================
+
+    std::shared_ptr<Entropy> k_entropy;
+
+    if( input_entropy ){
+        std::vector<double> vx,vy,vz;
+        double min, max, d; int step;
+        // x grid
+        min = input_entropy.child("x").attribute("min").as_double();
+        max = input_entropy.child("x").attribute("max").as_double();
+        step = input_entropy.child("x").attribute("step").as_int();
+        d = ( max - min ) / step;
+        vx.push_back( min );
+        for( int i = 0; i < step; i++ ){
+            vx.push_back( vx.back() + d );
+        }
+        // y grid
+        min = input_entropy.child("y").attribute("min").as_double();
+        max = input_entropy.child("y").attribute("max").as_double();
+        step = input_entropy.child("y").attribute("step").as_int();
+        d = ( max - min ) / step;
+        vy.push_back( min );
+        for( int i = 0; i < step; i++ ){
+            vy.push_back( vy.back() + d );
+        }
+        // z grid
+        min = input_entropy.child("z").attribute("min").as_double();
+        max = input_entropy.child("z").attribute("max").as_double();
+        step = input_entropy.child("z").attribute("step").as_int();
+        d = ( max - min ) / step;
+        vz.push_back( min );
+        for( int i = 0; i < step; i++ ){
+            vz.push_back( vz.back() + d );
+        }
+        k_entropy = std::make_shared<ShannonEntropy>( vx, vy, vz );
+    } else{
+        k_entropy = std::make_shared<EntropyNone>();
+    }
+    
+    
+    //=========================================================================
+    // k estimator
+    //=========================================================================
+
     unsigned long long active = input_ksearch.attribute("active_cycles")
                                 .as_double();
     Npassive = input_ksearch.attribute("passive_cycles").as_double();
     Ncycle   = active + Npassive;
     mode = "k-eigenvalue";
     k_estimator = std::make_shared<EstimatorK>(Ncycle, Ncycle-Npassive, 
-                                               Nsample);
+                                               Nsample, k_entropy); 
 }
+
 
 //=============================================================================
 // TDMC
@@ -318,7 +371,6 @@ for( const auto& n : input_nuclides.children("nuclide") ){
                         break;
                     }
                     cdf[j][i] = cdf[j][i-1] + cdf[j][i] * (d_E[i]-d_E[i-1]);
-                    std::cout<<j<<"  "<<i<<" "<<cdf[j][i]<<"\n";
                 }
             }
             for( int i = 0; i < 6; i++ ){
@@ -406,105 +458,97 @@ for( const auto& m : input_materials.children("material") ){
     Materials.push_back( M );
 }
 
-	// Set surfaces
-  	pugi::xml_node input_surfaces = input_file.child("surfaces");
-  	for ( const auto& s : input_surfaces )
+
+//=============================================================================
+// Surfaces
+//=============================================================================
+
+pugi::xml_node input_surfaces = input_file.child("surfaces");
+for( const auto& s : input_surfaces ){
+    std::shared_ptr<Surface> S;
+    const std::string type = s.name();
+    const std::string name = s.attribute("name").value();
+    std::string bc   = "transmission"; // Default boundary condition
+	
+    // Provided B.C. input
+    if( s.attribute("bc") ){ 
+        bc = s.attribute("bc").value(); 
+    }
+
+    int bc_type;
+    if( bc == "transmission" ) { bc_type = 0; }
+    if( bc == "reflective" ) { bc_type = 1; }
+    if( bc == "vacuum" ) { bc_type = -1; }
+	
+	// Plane-x
+	if ( type == "plane_x" ) 
 	{
-    		std::shared_ptr<Surface> S;
-    		const std::string type = s.name();
-      		const std::string name = s.attribute("name").value();
-		std::string bc   = "transmission"; // Default boundary condition
-		
-		// Provided B.C. input
-		if ( s.attribute("bc") ) 
-		{ 
-			bc = s.attribute("bc").value(); 
-			if ( bc != "transmission" && bc != "reflective" )
-			{
-				std::cout<< "unknown boundary condition " << bc << " for surface " << name << std::endl;
-				throw;
-			}
+		const double x = s.attribute("x").as_double();
+		S = std::make_shared< SurfacePlaneX > ( name, Surfaces.size(), bc_type, x );
+	}
 
-			if ( bc == "reflective" && type != "plane_x" && type != "plane_y" && type != "plane_z" && type != "plane" )
-			{
-				std::cout<< "reflective boundary condition is only supported by plane surfaces";
-				throw;
-			}
-		}
+	// Plane-y
+	else if ( type == "plane_y" ) 
+	{
+		const double y = s.attribute("y").as_double();
+		S = std::make_shared< SurfacePlaneY > ( name, Surfaces.size(), bc_type, y );
+	}
+	
+	// Plane-z
+	else if ( type == "plane_z" ) 
+	{
+		const double z = s.attribute("z").as_double();
+		S = std::make_shared< SurfacePlaneZ > ( name, Surfaces.size(), bc_type, z );
+	}
 
-                int bc_type;
-                if( bc == "transmission" ) { bc_type = 0; }
-                if( bc == "reflective" ) { bc_type = 1; }
-    		
-		// Plane-x
-		if ( type == "plane_x" ) 
-		{
-      			const double x = s.attribute("x").as_double();
-			S = std::make_shared< SurfacePlaneX > ( name, Surfaces.size(), bc_type, x );
-    		}
+	// Generic plane
+	else if ( type == "plane" ) 
+	{
+		const double a = s.attribute("a").as_double();
+		const double b = s.attribute("b").as_double();
+		const double c = s.attribute("c").as_double();
+		const double d = s.attribute("d").as_double();
+		S = std::make_shared< SurfacePlane > ( name, Surfaces.size(), bc_type, a, b, c, d );
+	}
+	
+	// Sphere
+	else if ( type == "sphere" )
+	{
+		const double x = s.attribute("x").as_double();
+		const double y = s.attribute("y").as_double();
+		const double z = s.attribute("z").as_double();
+		const double r = s.attribute("r").as_double();
+		S = std::make_shared< SurfaceSphere > ( name, Surfaces.size(), bc_type, x, y, z, r );
+	}
+	
+	// Cylinder-x
+	else if ( type == "cylinder_x" )
+	{
+		const double y = s.attribute("y").as_double();
+		const double z = s.attribute("z").as_double();
+		const double r = s.attribute("r").as_double();
+		S = std::make_shared< SurfaceCylinderX > ( name, Surfaces.size(), bc_type, y, z, r );
+	}
+	
+	// Cylinder-z
+	else if ( type == "cylinder_z" )
+	{
+		const double x = s.attribute("x").as_double();
+		const double y = s.attribute("y").as_double();
+		const double r = s.attribute("r").as_double();
+		S = std::make_shared< SurfaceCylinderZ > ( name, Surfaces.size(), bc_type, x, y, r );
+	}
 
-		// Plane-y
-		else if ( type == "plane_y" ) 
-		{
-      			const double y = s.attribute("y").as_double();
-			S = std::make_shared< SurfacePlaneY > ( name, Surfaces.size(), bc_type, y );
-    		}
-		
-		// Plane-z
-		else if ( type == "plane_z" ) 
-		{
-      			const double z = s.attribute("z").as_double();
-			S = std::make_shared< SurfacePlaneZ > ( name, Surfaces.size(), bc_type, z );
-    		}
+	// Unknown surface type
+	else 
+	{
+		std::cout << " unkown surface type " << type << std::endl;
+		throw;
+	}
 
-		// Generic plane
-		else if ( type == "plane" ) 
-		{
-      			const double a = s.attribute("a").as_double();
-      			const double b = s.attribute("b").as_double();
-      			const double c = s.attribute("c").as_double();
-      			const double d = s.attribute("d").as_double();
-			S = std::make_shared< SurfacePlane > ( name, Surfaces.size(), bc_type, a, b, c, d );
-    		}
-    		
-		// Sphere
-		else if ( type == "sphere" )
-		{
-      			const double x = s.attribute("x").as_double();
-      			const double y = s.attribute("y").as_double();
-      			const double z = s.attribute("z").as_double();
-      			const double r = s.attribute("r").as_double();
-      			S = std::make_shared< SurfaceSphere > ( name, Surfaces.size(), bc_type, x, y, z, r );
-		}
-		
-		// Cylinder-x
-		else if ( type == "cylinder_x" )
-		{
-      			const double y = s.attribute("y").as_double();
-      			const double z = s.attribute("z").as_double();
-      			const double r = s.attribute("r").as_double();
-      			S = std::make_shared< SurfaceCylinderX > ( name, Surfaces.size(), bc_type, y, z, r );
-		}
-		
-		// Cylinder-z
-		else if ( type == "cylinder_z" )
-		{
-      			const double x = s.attribute("x").as_double();
-      			const double y = s.attribute("y").as_double();
-      			const double r = s.attribute("r").as_double();
-      			S = std::make_shared< SurfaceCylinderZ > ( name, Surfaces.size(), bc_type, x, y, r );
-		}
-
-		// Unknown surface type
-		else 
-		{
-      			std::cout << " unkown surface type " << type << std::endl;
-      			throw;
-    		}
-    	
-		// Push new surface
-		Surfaces.push_back( S );
-  	}
+	// Push new surface
+	Surfaces.push_back( S );
+}
   
 
 //=============================================================================
@@ -793,6 +837,11 @@ if(input_trmm){
             (label,trmm_sk,i);
         trmm_estimator_simple->add_score( trmm_score );
     }
+
+    // Inverse Velocity
+    trmm_sk = std::make_shared<ScoreKernelTrackLength>();
+    trmm_score = std::make_shared<ScoreInverseVelocity>("inverse_speed",trmm_sk);
+    trmm_estimator_simple->add_score( trmm_score );
 
     // Delayed NuFission Emission
     trmm_sk = std::make_shared<ScoreKernelTrackLengthVelocity>();

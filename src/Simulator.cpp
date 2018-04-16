@@ -9,6 +9,7 @@
 #include "Simulator.h"
 #include "Algorithm.h"
 #include "Random.h"
+#include "eigen3-hdf5.hpp"
 
 
 //=============================================================================
@@ -152,9 +153,6 @@ void Simulator::collision( Particle& P )
     // Vacuum --> Kill particle at collision
     if( !P.cell()->material() ){ return P.kill(); }
     
-    // ksearch estimate
-    if(ksearch) { k_estimator->estimate_C(P); }
-    
     // Collision tallies
     if(tally){ 
         for( auto& e : P.cell()->estimators_C ) { e->score( P, 0 ); }
@@ -252,6 +250,15 @@ void Simulator::collision( Particle& P )
         }
     }
     
+    //=========================================================================
+    // ksearch estimate
+    //=========================================================================
+
+    if(ksearch){
+        k_estimator->estimate_C(P);
+        if( bank_nu > 0 ){ k_estimator->entropy->score( P.pos(), bank_nu ); }
+    }
+    
     // Implicit Absorption
     const double implicit = M->SigmaC(P.energy()) + M->SigmaF(P.energy());
     P.set_weight( P.weight() * ( M->SigmaT(P.energy()) - implicit ) 
@@ -275,10 +282,13 @@ void Simulator::surface_hit( Particle& P, const std::shared_ptr<Surface>& S )
     if ( S->bc() == 0 ){
 	P.move( EPSILON_float );
 	P.set_cell( search_cell( P.pos() ) );
+    } else if ( S->bc() == -1 ){
+	P.kill();
+        P.set_cell( P.cell() );
     } else{
 	S->reflect( P );
-        P.set_cell( P.cell() );
 	P.move( EPSILON_float );
+        P.set_cell( P.cell() );
     }
     if (tally){
 	for ( auto& e : S->estimators ){ 
@@ -432,26 +442,52 @@ void Simulator::report( H5::H5File& output )
     // Report estimators
     for ( auto& E : Estimators ) { E->report( output ); }
     if(ksearch){k_estimator->report(output);}
-/*
-    // Set TRM
-    unsigned long long trm_N = trmm_estimator_collision->tally_size()/2;
-    Eigen::MatrixXd TRM = Eigen::MatrixXd(trm_N,trm_N);
 
-    for( int f = 0; f < trm_N; f++ ){
-        for( int i = 0; i < trm_N; i++ ){
-            if( i == f ){
-                TRM(i,i)  = -trmm_estimator_collision->tally(i).mean;
-                TRM(i,i) +=  trmm_estimator_scatter->tally(i+i*trm_N).mean;
-                TRM(i,i) +=  trmm_estimator_fission->tally(i+i*trm_N).mean;
-                TRM(i,i) /=  trmm_estimator_collision->tally(i+trm_N).mean;
-            } else{
-                TRM(f,i)  = trmm_estimator_scatter->tally(f+i*trm_N).mean;
-                TRM(f,i) += trmm_estimator_fission->tally(f+i*trm_N).mean;
-                TRM(f,i) /= trmm_estimator_collision->tally(i+trm_N).mean;
+    // TRMM report
+    if( trmm ){
+        const int score_N = trmm_estimator_simple->score_size();
+        // TRM
+        unsigned long long trm_N = trmm_estimator_simple->tally_size()
+                                   / score_N;
+        std::vector<double> TRM(trm_N*trm_N);
+
+        int idx = 0;
+        for( int f = 0; f < trm_N; f++ ){
+            for( int i = 0; i < trm_N; i++ ){
+                if( i == f ){
+                    TRM[idx]  = -trmm_estimator_simple->tally(i).mean;
+                    TRM[idx] +=  trmm_estimator_scatter->tally(i+i*trm_N).mean;
+                    TRM[idx] +=  trmm_estimator_fission_prompt->tally(i+i*trm_N).mean;
+                    TRM[idx] /=  trmm_estimator_simple->tally(i+trm_N).mean;
+                } else{
+                    TRM[idx]  = trmm_estimator_scatter->tally(f+i*trm_N).mean;
+                    TRM[idx] += trmm_estimator_fission_prompt->tally(f+i*trm_N).mean;
+                    TRM[idx] /= trmm_estimator_simple->tally(i+trm_N).mean;
+                }
+                idx++;
             }
         }
+
+        hsize_t dimsM[2]; dimsM[0] = trm_N; dimsM[1] = trm_N;
+        H5::DataSpace data_spaceM(2,dimsM);
+        dataset = output.createDataSet( "TRM", type_double, data_spaceM);
+        dataset.write(TRM.data(), type_double);
+
+        // Inverse speed
+        std::vector<double> invspeed(trm_N);
+        for( int i = 0; i < trm_N; i++ ){
+            invspeed[i] = trmm_estimator_simple->
+                                  tally( i + (score_N-1) * trm_N).mean
+                          / trmm_estimator_simple->tally(i+trm_N).mean;
+        }
+        hsize_t dimsv[1]; dimsv[0] = trm_N;
+        H5::DataSpace data_spacev(1,dimsv);
+        dataset = output.createDataSet("inverse_speed",type_double,data_spacev);
+        dataset.write(invspeed.data(), type_double);
+
     }
 
+/*
     // Solve eigenvalue of TRM
     Eigen::MatrixXcd phi_mode;
     Eigen::VectorXcd alpha;

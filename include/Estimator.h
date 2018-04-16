@@ -14,11 +14,11 @@
 
 #include "Particle.h"
 #include "Distribution.h"
+#include "Entropy.h"
 
 
 //=============================================================================
 // Scoring Kernel
-//   - Supports: Neutron, Track Length, Collision
 //=============================================================================
 
 class ScoreKernel
@@ -78,9 +78,6 @@ class ScoreKernelTrackLengthVelocity : public ScoreKernel
 
 //=============================================================================
 // Score
-//   - Specified Scoring Kernel
-//   - Supports: Flux, Absorption, Scatter, Capture, Fission,
-//               NuFission, Total
 //=============================================================================
 
 class Score
@@ -102,7 +99,17 @@ class Score
         // Get score to be added at event
 	virtual double score( const Particle& P, const double l ) = 0;
 };
+// Inverse Velocity
+class ScoreInverseVelocity : public Score
+{
+    public:
+	ScoreInverseVelocity( const std::string n,
+                    const std::shared_ptr<ScoreKernel>& k )
+            : Score(n,k) {};
+	~ScoreInverseVelocity() {};
 
+	double score( const Particle& P, const double l );
+};
 // Flux
 class ScoreFlux : public Score
 {
@@ -463,11 +470,14 @@ class EstimatorK
         double              k_sum_TL = 0.0;
         double              k_sq_C   = 0.0;
         double              k_sq_TL  = 0.0;
+        double              H_sum = 0.0;
         std::vector<double> k_cycle, k_avg, k_uncer;
+        std::vector<double> H_cycle;
         unsigned long long  Navg   = 0;
         unsigned long long  icycle = 0;
         double              k_C  = 0.0;
         double              k_TL = 0.0;
+        double              H    = 0.0;
         unsigned long long Nsample, Nactive;
 
         // Accumulator
@@ -477,9 +487,11 @@ class EstimatorK
     public:
         EstimatorK( const unsigned long long Ncycle, 
                     const unsigned long long Na,
-                    const unsigned long long Ns );
+                    const unsigned long long Ns,
+                    std::shared_ptr<Entropy> e );
         ~EstimatorK() {};
 
+        std::shared_ptr<Entropy> entropy;
         void end_history();
         void report_cycle( const bool tally );
 	void report( H5::H5File& output );

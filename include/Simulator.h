@@ -16,6 +16,7 @@
 #include "Geometry.h"
 #include "Material.h"
 #include "Nuclide.h"
+#include "Entropy.h"
 
 
 class Simulator

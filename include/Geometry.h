@@ -43,6 +43,7 @@ class Surface : public Geometry
     private:
 	const int s_bc; // 0:"transmission"
 		        // 1:"reflective"
+                        // -1:"vacuum"
 		
     public:
      	Surface( const std::string n, const int i, const int b ): 

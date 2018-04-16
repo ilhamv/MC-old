@@ -4,7 +4,6 @@
 #include "H5Cpp.h"
 
 #include "Simulator.h"
-#include "TRMM.h"
 
 int main( int argc, char* argv[] )
 {
@@ -32,15 +31,5 @@ int main( int argc, char* argv[] )
     MC_Simulator.report( output );
     std::cout<<"Simulation output done!\n";
 
-    //=========================================================================
-    // TRMM Solver
-    //=========================================================================
-
-    if( MC_Simulator.trmm ){
-        TRMM MC_TRMM( MC_Simulator );
-        MC_TRMM.solve();
-        MC_TRMM.report( output );
-    }
-    
     return 0;
 }
