@@ -6,6 +6,7 @@
 #include "Random.h"
 #include "Particle.h"
 #include "Point.h"
+#include "Algorithm.h"
 
 
 //=============================================================================
@@ -40,6 +41,9 @@ void SourceBank::reset()
 }
 Particle SourceBank::get_source()
 {
+    const double xi = Urand();
+    return sources[binary_search(xi,p)].first->get_source();
+    /*
     const double xi = total * Urand();
     double s  = 0.0;
     for( const auto& So : sources ) {
@@ -55,5 +59,14 @@ Particle SourceBank::get_source()
     else{
         std::cout<< "[ERROR] Source particle lost...\n";
         std::exit(EXIT_FAILURE);
+    }
+    */
+}
+void SourceBank::set_up()
+{
+    p.resize( sources.size()+1, 0.0 );
+    double dp = 1.0 / sources.size();
+    for( int i = 1; i < p.size(); i++ ){
+        p[i] = p[i-1] + dp;
     }
 }

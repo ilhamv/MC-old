@@ -321,7 +321,7 @@ void Simulator::start()
     // Simulation loop
     for ( icycle = 0; icycle < Ncycle ; icycle++ ){
         if ( icycle == Npassive ) { tally = true; }
-        Sbank = Fbank; Fbank.reset();
+        Sbank = Fbank; Sbank.set_up(); Fbank.reset();
 
         // Cycle loop
         for ( isample = 0 ; isample < Nsample ; isample++ ){

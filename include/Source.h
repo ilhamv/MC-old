@@ -62,6 +62,7 @@ class SourceBank
     private:
         std::vector<std::pair<std::shared_ptr<Source>,double>> sources;
         double total = 0.0;
+        std::vector<double> p;
 	
     public:
         SourceBank() {};
@@ -70,6 +71,7 @@ class SourceBank
         void add_source( const std::shared_ptr<Source> S, const double prob );
         void reset();
         Particle get_source();
+        void set_up();
 };
 
 
