@@ -14,6 +14,8 @@ f = h5py.File('output_TRMM.h5', 'r');
 alpha = np.array(f['alpha']).transpose()[0]
 alpha_adj = np.array(f['alpha_adj']).transpose()[0]
 N = len(alpha)
+J = 6;
+G = N - J;
 
 idx = alpha.argsort()
 idx_adj = alpha_adj.argsort()
@@ -52,12 +54,11 @@ energy = (energy[1:] + energy[:-1])/2;
 # Verification with TDMC
 #===============================================================================
 
-J = 6;
-G = N - J;
-
 # Initial condition
 phi_initial = np.zeros(N)
 phi_initial[-1-J] = 13831.5926439 * 14.1**0.5 * 1000 * 100.0
+for g in range(G):
+    phi_initial[g] = phi_initial[g] * v_inv[g]
 
 # Expansion coefficients
 A = np.zeros(N,dtype=complex)
@@ -71,9 +72,6 @@ for i in range(N):
         num = num + phi_mode_adj[g][i] * phi_initial[g]
         gamma = gamma + phi_mode_adj[g][i] * phi_mode[g][i]
     A[i] = num / gamma
-
-# Other option for expansion coefficients
-A2 = np.linalg.solve(phi_mode,phi_initial)
 
 # Time grid
 time = [ 3e-8, 15e-8, 4e-6, 1e-4 ]
@@ -108,7 +106,7 @@ plt.xlabel("Energy, MeV");
 plt.ylabel("Scalar flux");
 plt.grid();
 plt.xlim(1E-9,20)
-plt.ylim(1,1E20)
+plt.ylim(1,1E10)
 plt.show();
 
 #===============================================================================
@@ -119,11 +117,10 @@ energy = np.array(f_mc['TRM_simple/energy'])
 energy = np.array(energy)*1E-6;
 energy = (energy[1:] + energy[:-1])/2;
 
-time = np.logspace(-12,-2,500)
+time = np.logspace(-14,-2,500)
 
 fig = plt.figure()
-ax = plt.axes(xlim=(1E-9, 20), ylim=(1E0, 1E10))
-ax = plt.axes(xlim=(1E-9, 20), ylim=(1E6, 1E20))
+ax = plt.axes(xlim=(1E-9, 20), ylim=(1, 2E10))
 ax.set_xscale('log')
 ax.set_yscale('log')
 line, = ax.plot([], [], '-', lw=2)
@@ -146,7 +143,7 @@ def animate(i):
     time_text.set_text('time = %.9f s' %time[i])
     return time_text, line
 
-inter = 1000 / len(time)
+inter = 5000 / len(time)
 anim = animation.FuncAnimation(fig, animate, init_func=init,
                                frames=len(time), interval=inter, blit=True)
 

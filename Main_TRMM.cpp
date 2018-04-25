@@ -46,13 +46,13 @@ int main( int argc, char* argv[] )
     Eigen::VectorXd speed_inv;
     EigenHDF5::load(file, "inverse_speed", speed_inv);
     for( int i = 0; i < G; i++ ){
-        for( int j = 0; j < G; j++ ){
+        for( int j = 0; j < N_TRM; j++ ){
             TRM(i,j) *= speed_inv[i];
         }
     }
     TRM.transposeInPlace();
     for( int i = 0; i < G; i++ ){
-        for( int j = 0; j < G; j++ ){
+        for( int j = 0; j < N_TRM; j++ ){
             TRM(i,j) /= speed_inv[i];
         }
     }
