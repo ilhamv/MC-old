@@ -304,7 +304,7 @@ for( const auto& n : input_nuclides.children("nuclide") ){
         std::vector<double> sigmaT;
         std::vector<double> nu;
         std::vector<double> beta;
-        std::vector<double> lambda(6);
+        std::vector<double> lambda(6,1.0);
         std::vector<double> fraction(6,0.0);
         std::vector<double> f_lambda;
         double c1, c2, c3, c4, c5, c6;

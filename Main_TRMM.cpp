@@ -24,6 +24,8 @@ int main( int argc, char* argv[] )
     H5::H5File file( FILE_NAME, H5F_ACC_RDONLY );
     EigenHDF5::load(file, "TRM", TRM);
     const int N_TRM = std::sqrt(TRM.size());
+    const int J = 6;
+    const int G = N_TRM - J;
     
     //=========================================================================
     // Solve eigen-pairs of TRM
@@ -43,14 +45,14 @@ int main( int argc, char* argv[] )
     // Set the adjoint TRM
     Eigen::VectorXd speed_inv;
     EigenHDF5::load(file, "inverse_speed", speed_inv);
-    for( int i = 0; i < N_TRM; i++ ){
-        for( int j = 0; j < N_TRM; j++ ){
+    for( int i = 0; i < G; i++ ){
+        for( int j = 0; j < G; j++ ){
             TRM(i,j) *= speed_inv[i];
         }
     }
     TRM.transposeInPlace();
-    for( int i = 0; i < N_TRM; i++ ){
-        for( int j = 0; j < N_TRM; j++ ){
+    for( int i = 0; i < G; i++ ){
+        for( int j = 0; j < G; j++ ){
             TRM(i,j) /= speed_inv[i];
         }
     }

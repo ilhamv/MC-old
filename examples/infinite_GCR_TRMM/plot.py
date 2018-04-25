@@ -52,19 +52,24 @@ energy = (energy[1:] + energy[:-1])/2;
 # Verification with TDMC
 #===============================================================================
 
+J = 6;
+G = N - J;
+
 # Initial condition
 phi_initial = np.zeros(N)
-phi_initial[-1] = 13831.5926439 * 14.1**0.5 * 1000 * 100.0
-print(phi_initial)
+phi_initial[-1-J] = 13831.5926439 * 14.1**0.5 * 1000 * 100.0
 
 # Expansion coefficients
 A = np.zeros(N,dtype=complex)
 for i in range(N):
     num = complex(0,0)
     gamma = complex(0,0)
-    for g in range(N):
+    for g in range(G):
         num = num + phi_mode_adj[g][i] * phi_initial[g]
         gamma = gamma + phi_mode_adj[g][i] * v_inv[g] * phi_mode[g][i]
+    for g in range(G,G+J):
+        num = num + phi_mode_adj[g][i] * phi_initial[g]
+        gamma = gamma + phi_mode_adj[g][i] * phi_mode[g][i]
     A[i] = num / gamma
 
 # Other option for expansion coefficients
@@ -83,7 +88,7 @@ for t in time:
     phi_ver = phi_ver / du
     if t == 0:
         print(phi_ver)
-    plt.loglog(energy,phi_ver);
+    plt.loglog(energy,phi_ver[:G]);
 
 # TDMC solution
 f_td = h5py.File('TDMC.h5', 'r')
@@ -137,7 +142,7 @@ def animate(i):
         for n in range(N):
             phi[g] = phi[g] + A[n] * phi_mode[g][n] * np.e**(alpha[n] * time[i])
     phi = phi / du
-    line.set_data(energy, phi)
+    line.set_data(energy, phi[:G])
     time_text.set_text('time = %.9f s' %time[i])
     return time_text, line
 

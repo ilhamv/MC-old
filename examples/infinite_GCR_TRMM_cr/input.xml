@@ -1,8 +1,8 @@
 <?xml version = '1.0' encoding = 'UTF-8'?>
 
 <simulation>
-    <description name="Infinite GCR" samples="400"/>
-    <ksearch active_cycles="100" passive_cycles="10"/>
+    <description name="Infinite GCR" samples="100"/>
+    <ksearch active_cycles="125" passive_cycles="25"/>
 </simulation>
 
 
@@ -22,7 +22,7 @@
 
 <materials>
     <material name="Fuel">
-    	<nuclide name="U-235" density="0.0000402"/>
+    	<nuclide name="U-235" density="0.0001020"/>
     	<nuclide name="U-238" density="0.0009061"/>
     	<nuclide name="O-16"  density="0.0018927"/>
     	<nuclide name="C"     density="0.0757080"/>
@@ -51,5 +51,5 @@
 
 <trmm>
     <cell name="infinity"/>
-    <filter type="energy" grid_lethargy="1E-5 2E7 20"/>
+    <filter type="energy" grid_lethargy="1E-5 2E7 10"/>
 </trmm>
