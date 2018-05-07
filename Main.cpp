@@ -3,7 +3,7 @@
 
 #include "H5Cpp.h"
 
-#include "Simulator.h"
+#include "simulator.h"
 
 int main( int argc, char* argv[] )
 {

@@ -1,0 +1,2 @@
+/usr/bin/ar qc liblibTRMM.a  CMakeFiles/libTRMM.dir/src_TRMM/TRMM.cpp.o
+/usr/bin/ranlib liblibTRMM.a

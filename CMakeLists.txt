@@ -63,6 +63,28 @@ endif()
 #==============================================================================
 
 file(GLOB libMC_SRC "src/*.cpp")
+set(libMC_SRC
+    src/Algorithm.cpp
+    src/Distribution.cpp
+    src/Entropy.cpp
+    src/Estimator.cpp
+    src/Geometry.cpp
+    src/Material.cpp
+    src/Nuclide.cpp
+    src/Particle.cpp
+    src/Random.cpp
+    src/Reaction.cpp
+    src/Source.cpp
+    src/XSec.cpp
+    src/simulator/fixed_source.cpp
+    src/simulator/general.cpp
+    src/simulator/ksearch.cpp
+    src/simulator/random_walk.cpp
+    src/simulator/report.cpp
+    src/simulator/report.cpp
+    src/simulator/setup.cpp
+    src/simulator/time_dependent.cpp
+)
 add_library(libMC ${libMC_SRC})
 
 set(program "MC.exe")
@@ -80,19 +102,12 @@ target_link_libraries(${program} ${ldflags} libMC)
 # Define the TRMM program executable
 #==============================================================================
 
-file(GLOB libTRMM_SRC "src_TRMM/*.cpp")
-add_library(libTRMM ${libTRMM_SRC})
-
 set(program "TRMM.exe")
-add_executable(${program} Main_TRMM.cpp)
+add_executable(${program} TRMM.cpp)
 
-target_include_directories(libTRMM PUBLIC ${HDF5_INCLUDE_DIRS})
+target_include_directories(${program} PUBLIC ${HDF5_INCLUDE_DIRS})
 # Add HDF5 library directories to link line with -L
-foreach(LIBDIR ${HDF5_LIBRARY_DIRS})
-    list(APPEND ldflags "-L${LIBDIR}")
-endforeach()
-target_link_libraries(libTRMM ${ldflags} ${HDF5_LIBRARIES} pugixml)
-target_link_libraries(${program} ${ldflags} libTRMM)
+target_link_libraries(${program} ${ldflags} ${HDF5_LIBRARIES})
 
 #==============================================================================
 # Copy important files
