@@ -57,8 +57,6 @@ class ReactionFission : public Reaction
 {
     private:
 	const std::shared_ptr<XS> r_nu;
-        const std::shared_ptr<Distribution<double>> r_Chi;
-        const std::vector<std::shared_ptr<Distribution<double>>> r_ChiD;
         const std::shared_ptr<XS> r_beta;
         const std::vector<double> r_lambda;
         const std::vector<double> r_fraction;
@@ -79,6 +77,9 @@ class ReactionFission : public Reaction
 
 	~ReactionFission() {};
 
+
+        const std::shared_ptr<Distribution<double>> r_Chi;
+        const std::vector<std::shared_ptr<Distribution<double>>> r_ChiD;
 
 	double nu( const unsigned long long idx, const double E,
                    const std::vector<double>& E_vec );

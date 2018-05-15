@@ -1,1 +1,0 @@
-/usr/bin/c++      CMakeFiles/TRMM.exe.dir/Main_TRMM.cpp.o  -o TRMM.exe -rdynamic -L/home/ilham/miniconda3/lib -L/home/ilham/miniconda3/lib liblibTRMM.a -L/home/ilham/miniconda3/lib /home/ilham/miniconda3/lib/libhdf5_cpp.so /home/ilham/miniconda3/lib/libhdf5.so -lrt -lpthread -lz -ldl -lm libpugixml.a -Wl,-rpath,/home/ilham/miniconda3/lib 

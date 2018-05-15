@@ -59,12 +59,11 @@ class SourcePoint : public Source
 
 class SourceBank
 {
-    private:
+    public:
         std::vector<std::pair<std::shared_ptr<Source>,double>> sources;
         double total = 0.0;
-        std::vector<double> p;
+        std::vector<double> p; // Source probability
 	
-    public:
         SourceBank() {};
         ~SourceBank() {};
 		

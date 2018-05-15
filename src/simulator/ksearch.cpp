@@ -14,22 +14,17 @@ void Simulator::add_fission_source( const std::shared_ptr<Source>& S,
 }
 
 //=============================================================================
-// ksearch collision
+// ksearch implicit fission
 //=============================================================================
 
-void Simulator::collision_ksearch( Particle& P, const double bank_nu, 
-                                   const std::shared_ptr<Nuclide>& N_fission )
+void Simulator::implicit_fission_ksearch( const Particle& P, 
+        const double bank_nu, const std::shared_ptr<Nuclide>& N_fission )
 {
+    // Get energy spectrum: Prompt or Delayed? If Delayed, which group?
+    std::shared_ptr<Distribution<double>> Chi;
     if( Urand() > N_fission->beta(P.energy()) ){
-        // Prompt energy spectrum
-        for ( int i = 0 ; i < bank_nu ; i++ ){
-            Particle P_new( P.pos(), isotropic_direction.sample(),
-                            N_fission->fission()->Chi(P.energy()), P.time(),
-                            1.0, P.tdmc(), P.cell() );
-            add_fission_source( std::make_shared<SourceDelta>(P_new),1.0);
-        }
+        Chi = N_fission->fission()->r_Chi;
     } else{
-        // Delayed energy spectrum
         double p_energy;
         // Precursor group cg
         int cg;
@@ -39,17 +34,14 @@ void Simulator::collision_ksearch( Particle& P, const double bank_nu,
             sum += N_fission->fission()->fraction(i);
             if( sum > xi ){ cg = i; break; }
         }
-        for( int i = 0 ; i < bank_nu ; i++ ){
-            p_energy = N_fission->fission()->ChiD(cg,P.energy());
-            Particle P_new( P.pos(), isotropic_direction.sample(),
-                            p_energy, P.time(), 1.0, P.tdmc(), P.cell() );
-            add_fission_source( std::make_shared<SourceDelta>(P_new),1.0);
-        }
+        Chi = N_fission->fission()->r_ChiD[cg];
     }
-    
-    // Tallies
-    k_estimator->estimate_C(P);
 
-    // Entropy
-    if( bank_nu > 0 ){ k_estimator->entropy->score( P.pos(), bank_nu ); }
+    // Generate fission neutrons
+    for ( int i = 0 ; i < bank_nu ; i++ ){
+        Particle P_new( P.pos(), isotropic_direction.sample(),
+                        N_fission->fission()->Chi(P.energy()), P.time(),
+                        1.0, P.tdmc(), P.cell() );
+        add_fission_source( std::make_shared<SourceDelta>(P_new),1.0);
+    }
 }

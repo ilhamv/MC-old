@@ -78,8 +78,8 @@ set(libMC_SRC
     src/XSec.cpp
     src/simulator/fixed_source.cpp
     src/simulator/general.cpp
+    src/simulator/handler.cpp
     src/simulator/ksearch.cpp
-    src/simulator/random_walk.cpp
     src/simulator/report.cpp
     src/simulator/report.cpp
     src/simulator/setup.cpp

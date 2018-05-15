@@ -38,7 +38,8 @@ class Simulator
         //=====================================================================
         // general functions
         //=====================================================================
-        
+ 
+        void random_walk( Particle& P );
         bool test_point( const Point& p, const std::shared_ptr<Cell>& C );
         std::shared_ptr<Cell> search_cell( const Point& p );
         double collision_distance( const Particle& P );
@@ -56,20 +57,21 @@ class Simulator
         
         void add_fission_source( const std::shared_ptr<Source>& S, 
                                  const double i );
-        void collision_ksearch( Particle& P, const double bank_nu, 
+        void implicit_fission_ksearch( const Particle& P, const double bank_nu, 
                                 const std::shared_ptr<Nuclide>& N_fission );
 
         //=====================================================================
         // fixed source functions
         //=====================================================================
         
-        void collision_fixed_source( Particle& P, const double bank_nu, 
-                                   const std::shared_ptr<Nuclide>& N_fission );
+        void implicit_fission_fixed_source( const Particle& P, 
+            const double bank_nu, const std::shared_ptr<Nuclide>& N_fission );
 
         //=====================================================================
         // time dependent functions
         //=====================================================================
-        
+
+        void time_hit( Particle& P );
         Particle forced_decay( const Particle& P, 
                                const std::shared_ptr<Nuclide>& N, 
                                const double initial, const double interval,
@@ -89,16 +91,16 @@ class Simulator
         bool ksearch     = false; 
         bool tdmc        = false;
         bool trmm        = false;
-        bool save_source = false;
         
         // Survival rouletting
         double wr = 0.25; // Weight rouletting
         double ws = 1.0;  // Survival weight
         
         // Banks
-        SourceBank           Fbank; // Fission bank
-        SourceBank           Sbank; // Sample bank
-        std::stack<Particle> Pbank; // Particle bank
+        SourceBank           Fbank;  // Fission bank
+        SourceBank           TDbank; // Time dependent bank
+        SourceBank           Sbank;  // Sample bank
+        std::stack<Particle> Pbank;  // Particle bank
 
         // THE OBJECTS
         std::vector<std::shared_ptr<Surface>>  Surfaces;
@@ -115,7 +117,6 @@ class Simulator
         // TDMC specific
         std::vector<double> tdmc_time;
         std::vector<double> tdmc_interval;
-        unsigned long long  tdmc_split = 1.0;
 
         // TRMM specific
         std::shared_ptr<Estimator> trmm_estimator_simple;
@@ -133,7 +134,7 @@ class Simulator
 
         // Start simulation
         void start();
-        void report( H5::H5File& output );
+        void report( const std::string io_dr );
 };
 
 #endif // SIMULATOR_H

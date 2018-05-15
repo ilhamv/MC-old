@@ -56,11 +56,6 @@ Nsample         = input_description.attribute("samples").as_double();
 
 if( input_ksearch ){
     ksearch  = true;
-
-    // Save source?
-    if( input_ksearch.attribute("save_source") ){
-        save_source = true;
-    }
     
     //=========================================================================
     // Shannon entropy
@@ -135,9 +130,6 @@ if( input_tdmc ){
     if( input_ksearch ){
         std::cout<<"ksearch and tdmc could not coexist\n";
         std::exit(EXIT_FAILURE);
-    }
-    if( input_tdmc.attribute("split") ){
-        tdmc_split = input_tdmc.attribute("split").as_double();
     }
     mode = "time-dependent";
 }
@@ -671,12 +663,14 @@ for ( auto& e : input_file.child("estimators").children("estimator") ){
     // Estimator filters
     std::vector<double>     f_grid;
     std::shared_ptr<Filter> e_filter;
+    
     // TDMC filter
-    if(tdmc){
+    if( e.child("tdmc") ){
         f_grid = tdmc_time;
         e_filter = std::make_shared<FilterTDMC> (f_grid);
         set_estimator->add_filter(e_filter);
     }
+
     // Attach estimator on geometries (and build the corresponding filter)
     f_grid.clear();
     for( auto& surface : e.children("surface") ){
@@ -714,8 +708,12 @@ for ( auto& e : input_file.child("estimators").children("estimator") ){
 
     // Other filters
     for( auto& f : e.children("filter") ){
+        // Filter type
+        std::string f_name = f.attribute("type").value();
+        
         // Filter grid
         f_grid.clear();
+
 	if( f.attribute("grid") ){
 	    const std::string   grid_string = f.attribute("grid").value();
 	    std::istringstream  iss( grid_string );
@@ -752,13 +750,8 @@ for ( auto& e : input_file.child("estimators").children("estimator") ){
                      << "\n";
             std::exit(EXIT_FAILURE);
         }
-        // Filter type
-        if ( !f.attribute("type") ){
-            std::cout<< "[ERROR] Need filter type for estimator " << e_name 
-                     << "\n";
-            std::exit(EXIT_FAILURE);
-        }
-        std::string f_name = f.attribute("type").value();
+        
+        // Build filter
         if( f_name == "energy" ){
             e_filter = std::make_shared<FilterEnergy> (f_grid);
         } else if( f_name == "time" ){
@@ -1027,8 +1020,9 @@ for( const auto& s : input_sources.children() ){
 	S = std::make_shared<SourcePoint>( p, search_cell(p), s_dir, 
                                             s_energy );
     }
+
     else{
-        std::cout << "[INPUT ERROR] Unknown source type...\n";
+        std::cout << "[INPUT ERROR] Unknown source type: " << s_type << "\n";
         std::exit(EXIT_FAILURE);
     }
 		

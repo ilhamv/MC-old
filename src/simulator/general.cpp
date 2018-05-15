@@ -134,9 +134,18 @@ void Simulator::collision( Particle& P )
     
     std::shared_ptr<Nuclide> N_fission = M->nuclide_nufission( P.energy() );
 
-    // Collision implementaiton
-    if(ksearch){ collision_ksearch( P, bank_nu, N_fission ); }
-    else{ collision_fixed_source( P, bank_nu, N_fission ); }
+    if( ksearch ){ 
+        implicit_fission_ksearch( P, bank_nu, N_fission ); 
+        
+        // Tallies
+        k_estimator->estimate_C(P);
+
+        // Entropy
+        if( bank_nu > 0 ){ k_estimator->entropy->score( P.pos(), bank_nu ); }
+    }
+    else{ 
+        implicit_fission_fixed_source( P, bank_nu, N_fission ); 
+    }
 
     // Implicit Absorption
     const double implicit = M->SigmaC(P.energy()) + M->SigmaF(P.energy());
@@ -168,4 +177,45 @@ void Simulator::weight_roulette( Particle& P )
 void Simulator::push_particle_bank( const Particle& P )
 {
     Pbank.push(P);
+}
+
+//=============================================================================
+// Random walk
+//=============================================================================
+
+void Simulator::random_walk( Particle& P )
+{
+    while( P.alive() ){
+        // Determine nearest surface and its distance
+        const std::pair< std::shared_ptr<Surface>, double > 
+            SnD = surface_intersect( P );
+
+        // Determine collision distance
+        double dcol = collision_distance( P );
+
+        // Exceeding TDMC time boundary?
+        if( tdmc ){
+            double dbound = (tdmc_time[P.tdmc()] - P.time()) 
+                            * P.speed();
+            if( std::min(SnD.second,dcol) > dbound ){
+                move_particle( P, dbound );
+                time_hit( P ); continue; 
+            }
+        }
+                        
+        // Hit surface?
+        if( dcol > SnD.second ){	
+            move_particle( P, SnD.second );
+            surface_hit( P, SnD.first );
+            split_roulette( P, Pbank );
+        }
+        
+        // Collide!!
+        else{
+            move_particle( P, dcol );
+            collision( P );
+        }
+
+        weight_roulette( P );
+    } 
 }

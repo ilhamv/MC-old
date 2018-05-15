@@ -6,7 +6,7 @@
 // Report results
 //=============================================================================
 
-void Simulator::report( H5::H5File& output )
+void Simulator::report( const std::string io_dir )
 {
     // H5 tools
     H5::DataSet dataset;
@@ -15,7 +15,11 @@ void Simulator::report( H5::H5File& output )
     H5::DataType type_ull    = H5::PredType::NATIVE_ULLONG;
     H5::DataType type_double = H5::PredType::NATIVE_DOUBLE;
     H5::StrType type_str(0, H5T_VARIABLE);
-
+    
+    // HDF5 output
+    H5std_string output_name( io_dir + "output.h5" );
+    H5::H5File output(output_name, H5F_ACC_TRUNC);
+    
     // Summary
     group = output.createGroup("/summary");
     dataset = group.createDataSet( "Ncycle", type_ull, space_scalar );
@@ -35,8 +39,6 @@ void Simulator::report( H5::H5File& output )
     dataset.write(&ws, type_double);
     if(tdmc){
         group = output.createGroup("/summary/tdmc");
-        dataset = group.createDataSet( "split", type_ull, space_scalar);
-        dataset.write(&tdmc_split, type_ull);
         hsize_t dimsv[1]; dimsv[0] = tdmc_time.size();
         H5::DataSpace data_spacev(1,dimsv);
         dataset = group.createDataSet( "time", type_double, data_spacev);

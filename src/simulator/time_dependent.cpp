@@ -2,9 +2,11 @@
 #include <memory>  
 #include <cmath>   
 #include <numeric> // accumulate
+#include <Eigen/Dense>
 
 #include "simulator.h"
 #include "Random.h"
+#include "eigen3-hdf5.hpp"
 
 
 //=============================================================================
@@ -40,4 +42,14 @@ Particle Simulator::forced_decay( const Particle& P,
     return Particle( P.pos(), isotropic_direction.sample(), 
                      p_energy, p_time, p_weight, p_tdmc, 
                      P.cell() );
+}
+
+//=============================================================================
+// Time boundary hit
+//=============================================================================
+
+void Simulator::time_hit( Particle& P )
+{
+    P.increment_tdmc();
+    if( P.time() == tdmc_time.back() ) { P.kill(); }
 }

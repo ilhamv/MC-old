@@ -6,11 +6,11 @@
 
 
 //=============================================================================
-// fixed source collision
+// fixed source implicit fission
 //=============================================================================
 
-void Simulator::collision_fixed_source( Particle& P, const double bank_nu, 
-                                    const std::shared_ptr<Nuclide>& N_fission )
+void Simulator::implicit_fission_fixed_source( const Particle& P, 
+        const double bank_nu, const std::shared_ptr<Nuclide>& N_fission )
 {
     if( Urand() > N_fission->beta(P.energy()) ){
         // Prompt

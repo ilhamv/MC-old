@@ -1,7 +1,0 @@
-/home/ilham/Work/MC/build2/CMakeFiles/pugixml.dir
-/home/ilham/Work/MC/build2/CMakeFiles/libMC.dir
-/home/ilham/Work/MC/build2/CMakeFiles/rebuild_cache.dir
-/home/ilham/Work/MC/build2/CMakeFiles/MC.exe.dir
-/home/ilham/Work/MC/build2/CMakeFiles/edit_cache.dir
-/home/ilham/Work/MC/build2/CMakeFiles/TRMM.exe.dir
-/home/ilham/Work/MC/build2/CMakeFiles/libTRMM.dir

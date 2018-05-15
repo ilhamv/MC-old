@@ -1,1 +1,0 @@
-/usr/bin/c++      CMakeFiles/MC.exe.dir/Main.cpp.o  -o MC.exe -rdynamic -L/home/ilham/miniconda3/lib liblibMC.a -L/home/ilham/miniconda3/lib /home/ilham/miniconda3/lib/libhdf5_cpp.so /home/ilham/miniconda3/lib/libhdf5.so -lrt -lpthread -lz -ldl -lm libpugixml.a -Wl,-rpath,/home/ilham/miniconda3/lib 

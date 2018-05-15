@@ -14,10 +14,6 @@ int main( int argc, char* argv[] )
     }
     const std::string io_dir = std::string(argv[1]) + "/"; 
     
-    // HDF5 output
-    H5std_string output_name( io_dir + "output.h5" );
-    H5::H5File output(output_name, H5F_ACC_TRUNC);
-    
     //=========================================================================
     // Monte Carlo Simulation
     //=========================================================================
@@ -27,8 +23,8 @@ int main( int argc, char* argv[] )
     
     MC_Simulator.start();
     std::cout<<"Simulation done!\n\nReporting simulation output...\n";
-    
-    MC_Simulator.report( output );
+
+    MC_Simulator.report( io_dir );
     std::cout<<"Simulation output done!\n";
 
     return 0;

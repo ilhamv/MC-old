@@ -1,8 +1,8 @@
 <?xml version = '1.0' encoding = 'UTF-8'?>
 
 <simulation>
-    <description name="Infinite GCR" samples="4e7"/>
-    <tdmc time="3e-8 15e-8 4e-6 100e-6" split="5"/>
+    <description name="Infinite GCR" samples="2500"/>
+    <tdmc time="3e-8 15e-8 4e-6 100e-6"/>
 </simulation>
 
 
@@ -52,6 +52,7 @@
 <estimators>
     <estimator name="spectrum" scores="flux">
     	<cell name="infinity"/>
-	<filter type="energy" grid_lethargy="1E-5 2E7 320"/>
+	<filter type="energy" grid_lethargy="1E-5 2E7 50"/>
+        <tdmc/>
     </estimator>
 </estimators>
