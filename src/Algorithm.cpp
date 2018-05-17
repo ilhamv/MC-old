@@ -104,38 +104,6 @@ double interpolate( const double x, const double x1, const double x2,
                     const double y1, const double y2 )
 { return ( x - x2 ) / ( x1 - x2 ) * y1 + ( x - x1 ) / ( x2 - x1 ) * y2; }
 
-void split_roulette( Particle& P, std::stack<Particle>& Pbank )
-{
-    // Importances
-    const double Iold = P.cell_old()->importance();
-    const double Inew = P.cell()->importance();
-
-    // Same importance, do nothing
-    if ( Inew == Iold ) { return; }
-	
-    const double rat = Inew / Iold; // Ratio of importances
-	
-    // Less important, Russian Roulette
-    if ( rat < 1.0 )
-    {
-	if ( Urand() < rat ) { P.set_weight( P.weight() / rat ); }
-	else                 { P.kill(); }
-    }
-
-    // More important, Splitting
-    else
-    {
-	// Sample # of splitting
-	const int n = std::floor( rat + Urand() );
-		
-	// Update working particle weight
-	P.set_weight( P.weight() / double(n) );
-
-	// Push n-1 identical particles into particle bank
-	for ( int i = 0 ; i < n-1 ; i++ ){ Pbank.push( P ); }
-    }
-}
-
 void normalize_point( Point& p )
 {
     const double denom = p.x*p.x + p.y*p.y + p.z*p.z;

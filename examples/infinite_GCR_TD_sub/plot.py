@@ -25,10 +25,10 @@ for i in range(0, len(flux)):
     plt.show(); 
 '''
 fig = plt.figure()
-ax = plt.axes(xlim=(1E-9, 20), ylim=(1E-5, 1E9))
+ax = plt.axes(xlim=(1E-9, 20), ylim=(1, 1E9))
 ax.set_xscale('log')
 ax.set_yscale('log')
-line, = ax.plot([], [], lw=2)
+line, = ax.plot([], [], 'o', lw=2)
 time_text = ax.text(0.02, 0.95, '', transform=ax.transAxes)
 plt.xlabel("Energy, MeV");
 plt.ylabel("Scalar flux");
@@ -43,7 +43,7 @@ def animate(i):
     time_text.set_text('time = %.9f s' %time[i])
     return time_text, line
 
-inter = 50 * len(flux)
+inter = 1000 / len(flux)
 anim = animation.FuncAnimation(fig, animate, init_func=init,
                                frames=len(flux), interval=inter, blit=True)
 

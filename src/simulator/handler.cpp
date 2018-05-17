@@ -17,12 +17,15 @@ void Simulator::start()
 
         // Sample loop
         for( isample = 0 ; isample < Nsample ; isample++ ){
-            Pbank.push( Sbank.get_source() );
+            Pbank.push_back( Sbank.get_source() );
             
             while( !Pbank.empty() ){
-                Particle P = Pbank.top(); Pbank.pop();
+//std::cout<<isample<<"    "<<Pbank.size()<<"\n";
+                Particle P = Pbank.back(); Pbank.pop_back();
                 // Particle random walk
                 random_walk( P );
+                // Particle control: Combing
+                if( comb ) { particle_comb( Pbank ); }
             }
 
             // Estimator history closeout

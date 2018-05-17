@@ -4,7 +4,6 @@
 #include <vector>  
 #include <cstring> 
 #include <memory>  
-#include <stack>   
 
 #include "H5Cpp.h"
 
@@ -22,7 +21,14 @@
 class Simulator
 {
     private:
+        // Distributions
         DistributionIsotropicDirection isotropic_direction;
+        
+        // Banks
+        SourceBank            Fbank;  // Fission bank
+        SourceBank            TDbank; // Time dependent bank
+        SourceBank            Sbank;  // Sample bank
+        std::vector<Particle> Pbank;  // Particle bank
 
         //=====================================================================
         // setup
@@ -47,7 +53,6 @@ class Simulator
                                      surface_intersect( const Particle& P );
         void move_particle( Particle& P, const double l );
         void surface_hit( Particle& P, const std::shared_ptr<Surface>& S );
-        void weight_roulette( Particle& P );
         void push_particle_bank( const Particle& P );
         void collision( Particle& P );
         
@@ -77,6 +82,23 @@ class Simulator
                                const double initial, const double interval,
                                const int p_tdmc);
 
+        //=====================================================================
+        // Population control
+        //=====================================================================
+
+        // Weight roulette
+        double wr = 0.001; // Weight rouletting
+        double ws = 1.0;  // Survival weight
+
+        // Particle comb
+        bool comb = false;
+        int comb_teeth, bank_max;
+        
+        void weight_roulette( Particle& P );
+        void cell_importance( Particle& P, std::vector<Particle>& Pbank );
+        void particle_comb( std::vector<Particle>& Pbank );
+
+
     public:
         std::string simulation_name;
         
@@ -92,16 +114,6 @@ class Simulator
         bool tdmc        = false;
         bool trmm        = false;
         
-        // Survival rouletting
-        double wr = 0.25; // Weight rouletting
-        double ws = 1.0;  // Survival weight
-        
-        // Banks
-        SourceBank           Fbank;  // Fission bank
-        SourceBank           TDbank; // Time dependent bank
-        SourceBank           Sbank;  // Sample bank
-        std::stack<Particle> Pbank;  // Particle bank
-
         // THE OBJECTS
         std::vector<std::shared_ptr<Surface>>  Surfaces;
         std::vector<std::shared_ptr<Cell>>       Cells;

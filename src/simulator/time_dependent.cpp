@@ -51,5 +51,5 @@ Particle Simulator::forced_decay( const Particle& P,
 void Simulator::time_hit( Particle& P )
 {
     P.increment_tdmc();
-    if( P.time() == tdmc_time.back() ) { P.kill(); }
+    if( P.tdmc() == tdmc_time.size() ) { P.kill(); }
 }

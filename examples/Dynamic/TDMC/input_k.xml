@@ -1,13 +1,13 @@
 <?xml version = '1.0' encoding = 'UTF-8'?>
 
 <simulation>
-    <description name="Infinite GCR" samples="5000"/>
-    <tdmc time_linear="1E-4 10 1E1"/>
+    <description name="Infinite GCR" samples="1000"/>
+    <ksearch active_cycles="100" passive_cycles="10"/>
 </simulation>
 
 
 <population_control>
-    <particle_comb bank_max="10000" teeth="5000"/>
+    <particle_comb bank_max="100" teeth="50"/>
 </population_control>
 
 
@@ -31,7 +31,7 @@
     	<nuclide name="U-235" density="0.0001018"/>
     	<nuclide name="U-238" density="0.0009074"/>
     	<nuclide name="O-16"  density="0.0018927"/>
-    	<nuclide name="C"     density="0.0776250"/>
+    	<nuclide name="C"     density="0.0776150"/>
     </material>
 </materials>
 
@@ -53,12 +53,3 @@
 <sources>
     <point x="0.0" y="0.0" z="0.0" direction="dir" energy="enrg"/>
 </sources>
-
-
-<estimators>
-    <estimator name="spectrum" scores="flux">
-    	<cell name="infinity"/>
-	<filter type="energy" grid_lethargy="1E-5 2E7 50"/>
-        <tdmc/>
-    </estimator>
-</estimators>

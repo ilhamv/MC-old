@@ -109,6 +109,9 @@ void Simulator::surface_hit( Particle& P, const std::shared_ptr<Surface>& S )
     if (tally){
 	for ( auto& e : S->estimators ){ e->score( P, 0.0 ); }
     }
+    
+    // Population control: Cell importance
+    cell_importance( P, Pbank );
 }
 
 //=============================================================================
@@ -160,23 +163,11 @@ void Simulator::collision( Particle& P )
 }
 
 //=============================================================================
-// Weight Roulette
-//=============================================================================
-
-void Simulator::weight_roulette( Particle& P )
-{
-    if( P.weight() < wr ){
-        if( Urand() < P.weight() / ws ) { P.set_weight(ws); }
-        else { P.kill(); }
-    }
-}
-
-//=============================================================================
 // Push Particle Bank
 //=============================================================================
 void Simulator::push_particle_bank( const Particle& P )
 {
-    Pbank.push(P);
+    Pbank.push_back(P);
 }
 
 //=============================================================================
@@ -207,7 +198,6 @@ void Simulator::random_walk( Particle& P )
         if( dcol > SnD.second ){	
             move_particle( P, SnD.second );
             surface_hit( P, SnD.first );
-            split_roulette( P, Pbank );
         }
         
         // Collide!!

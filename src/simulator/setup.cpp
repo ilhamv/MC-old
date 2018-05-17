@@ -51,6 +51,22 @@ Nsample         = input_description.attribute("samples").as_double();
 
 
 //=============================================================================
+// Population Control
+//=============================================================================
+
+pugi::xml_node input_ctrl = input_file.child("population_control");
+
+if( input_ctrl ){
+    if( input_ctrl.child("particle_comb") ){ 
+        comb = true;
+        bank_max = input_ctrl.child("particle_comb")
+                             .attribute("bank_max").as_int();
+        comb_teeth = input_ctrl.child("particle_comb")
+                               .attribute("teeth").as_int();
+    }
+}
+
+//=============================================================================
 // KSEARCH
 //=============================================================================
 
@@ -119,14 +135,34 @@ if( input_ksearch ){
 
 if( input_tdmc ){
     tdmc = true;
-    const std::string grid_string = input_tdmc.attribute("time").value();
-    std::istringstream  iss( grid_string );
+
+    // Time grid
     tdmc_interval.push_back(0.0);
-    for( double s; iss >> s; ){
-        tdmc_time.push_back(s); 
-        tdmc_interval.push_back(s-tdmc_interval.back()); 
+    if( input_tdmc.attribute("time") ){
+        const std::string grid_string = input_tdmc.attribute("time").value();
+        std::istringstream  iss( grid_string );
+        for( double s; iss >> s; ){
+            tdmc_time.push_back(s); 
+            tdmc_interval.push_back(s-tdmc_interval.back()); 
+        }
+        tdmc_interval.erase(tdmc_interval.begin());
     }
-    tdmc_interval.erase(tdmc_interval.begin());
+    else if( input_tdmc.attribute("time_linear") ){
+        const std::string grid_string = input_tdmc.attribute("time_linear")
+                                        .value();
+        double a, b, step;
+        std::istringstream  iss( grid_string );
+        iss >> a >> step >> b; step = (b-a)/step;
+        tdmc_time.push_back(a); 
+        tdmc_interval.push_back(a-tdmc_interval.back());
+        while( tdmc_time.back() < b ){
+            tdmc_time.push_back( tdmc_time.back() + step );
+            tdmc_interval.push_back(tdmc_time.back()-tdmc_interval.back()); 
+        }
+        tdmc_interval.erase(tdmc_interval.begin());
+        tdmc_time.pop_back();
+        tdmc_time.push_back(b);
+    }
     if( input_ksearch ){
         std::cout<<"ksearch and tdmc could not coexist\n";
         std::exit(EXIT_FAILURE);

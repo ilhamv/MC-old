@@ -80,6 +80,7 @@ set(libMC_SRC
     src/simulator/general.cpp
     src/simulator/handler.cpp
     src/simulator/ksearch.cpp
+    src/simulator/population_control.cpp
     src/simulator/report.cpp
     src/simulator/report.cpp
     src/simulator/setup.cpp

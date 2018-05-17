@@ -1,20 +1,19 @@
 <?xml version = '1.0' encoding = 'UTF-8'?>
 
 <simulation>
-    <description name="Infinite GCR" samples="5000"/>
-    <tdmc time_linear="1E-4 10 1E1"/>
+    <description name="Subcritical Infinite GCR" samples="1000"/>
+    <tdmc time="1e-4 2E-4 3E-4 5E-4 6E-4 7E-4 8E-4 9E-4 1e-3 2E-3 3E-3 5E-3 6E-3 7E-3 8E-3 9E-3"/>
 </simulation>
 
 
 <population_control>
-    <particle_comb bank_max="10000" teeth="5000"/>
+    <particle_comb bank_max="100" teeth="50"/>
 </population_control>
-
 
 
 <distributions>
     <isotropic name="dir" datatype="point" />
-    <delta name="enrg" datatype="double" val="14.0e6"/>
+    <delta name="enrg" datatype="double" val="14.1e6"/>
 </distributions>
 
 
@@ -31,7 +30,7 @@
     	<nuclide name="U-235" density="0.0001018"/>
     	<nuclide name="U-238" density="0.0009074"/>
     	<nuclide name="O-16"  density="0.0018927"/>
-    	<nuclide name="C"     density="0.0776250"/>
+    	<nuclide name="C"     density="0.0776150"/>
     </material>
 </materials>
 
